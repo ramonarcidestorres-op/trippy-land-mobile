@@ -1,42 +1,31 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { Search, Box, Droplets, Leaf, Pill, Flame, Cross } from "lucide-react";
+import { Candy, Search, Sparkles } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { ProductCard, ProductCardSkeleton } from "@/components/ProductCard";
 import { EmptyState, ErrorState } from "@/components/States";
 import { Input } from "@/components/ui/input";
 import { categoriesQuery, productsQuery } from "@/lib/queries";
-import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Trippy Land Store" },
-      { name: "description", content: "Tienda exclusiva. Catálogo, carrito y pedidos." },
+      { title: "Trippy Land Store — Dulces a domicilio" },
+      {
+        name: "description",
+        content: "Pide dulces a domicilio en minutos. Catálogo, carrito y pago en efectivo.",
+      },
+      { property: "og:title", content: "Trippy Land Store — Dulces a domicilio" },
+      {
+        property: "og:description",
+        content: "Pide dulces a domicilio en minutos. Catálogo, carrito y pago en efectivo.",
+      },
     ],
   }),
   component: HomePage,
 });
-
-// Helper for discrete category icons
-function getCategoryIcon(slug: string) {
-  switch (slug) {
-    case "sinteticos":
-      return <Pill className="size-5 opacity-70" />;
-    case "weed":
-      return <Leaf className="size-5 opacity-70" />;
-    case "pre-rolls":
-      return <Flame className="size-5 opacity-70" />;
-    case "farmacia":
-      return <Cross className="size-5 opacity-70" />;
-    case "coca":
-      return <Droplets className="size-5 opacity-70" />;
-    default:
-      return <Box className="size-5 opacity-70" />;
-  }
-}
 
 function HomePage() {
   const [search, setSearch] = useState("");
@@ -45,109 +34,77 @@ function HomePage() {
 
   return (
     <AppShell>
-      <section className="relative overflow-hidden rounded-3xl border border-border/40 bg-[#0a0a0a] p-6 shadow-sm">
-        <div className="flex flex-col items-center text-center">
-          {/* Logo container with generous padding to handle the black margins in the original image */}
-          <div className="mb-4 flex h-24 w-full items-center justify-center p-2">
-            <img 
-              src="/logo.png" 
-              alt="Trippy Land Logo" 
-              className="h-full max-h-full w-auto object-contain"
-              onError={(e) => {
-                // Fallback to text if image is not present yet
-                (e.target as HTMLImageElement).style.display = 'none';
-                (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
-              }}
-            />
-            <div className="hidden flex-col items-center">
-              <span className="text-3xl font-serif text-[#F5F5DC] tracking-widest">TRIPPY LAND</span>
-            </div>
-          </div>
-          
-          <p className="mt-2 text-sm text-muted-foreground max-w-[250px]">
-            Explora nuestro catálogo exclusivo
-          </p>
-        </div>
-
-        <div className="relative mt-6">
-          <Search className="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+      <section className="relative overflow-hidden rounded-3xl border border-border/60 bg-card p-5">
+        <div className="pointer-events-none absolute -right-10 -top-10 size-40 rounded-full candy-gradient opacity-25 blur-2xl" />
+        <p className="inline-flex items-center gap-1.5 rounded-full bg-surface-2 px-3 py-1 text-[11px] text-candy-lime">
+          <Sparkles className="size-3" /> Entrega a domicilio · Pago en efectivo
+        </p>
+        <h1 className="mt-3 text-2xl font-bold leading-tight">
+          Dulces que <span className="candy-text">viajan</span> hasta tu puerta
+        </h1>
+        <div className="relative mt-4">
+          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Buscar..."
-            className="h-12 rounded-xl bg-surface border-border/50 pl-10 focus-visible:ring-[#F5F5DC]/30 focus-visible:border-[#F5F5DC]/50 transition-all text-base"
+            placeholder="Buscar dulces…"
+            className="h-11 rounded-full bg-surface-2 pl-9"
           />
         </div>
         {search.trim() && (
           <Link
             to="/catalogo"
             search={{ q: search.trim() }}
-            className="mt-4 block text-center text-sm text-[#F5F5DC]/80 underline underline-offset-4 active:text-[#F5F5DC]"
+            className="mt-3 inline-block text-xs text-primary underline underline-offset-4"
           >
-            Ver resultados para "{search.trim()}"
+            Ver resultados para “{search.trim()}” en el catálogo
           </Link>
         )}
       </section>
 
-      <section className="mt-8">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-            Categorías
-          </h2>
-        </div>
+      <section className="mt-7">
+        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+          Categorías
+        </h2>
         {categories.isLoading ? (
-          <div className="grid grid-cols-2 gap-3">
-            {[0, 1, 2, 3].map((i) => (
-              <div key={i} className="h-16 animate-pulse rounded-xl bg-surface-2" />
+          <div className="flex gap-2">
+            {[0, 1, 2].map((i) => (
+              <div key={i} className="h-9 w-24 animate-pulse rounded-full bg-surface-2" />
             ))}
           </div>
         ) : categories.error ? (
           <ErrorState error={categories.error} onRetry={() => categories.refetch()} />
         ) : categories.data?.length ? (
-          <div className="grid grid-cols-2 gap-3">
+          <div className="flex flex-wrap gap-2">
             {categories.data.map((c) => (
               <Link
                 key={c.id}
                 to="/catalogo"
                 search={{ categoria: c.slug }}
-                className={cn(
-                  "flex items-center gap-3 rounded-xl border border-border/40 bg-surface px-4 py-3",
-                  "transition-all active:scale-[0.98] active:bg-surface-2 active:border-[#F5F5DC]/20 md:hover:bg-surface-2",
-                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F5F5DC]/30"
-                )}
+                className="rounded-full border border-border bg-surface px-4 py-2 text-sm transition-colors hover:border-primary hover:text-primary"
               >
-                <div className="text-[#F5F5DC]">
-                  {c.icon_url ? (
-                    <img src={c.icon_url} alt="" className="size-5 object-contain opacity-80" />
-                  ) : (
-                    getCategoryIcon(c.slug)
-                  )}
-                </div>
-                <span className="text-sm font-medium tracking-wide text-foreground/90">{c.name}</span>
+                {c.name}
               </Link>
             ))}
           </div>
         ) : (
           <p className="text-sm text-muted-foreground">
-            No hay categorías disponibles.
+            Aún no hay categorías cargadas en el sistema.
           </p>
         )}
       </section>
 
-      <section className="mt-10">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+      <section className="mt-7">
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
             Destacados
           </h2>
-          <Link 
-            to="/catalogo" 
-            className="text-xs font-medium text-[#F5F5DC]/80 active:text-[#F5F5DC] md:hover:text-[#F5F5DC]"
-          >
+          <Link to="/catalogo" className="text-xs text-primary">
             Ver todo
           </Link>
         </div>
         {products.isLoading ? (
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
             {[0, 1, 2, 3].map((i) => (
               <ProductCardSkeleton key={i} />
             ))}
@@ -155,16 +112,16 @@ function HomePage() {
         ) : products.error ? (
           <ErrorState error={products.error} onRetry={() => products.refetch()} />
         ) : products.data?.length ? (
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
             {products.data.slice(0, 8).map((p) => (
               <ProductCard key={p.id} product={p} />
             ))}
           </div>
         ) : (
           <EmptyState
-            icon={<Box className="size-7" />}
-            title="Sin productos"
-            description="No hay productos disponibles por ahora."
+            icon={<Candy className="size-7" />}
+            title="Todavía no hay productos"
+            description="Cuando el equipo publique productos en el panel, aparecerán aquí al instante."
           />
         )}
       </section>
