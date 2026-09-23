@@ -99,7 +99,7 @@ function HomePage() {
           <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
             Destacados
           </h2>
-          <Link to="/catalogo" className="text-xs text-primary">
+          <Link to="/catalogo" search={{}} className="text-xs text-primary">
             Ver todo
           </Link>
         </div>
