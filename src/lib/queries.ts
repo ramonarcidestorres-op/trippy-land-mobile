@@ -24,7 +24,7 @@ export const categoriesQuery = () =>
       unwrap<Category[]>(await supabase.from("categories").select("*").order("name")),
   });
 
-export const productsQuery = (opts: { search?: string; categoryId?: string | null } = {}) =>
+export const productsQuery = (opts: { search?: string | undefined; categoryId?: string | null | undefined } = {}) =>
   queryOptions({
     queryKey: ["products", opts.search ?? "", opts.categoryId ?? ""],
     queryFn: async () => {

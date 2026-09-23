@@ -1,8 +1,43 @@
-Need to install the following packages:
-tsc@2.0.4
-Ok to proceed? (y) 
-npm error code EPIPE
-npm error syscall read
-npm error errno -4047
-npm error read EPIPE
-npm error A complete log of this run can be found in: C:\Users\Jerian\AppData\Local\npm-cache\_logs\2026-09-23T22_08_34_815Z-debug-0.log
+src/components/AppShell.tsx(78,17): error TS2322: Type '{}' is not assignable to type 'true | ParamsReducerFn<RouterCore<Route<Register, any, "/", "/", string, "__root__", undefined, {}, { queryClient: QueryClient; }, AnyContext, AnyContext, ... 6 more ..., undefined>, "never", false, RouterHistory, Record<...>>, "SEARCH", string, any>'.
+src/hooks/useAuth.tsx(2,36): error TS2307: Cannot find module '@supabase/supabase-js' or its corresponding type declarations.
+src/hooks/useAuth.tsx(18,60): error TS7006: Parameter '_event' implicitly has an 'any' type.
+src/hooks/useAuth.tsx(18,68): error TS7006: Parameter 'next' implicitly has an 'any' type.
+src/hooks/useAuth.tsx(22,40): error TS7031: Binding element 'data' implicitly has an 'any' type.
+src/integrations/supabase/auth-middleware.ts(4,30): error TS2307: Cannot find module '@supabase/supabase-js' or its corresponding type declarations.
+src/integrations/supabase/client.server.ts(5,30): error TS2307: Cannot find module '@supabase/supabase-js' or its corresponding type declarations.
+src/integrations/supabase/client.ts(2,30): error TS2307: Cannot find module '@supabase/supabase-js' or its corresponding type declarations.
+src/routes/_authenticated/pedido.$id.tsx(15,76): error TS2375: Type '{ nuevo: true | undefined; }' is not assignable to type 'OrderDetailSearch' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'nuevo' are incompatible.
+    Type 'boolean | undefined' is not assignable to type 'boolean'.
+      Type 'undefined' is not assignable to type 'boolean'.
+src/routes/_authenticated/pedido.$id.tsx(16,19): error TS4111: Property 'nuevo' comes from an index signature, so it must be accessed with ['nuevo'].
+src/routes/_authenticated/pedido.$id.tsx(16,44): error TS4111: Property 'nuevo' comes from an index signature, so it must be accessed with ['nuevo'].
+src/routes/auth.tsx(14,80): error TS2375: Type '{ redirect: string | undefined; }' is not assignable to type '{ redirect?: string; }' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'redirect' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+src/routes/auth.tsx(15,29): error TS4111: Property 'redirect' comes from an index signature, so it must be accessed with ['redirect'].
+src/routes/auth.tsx(15,60): error TS4111: Property 'redirect' comes from an index signature, so it must be accessed with ['redirect'].
+src/routes/catalogo.tsx(16,72): error TS2375: Type '{ q: string | undefined; categoria: string | undefined; }' is not assignable to type 'CatalogSearch' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'q' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+src/routes/catalogo.tsx(17,22): error TS4111: Property 'q' comes from an index signature, so it must be accessed with ['q'].
+src/routes/catalogo.tsx(17,46): error TS4111: Property 'q' comes from an index signature, so it must be accessed with ['q'].
+src/routes/catalogo.tsx(18,30): error TS4111: Property 'categoria' comes from an index signature, so it must be accessed with ['categoria'].
+src/routes/catalogo.tsx(18,62): error TS4111: Property 'categoria' comes from an index signature, so it must be accessed with ['categoria'].
+src/routes/catalogo.tsx(42,19): error TS2379: Argument of type '{ search: string | undefined; categoryId: string | null; }' is not assignable to parameter of type '{ search?: string; categoryId?: string | null; }' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'search' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+src/routes/catalogo.tsx(46,16): error TS2322: Type '(prev: CatalogSearch) => { q: string | undefined; categoria?: string; }' is not assignable to type 'true | { q?: string; categoria?: string; } | ParamsReducerFn<RouterCore<Route<Register, any, "/", "/", string, "__root__", undefined, {}, { queryClient: QueryClient; }, AnyContext, ... 7 more ..., undefined>, "never", false, RouterHistory, Record<...>>, "SEARCH", "/catalogo", string | undefined>'.
+  Type '(prev: CatalogSearch) => { q: string | undefined; categoria?: string; }' is not assignable to type 'ParamsReducerFn<RouterCore<Route<Register, any, "/", "/", string, "__root__", undefined, {}, { queryClient: QueryClient; }, AnyContext, AnyContext, ... 6 more ..., undefined>, "never", false, RouterHistory, Record<...>>, "SEARCH", "/catalogo", string | undefined>'.
+    Call signature return types '{ q: string | undefined; categoria?: string; }' and '{ q?: string; categoria?: string; }' are incompatible.
+      The types of 'q' are incompatible between these types.
+        Type 'string | undefined' is not assignable to type 'string'.
+          Type 'undefined' is not assignable to type 'string'.
+src/routes/catalogo.tsx(72,37): error TS2322: Type '(prev: CatalogSearch) => { categoria: undefined; q?: string; }' is not assignable to type 'true | { q?: string; categoria?: string; } | ParamsReducerFn<RouterCore<Route<Register, any, "/", "/", string, "__root__", undefined, {}, { queryClient: QueryClient; }, AnyContext, ... 7 more ..., undefined>, "never", false, RouterHistory, Record<...>>, "SEARCH", "/catalogo", string | undefined>'.
+  Type '(prev: CatalogSearch) => { categoria: undefined; q?: string; }' is not assignable to type 'ParamsReducerFn<RouterCore<Route<Register, any, "/", "/", string, "__root__", undefined, {}, { queryClient: QueryClient; }, AnyContext, AnyContext, ... 6 more ..., undefined>, "never", false, RouterHistory, Record<...>>, "SEARCH", "/catalogo", string | undefined>'.
+    Call signature return types '{ categoria: undefined; q?: string; }' and '{ q?: string; categoria?: string; }' are incompatible.
+      The types of 'categoria' are incompatible between these types.
+        Type 'undefined' is not assignable to type 'string'.

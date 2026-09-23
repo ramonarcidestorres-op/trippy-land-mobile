@@ -75,7 +75,6 @@ export function AppShell({ children }: { children: ReactNode }) {
               <Link
                 key={to}
                 to={to as any}
-                search={{}}
                 className={cn(
                   "flex flex-1 flex-col items-center gap-1 py-2.5 text-[11px]",
                   active ? "text-primary" : "text-muted-foreground",

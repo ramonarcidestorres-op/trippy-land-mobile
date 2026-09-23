@@ -9,13 +9,13 @@ import { Input } from "@/components/ui/input";
 import { categoriesQuery, productsQuery } from "@/lib/queries";
 import { cn } from "@/lib/utils";
 
-type CatalogSearch = { q?: string; categoria?: string };
+type CatalogSearch = { q?: string | undefined; categoria?: string | undefined };
 
 export const Route = createFileRoute("/catalogo")({
   ssr: false,
   validateSearch: (search: Record<string, unknown>): CatalogSearch => ({
-    q: typeof search.q === "string" ? search.q : undefined,
-    categoria: typeof search.categoria === "string" ? search.categoria : undefined,
+    q: typeof search["q"] === "string" ? search["q"] : undefined,
+    categoria: typeof search["categoria"] === "string" ? search["categoria"] : undefined,
   }),
   head: () => ({
     meta: [

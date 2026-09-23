@@ -9,11 +9,11 @@ import { orderQuery } from "@/lib/queries";
 import { formatDate, formatPrice, ORDER_STATUSES, STATUS_LABELS } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
-type OrderDetailSearch = { nuevo?: boolean };
+type OrderDetailSearch = { nuevo?: boolean | undefined };
 
 export const Route = createFileRoute("/_authenticated/pedido/$id")({
   validateSearch: (search: Record<string, unknown>): OrderDetailSearch => ({
-    nuevo: search.nuevo === true || search.nuevo === "true" ? true : undefined,
+    nuevo: search["nuevo"] === true || search["nuevo"] === "true" ? true : undefined,
   }),
   head: () => ({
     meta: [
