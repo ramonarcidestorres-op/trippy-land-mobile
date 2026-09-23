@@ -10,13 +10,21 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as CatalogoRouteImport } from './routes/catalogo'
+import { Route as AuthenticatedCarritoRouteImport } from './routes/_authenticated/carrito'
+import { Route as AuthenticatedPedidosRouteImport } from './routes/_authenticated/pedidos'
 import { Route as ProductoIdRouteImport } from './routes/producto.$id'
+import { Route as AuthenticatedPedidoIdRouteImport } from './routes/_authenticated/pedido.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -29,41 +37,90 @@ const CatalogoRoute = CatalogoRouteImport.update({
   path: '/catalogo',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedCarritoRoute = AuthenticatedCarritoRouteImport.update({
+  id: '/carrito',
+  path: '/carrito',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedPedidosRoute = AuthenticatedPedidosRouteImport.update({
+  id: '/pedidos',
+  path: '/pedidos',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const ProductoIdRoute = ProductoIdRouteImport.update({
   id: '/producto/$id',
   path: '/producto/$id',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedPedidoIdRoute = AuthenticatedPedidoIdRouteImport.update({
+  id: '/pedido/$id',
+  path: '/pedido/$id',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/catalogo': typeof CatalogoRoute
+  '/carrito': typeof AuthenticatedCarritoRoute
+  '/pedidos': typeof AuthenticatedPedidosRoute
   '/producto/$id': typeof ProductoIdRoute
+  '/pedido/$id': typeof AuthenticatedPedidoIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/catalogo': typeof CatalogoRoute
+  '/carrito': typeof AuthenticatedCarritoRoute
+  '/pedidos': typeof AuthenticatedPedidosRoute
   '/producto/$id': typeof ProductoIdRoute
+  '/pedido/$id': typeof AuthenticatedPedidoIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/catalogo': typeof CatalogoRoute
+  '/_authenticated/carrito': typeof AuthenticatedCarritoRoute
+  '/_authenticated/pedidos': typeof AuthenticatedPedidosRoute
   '/producto/$id': typeof ProductoIdRoute
+  '/_authenticated/pedido/$id': typeof AuthenticatedPedidoIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/catalogo' | '/producto/$id'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/catalogo'
+    | '/carrito'
+    | '/pedidos'
+    | '/producto/$id'
+    | '/pedido/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/catalogo' | '/producto/$id'
-  id: '__root__' | '/' | '/auth' | '/catalogo' | '/producto/$id'
+  to:
+    | '/'
+    | '/auth'
+    | '/catalogo'
+    | '/carrito'
+    | '/pedidos'
+    | '/producto/$id'
+    | '/pedido/$id'
+  id:
+    | '__root__'
+    | '/'
+    | '/_authenticated'
+    | '/auth'
+    | '/catalogo'
+    | '/_authenticated/carrito'
+    | '/_authenticated/pedidos'
+    | '/producto/$id'
+    | '/_authenticated/pedido/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   CatalogoRoute: typeof CatalogoRoute
   ProductoIdRoute: typeof ProductoIdRoute
@@ -76,6 +133,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -92,6 +156,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CatalogoRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/carrito': {
+      id: '/_authenticated/carrito'
+      path: '/carrito'
+      fullPath: '/carrito'
+      preLoaderRoute: typeof AuthenticatedCarritoRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/pedidos': {
+      id: '/_authenticated/pedidos'
+      path: '/pedidos'
+      fullPath: '/pedidos'
+      preLoaderRoute: typeof AuthenticatedPedidosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/producto/$id': {
       id: '/producto/$id'
       path: '/producto/$id'
@@ -99,11 +177,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProductoIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/pedido/$id': {
+      id: '/_authenticated/pedido/$id'
+      path: '/pedido/$id'
+      fullPath: '/pedido/$id'
+      preLoaderRoute: typeof AuthenticatedPedidoIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedCarritoRoute: typeof AuthenticatedCarritoRoute
+  AuthenticatedPedidosRoute: typeof AuthenticatedPedidosRoute
+  AuthenticatedPedidoIdRoute: typeof AuthenticatedPedidoIdRoute
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedCarritoRoute: AuthenticatedCarritoRoute,
+  AuthenticatedPedidosRoute: AuthenticatedPedidosRoute,
+  AuthenticatedPedidoIdRoute: AuthenticatedPedidoIdRoute,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   CatalogoRoute: CatalogoRoute,
   ProductoIdRoute: ProductoIdRoute,
