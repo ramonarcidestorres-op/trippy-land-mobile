@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { Search, Box, Droplets, Leaf, Pill, Flame, PlusSquare } from "lucide-react";
+import { Search, Box, Droplets, Leaf, Pill, Flame, Plus } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { ProductCard, ProductCardSkeleton } from "@/components/ProductCard";
 import { EmptyState, ErrorState } from "@/components/States";
@@ -30,7 +30,7 @@ function getCategoryIcon(slug: string) {
     case "pre-rolls":
       return <Flame className="size-5 opacity-70" />;
     case "farmacia":
-      return <PlusSquare className="size-5 opacity-70" />;
+      return <Plus className="size-5 opacity-70" />;
     case "coca":
       return <Droplets className="size-5 opacity-70" />;
     default:
@@ -55,8 +55,11 @@ function HomePage() {
               className="h-full max-h-full w-auto object-contain"
               onError={(e) => {
                 // Fallback to text if image is not present yet
-                (e.target as HTMLImageElement).style.display = 'none';
-                (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
+                const target = e.target as HTMLImageElement;
+                target.style.display = 'none';
+                if (target.nextElementSibling) {
+                  (target.nextElementSibling as HTMLElement).classList.remove('hidden');
+                }
               }}
             />
             <div className="hidden flex-col items-center">
