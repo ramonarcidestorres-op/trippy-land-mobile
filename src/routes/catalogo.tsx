@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { Search, Box, Droplets, Leaf, Pill, Flame, Plus } from "lucide-react";
+import { Search, Box, Droplets, Leaf, Pill, Flame, Cross } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { ProductCard, ProductCardSkeleton } from "@/components/ProductCard";
 import { EmptyState, ErrorState } from "@/components/States";
@@ -36,7 +36,7 @@ function getCategoryIcon(slug: string) {
     case "pre-rolls":
       return <Flame className="size-4" />;
     case "farmacia":
-      return <Plus className="size-4" />;
+      return <Cross className="size-4" />;
     case "coca":
       return <Droplets className="size-4" />;
     default:
