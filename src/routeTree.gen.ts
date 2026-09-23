@@ -14,6 +14,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as CatalogoRouteImport } from './routes/catalogo'
 import { Route as AuthenticatedCarritoRouteImport } from './routes/_authenticated/carrito'
+import { Route as AuthenticatedCheckoutRouteImport } from './routes/_authenticated/checkout'
 import { Route as AuthenticatedPedidosRouteImport } from './routes/_authenticated/pedidos'
 import { Route as ProductoIdRouteImport } from './routes/producto.$id'
 import { Route as AuthenticatedPedidoIdRouteImport } from './routes/_authenticated/pedido.$id'
@@ -42,6 +43,11 @@ const AuthenticatedCarritoRoute = AuthenticatedCarritoRouteImport.update({
   path: '/carrito',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedCheckoutRoute = AuthenticatedCheckoutRouteImport.update({
+  id: '/checkout',
+  path: '/checkout',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedPedidosRoute = AuthenticatedPedidosRouteImport.update({
   id: '/pedidos',
   path: '/pedidos',
@@ -63,6 +69,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/catalogo': typeof CatalogoRoute
   '/carrito': typeof AuthenticatedCarritoRoute
+  '/checkout': typeof AuthenticatedCheckoutRoute
   '/pedidos': typeof AuthenticatedPedidosRoute
   '/producto/$id': typeof ProductoIdRoute
   '/pedido/$id': typeof AuthenticatedPedidoIdRoute
@@ -72,6 +79,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/catalogo': typeof CatalogoRoute
   '/carrito': typeof AuthenticatedCarritoRoute
+  '/checkout': typeof AuthenticatedCheckoutRoute
   '/pedidos': typeof AuthenticatedPedidosRoute
   '/producto/$id': typeof ProductoIdRoute
   '/pedido/$id': typeof AuthenticatedPedidoIdRoute
@@ -83,6 +91,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/catalogo': typeof CatalogoRoute
   '/_authenticated/carrito': typeof AuthenticatedCarritoRoute
+  '/_authenticated/checkout': typeof AuthenticatedCheckoutRoute
   '/_authenticated/pedidos': typeof AuthenticatedPedidosRoute
   '/producto/$id': typeof ProductoIdRoute
   '/_authenticated/pedido/$id': typeof AuthenticatedPedidoIdRoute
@@ -94,6 +103,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/catalogo'
     | '/carrito'
+    | '/checkout'
     | '/pedidos'
     | '/producto/$id'
     | '/pedido/$id'
@@ -103,6 +113,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/catalogo'
     | '/carrito'
+    | '/checkout'
     | '/pedidos'
     | '/producto/$id'
     | '/pedido/$id'
@@ -113,6 +124,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/catalogo'
     | '/_authenticated/carrito'
+    | '/_authenticated/checkout'
     | '/_authenticated/pedidos'
     | '/producto/$id'
     | '/_authenticated/pedido/$id'
@@ -163,6 +175,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCarritoRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/checkout': {
+      id: '/_authenticated/checkout'
+      path: '/checkout'
+      fullPath: '/checkout'
+      preLoaderRoute: typeof AuthenticatedCheckoutRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/pedidos': {
       id: '/_authenticated/pedidos'
       path: '/pedidos'
@@ -189,12 +208,14 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedCarritoRoute: typeof AuthenticatedCarritoRoute
+  AuthenticatedCheckoutRoute: typeof AuthenticatedCheckoutRoute
   AuthenticatedPedidosRoute: typeof AuthenticatedPedidosRoute
   AuthenticatedPedidoIdRoute: typeof AuthenticatedPedidoIdRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCarritoRoute: AuthenticatedCarritoRoute,
+  AuthenticatedCheckoutRoute: AuthenticatedCheckoutRoute,
   AuthenticatedPedidosRoute: AuthenticatedPedidosRoute,
   AuthenticatedPedidoIdRoute: AuthenticatedPedidoIdRoute,
 }
