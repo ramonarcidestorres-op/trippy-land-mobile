@@ -48,7 +48,6 @@ function OrdersPage() {
               <Link
                 to="/pedido/$id"
                 params={{ id: order.id }}
-                search={{}}
                 className="flex items-center justify-between rounded-2xl border border-border/60 bg-card p-4 transition-colors hover:border-primary/60"
               >
                 <div className="min-w-0">
