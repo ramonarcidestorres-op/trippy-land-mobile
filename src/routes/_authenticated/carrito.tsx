@@ -65,7 +65,7 @@ function CartPage() {
             description="Agrega dulces desde el catálogo y vuelve aquí."
             action={
               <Button asChild variant="secondary">
-                <Link to="/catalogo">Ir al catálogo</Link>
+                <Link to="/catalogo" search={{}}>Ir al catálogo</Link>
               </Button>
             }
           />

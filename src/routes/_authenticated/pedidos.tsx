@@ -72,7 +72,7 @@ function OrdersPage() {
             description="Cuando hagas tu primer pedido aparecerá aquí con su seguimiento."
             action={
               <Button asChild variant="secondary">
-                <Link to="/catalogo">Explorar catálogo</Link>
+                <Link to="/catalogo" search={{}}>Explorar catálogo</Link>
               </Button>
             }
           />

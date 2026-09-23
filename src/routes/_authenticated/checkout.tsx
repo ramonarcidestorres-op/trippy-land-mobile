@@ -153,7 +153,7 @@ function CheckoutPage() {
           description="Agrega productos al carrito para continuar con el checkout."
           action={
             <Button asChild variant="secondary">
-              <Link to="/catalogo">Ir al catálogo</Link>
+              <Link to="/catalogo" search={{}}>Ir al catálogo</Link>
             </Button>
           }
         />
