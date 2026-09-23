@@ -37,7 +37,7 @@ function AuthPage() {
   const { redirect } = Route.useSearch();
 
   useEffect(() => {
-    if (!loading && user) navigate({ to: (redirect ?? "/") as "/" });
+    if (!loading && user) navigate({ to: (redirect ?? "/") as "/", search: {} });
   }, [user, loading, navigate, redirect]);
 
   return (
