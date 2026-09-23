@@ -13,7 +13,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { cartQuery, cartSubtotal, deliveryFeesQuery } from "@/lib/queries";
 import { supabase } from "@/integrations/supabase/client";
 import { formatPrice } from "@/lib/format";
-import { addressStore, composeAddress, type SavedAddress } from "@/lib/address";
+import { addressStore, composeAddress } from "@/lib/address";
+import { AddressManager } from "@/components/AddressManager";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/checkout")({
@@ -37,10 +38,7 @@ function CheckoutPage() {
   const queryClient = useQueryClient();
   const { data, isLoading, error, refetch } = useQuery(cartQuery(user?.id));
 
-  const [addresses, setAddresses] = useState<SavedAddress[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ label: "Casa", address: "", references: "", notes: "" });
   const [deliveryType, setDeliveryType] = useState<"normal" | "fast">("normal");
   const [placing, setPlacing] = useState(false);
   const lock = useRef(false);
@@ -49,10 +47,7 @@ function CheckoutPage() {
 
   useEffect(() => {
     const sync = () => {
-      const list = addressStore.list();
-      setAddresses(list);
       setSelectedId(addressStore.selected()?.id ?? null);
-      setShowForm(list.length === 0);
     };
     sync();
     window.addEventListener("tls-address-change", sync);
@@ -62,27 +57,12 @@ function CheckoutPage() {
   const rows = data ?? [];
   const subtotal = cartSubtotal(rows);
   const unavailable = rows.filter((r) => r.products?.is_available === false);
-  const selected = addresses.find((a) => a.id === selectedId) ?? null;
+  const selected = addressStore.list().find((a) => a.id === selectedId) ?? null;
   const applicableFee = (fees ?? []).find(
     (f) => subtotal >= f.min_subtotal && (f.max_subtotal === null || subtotal <= f.max_subtotal)
   );
   const deliveryCost = applicableFee ? applicableFee[`${deliveryType}_fee`] : 0;
   const total = subtotal + deliveryCost;
-
-  function saveAddress() {
-    if (form.address.trim().length < 6) {
-      toast.error("Escribe una dirección completa para la entrega.");
-      return;
-    }
-    addressStore.save({
-      label: form.label.trim() || "Mi dirección",
-      address: form.address.trim(),
-      references: form.references.trim(),
-      notes: form.notes.trim(),
-    });
-    setForm({ label: "Casa", address: "", references: "", notes: "" });
-    setShowForm(false);
-  }
 
   async function placeOrder() {
     if (lock.current || !user) return;
@@ -158,88 +138,11 @@ function CheckoutPage() {
       <h1 className="text-xl font-bold">Checkout</h1>
 
       <section className="mt-4 rounded-2xl border border-border/60 bg-card p-4">
-        <h2 className="flex items-center gap-2 text-sm font-semibold">
+        <h2 className="flex items-center gap-2 text-sm font-semibold mb-3">
           <MapPin className="size-4 text-candy-lime" /> Dirección de entrega
         </h2>
-
-        {addresses.length > 0 && (
-          <ul className="mt-3 space-y-2">
-            {addresses.map((a) => (
-              <li key={a.id}>
-                <button
-                  onClick={() => addressStore.select(a.id)}
-                  className={cn(
-                    "w-full rounded-xl border p-3 text-left",
-                    a.id === selectedId
-                      ? "border-primary bg-primary/10"
-                      : "border-border bg-surface",
-                  )}
-                >
-                  <p className="text-sm font-medium">{a.label}</p>
-                  <p className="text-xs text-muted-foreground">{a.address}</p>
-                  {a.references && (
-                    <p className="text-xs text-muted-foreground">Ref: {a.references}</p>
-                  )}
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-
-        {showForm ? (
-          <div className="mt-3 space-y-3">
-            <div className="space-y-1.5">
-              <Label htmlFor="label">Nombre de la dirección</Label>
-              <Input
-                id="label"
-                value={form.label}
-                onChange={(e) => setForm({ ...form, label: e.target.value })}
-                placeholder="Casa, trabajo…"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="address">Dirección</Label>
-              <Input
-                id="address"
-                value={form.address}
-                onChange={(e) => setForm({ ...form, address: e.target.value })}
-                placeholder="Calle 00 #00-00, barrio, ciudad"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="references">Referencias</Label>
-              <Input
-                id="references"
-                value={form.references}
-                onChange={(e) => setForm({ ...form, references: e.target.value })}
-                placeholder="Torre 2, apto 301, portería"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="notes">Indicaciones para el domiciliario</Label>
-              <Textarea
-                id="notes"
-                value={form.notes}
-                onChange={(e) => setForm({ ...form, notes: e.target.value })}
-                placeholder="Llamar al llegar, no timbrar…"
-              />
-            </div>
-            <div className="flex gap-2">
-              <Button onClick={saveAddress} className="flex-1">
-                Guardar dirección
-              </Button>
-              {addresses.length > 0 && (
-                <Button variant="ghost" onClick={() => setShowForm(false)}>
-                  Cancelar
-                </Button>
-              )}
-            </div>
-          </div>
-        ) : (
-          <Button variant="secondary" className="mt-3 w-full" onClick={() => setShowForm(true)}>
-            <Plus className="mr-1 size-4" /> Agregar otra dirección
-          </Button>
-        )}
+        
+        <AddressManager />
       </section>
 
       <section className="mt-4 rounded-2xl border border-border/60 bg-card p-4">

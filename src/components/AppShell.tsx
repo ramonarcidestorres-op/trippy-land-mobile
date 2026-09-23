@@ -19,7 +19,7 @@ const NAV = [
   { to: "/", label: "Inicio", icon: Home },
   { to: "/catalogo", label: "Catálogo", icon: LayoutGrid },
   { to: "/carrito", label: "Carrito", icon: ShoppingCart },
-  { to: "/pedidos", label: "Pedidos", icon: Receipt },
+  { to: "/pedidos", label: "Mis compras", icon: Receipt },
 ] as const;
 
 function useSelectedAddress() {
@@ -110,16 +110,8 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       <main className="mx-auto max-w-5xl px-4 pb-28 pt-4 md:pb-12">{children}</main>
 
-      <nav className="fixed inset-x-0 bottom-0 z-30 md:hidden">
-        <div 
-          className="flex h-20 items-center justify-around rounded-t-[2.5rem] px-2 shadow-[0_-8px_32px_rgba(0,0,0,0.6)] backdrop-blur-3xl border-t"
-          style={{ 
-            backgroundColor: "rgba(20, 20, 20, 0.45)", 
-            borderColor: "rgba(255, 255, 255, 0.08)",
-            WebkitBackdropFilter: "blur(24px) saturate(180%)",
-            backdropFilter: "blur(24px) saturate(180%)"
-          }}
-        >
+      <nav className="fixed inset-x-0 bottom-0 z-30 md:hidden bg-[#121212] border-t border-border/20">
+        <div className="flex h-16 items-center justify-around px-2">
           {NAV.map(({ to, label, icon: Icon }) => {
             const active = to === "/" ? pathname === "/" : pathname.startsWith(to);
             return (
@@ -127,28 +119,17 @@ export function AppShell({ children }: { children: ReactNode }) {
                 key={to}
                 to={to as any}
                 className={cn(
-                  "relative flex flex-col items-center justify-center gap-1 w-16 h-full transition-all duration-400 ease-out",
-                  active ? "" : "active:scale-95"
+                  "relative flex flex-col items-center justify-center gap-1 w-16 h-full transition-colors",
+                  active ? "text-primary" : "text-muted-foreground hover:text-foreground"
                 )}
               >
-                <div className={cn(
-                  "grid size-10 place-items-center rounded-full transition-all duration-400",
-                  active ? "bg-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.15)] scale-110" : ""
-                )}>
-                  <Icon
-                    strokeWidth={active ? 2 : 1.5}
-                    className={cn(
-                      "size-[1.15rem] transition-all duration-400 ease-out",
-                      active ? "text-candy-lime drop-shadow-[0_0_8px_rgba(204,255,0,0.4)]" : "text-white/60"
-                    )}
-                  />
-                </div>
-                <span className={cn(
-                  "text-[10px] font-medium transition-all duration-400",
-                  active ? "text-candy-lime opacity-100" : "text-white/60 opacity-80"
-                )}>
-                  {label}
-                </span>
+                <Icon
+                  strokeWidth={active ? 2.5 : 2}
+                  className={cn(
+                    "size-5 transition-transform",
+                    active ? "scale-110" : ""
+                  )}
+                />
               </Link>
             );
           })}

@@ -1,8 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { Candy, Search, Sparkles } from "lucide-react";
+import { Candy, Search, ChevronDown } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
+import { AddressManager } from "@/components/AddressManager";
 import { ProductCard, ProductCardSkeleton } from "@/components/ProductCard";
 import { EmptyState, ErrorState } from "@/components/States";
 import { Input } from "@/components/ui/input";
@@ -34,58 +35,78 @@ function HomePage() {
 
   return (
     <AppShell>
-      <section className="relative overflow-hidden rounded-3xl border border-border/60 bg-card p-5">
-        <div className="pointer-events-none absolute -right-10 -top-10 size-40 rounded-full candy-gradient opacity-25 blur-2xl" />
-        <p className="inline-flex items-center gap-1.5 rounded-full bg-surface-2 px-3 py-1 text-[11px] text-candy-lime">
-          <Sparkles className="size-3" /> Entrega a domicilio · Pago en efectivo
-        </p>
-        <h1 className="mt-3 text-2xl font-bold leading-tight">
-          Dulces que <span className="candy-text">viajan</span> hasta tu puerta
-        </h1>
-        <div className="relative mt-4">
-          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Buscar dulces…"
-            className="h-11 rounded-full bg-surface-2 pl-9"
-          />
-        </div>
+      <div className="mb-6">
+        <AddressManager />
+      </div>
+
+      {/* Search Bar */}
+      <div className="relative mb-8">
+        <Search className="absolute left-4 top-1/2 size-5 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search..."
+          className="h-14 rounded-2xl bg-[#1a1a1a] border-none pl-12 text-base text-foreground placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-primary/50"
+        />
         {search.trim() && (
           <Link
             to="/catalogo"
             search={{ q: search.trim() }}
-            className="mt-3 inline-block text-xs text-primary underline underline-offset-4"
+            className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-primary font-medium"
           >
-            Ver resultados para “{search.trim()}” en el catálogo
+            Go
           </Link>
         )}
-      </section>
+      </div>
 
-      <section className="mt-7">
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-          Categorías
-        </h2>
+      {/* Categories */}
+      <section className="mb-8">
         {categories.isLoading ? (
-          <div className="flex gap-2">
-            {[0, 1, 2].map((i) => (
-              <div key={i} className="h-9 w-24 animate-pulse rounded-full bg-surface-2" />
+          <div className="flex gap-4 overflow-x-auto pb-4 hide-scrollbar">
+            {[0, 1, 2, 3].map((i) => (
+              <div key={i} className="h-[120px] w-[90px] shrink-0 animate-pulse rounded-[24px] bg-[#1a1a1a]" />
             ))}
           </div>
         ) : categories.error ? (
           <ErrorState error={categories.error} onRetry={() => categories.refetch()} />
         ) : categories.data?.length ? (
-          <div className="flex flex-wrap gap-2">
-            {categories.data.map((c) => (
-              <Link
-                key={c.id}
-                to="/catalogo"
-                search={{ categoria: c.slug }}
-                className="rounded-full border border-border bg-surface px-4 py-2 text-sm transition-colors hover:border-primary hover:text-primary"
-              >
-                {c.name}
-              </Link>
-            ))}
+          <div className="flex gap-4 overflow-x-auto pb-4 hide-scrollbar snap-x snap-mandatory">
+            {categories.data.map((c, index) => {
+              // Get an image based on the slug or name
+              let imgUrl = "https://images.unsplash.com/photo-1550258987-190a2d41a8ba?w=400&q=80";
+              const s = c.slug.toLowerCase();
+              if (s.includes("gomi")) imgUrl = "https://images.unsplash.com/photo-1582058091505-f87a2e55a40f?w=400&q=80";
+              else if (s.includes("choco")) imgUrl = "https://images.unsplash.com/photo-1606312619070-d48b4c652a52?w=400&q=80";
+              else if (s.includes("snack") || s.includes("sal")) imgUrl = "https://images.unsplash.com/photo-1599490659213-e2b9527bd087?w=400&q=80";
+              else if (s.includes("dulce")) imgUrl = "https://images.unsplash.com/photo-1575224300306-1b8da36134ec?w=400&q=80";
+
+              // Matte white active state instead of green
+              const isActive = index === 1; // Just simulating an active state for visual demo since Home doesn't actually have a selected category state by default
+
+              return (
+                <Link
+                  key={c.id}
+                  to="/catalogo"
+                  search={{ categoria: c.slug }}
+                  className={`group relative flex w-[90px] shrink-0 snap-center flex-col items-center justify-between overflow-hidden rounded-[32px] p-2 transition-all duration-300 ${
+                    isActive ? "bg-[#e5e5e5] text-black" : "bg-[#1a1a1a] text-white"
+                  }`}
+                  style={{ minHeight: "130px" }}
+                >
+                  <div className="relative aspect-square w-full overflow-hidden rounded-full bg-surface-2 shadow-sm">
+                    <img src={imgUrl} alt={c.name} className="size-full object-cover" />
+                  </div>
+                  <div className="mb-2 mt-3 text-center">
+                    <p className={`text-[13px] font-bold leading-tight ${isActive ? "text-black" : "text-white"}`}>
+                      {c.name}
+                    </p>
+                    <p className={`text-[10px] ${isActive ? "text-black/60" : "text-white/50"}`}>
+                      Dulces
+                    </p>
+                  </div>
+                </Link>
+              );
+            })}
           </div>
         ) : (
           <p className="text-sm text-muted-foreground">
@@ -94,12 +115,15 @@ function HomePage() {
         )}
       </section>
 
-      <section className="mt-7">
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-            Destacados
-          </h2>
-          <Link to="/catalogo" search={{}} className="text-xs text-primary">
+      <section className="mb-8">
+        <div className="mb-4 flex items-center justify-between">
+          <div className="flex items-center gap-1 cursor-pointer">
+            <h2 className="text-xl font-medium text-foreground">
+              Popular Dishes
+            </h2>
+            <ChevronDown className="size-5 text-muted-foreground mt-0.5" />
+          </div>
+          <Link to="/catalogo" search={{}} className="text-xs text-primary font-medium">
             Ver todo
           </Link>
         </div>
