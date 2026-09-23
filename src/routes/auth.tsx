@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate, useRouterState } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Logo } from "@/components/Logo";
@@ -34,12 +34,10 @@ export const Route = createFileRoute("/auth")({
 function AuthPage() {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
-  const redirect = useRouterState({
-    select: (s) => (s.location.search as { redirect?: string }).redirect,
-  });
+  const { redirect } = Route.useSearch();
 
   useEffect(() => {
-    if (!loading && user) navigate({ to: redirect ?? "/" });
+    if (!loading && user) navigate({ to: (redirect ?? "/") as "/" });
   }, [user, loading, navigate, redirect]);
 
   return (
