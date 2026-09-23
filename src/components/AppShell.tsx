@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Store, Compass, ShoppingBasket, Package, MapPin, ShoppingCart, User } from "lucide-react";
+import { Home, LayoutGrid, ShoppingCart, Receipt, MapPin, User } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Logo } from "@/components/Logo";
@@ -16,10 +16,10 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 
 const NAV = [
-  { to: "/", label: "Inicio", icon: Store },
-  { to: "/catalogo", label: "Catálogo", icon: Compass },
-  { to: "/carrito", label: "Carrito", icon: ShoppingBasket },
-  { to: "/pedidos", label: "Pedidos", icon: Package },
+  { to: "/", label: "Inicio", icon: Home },
+  { to: "/catalogo", label: "Catálogo", icon: LayoutGrid },
+  { to: "/carrito", label: "Carrito", icon: ShoppingCart },
+  { to: "/pedidos", label: "Pedidos", icon: Receipt },
 ] as const;
 
 function useSelectedAddress() {
@@ -110,9 +110,9 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       <main className="mx-auto max-w-5xl px-4 pb-28 pt-4 md:pb-12">{children}</main>
 
-      <nav className="fixed inset-x-0 bottom-6 z-30 mx-auto px-4 md:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-30 md:hidden">
         <div 
-          className="flex h-16 items-center justify-around rounded-[2.5rem] px-2 shadow-[0_8px_32px_rgba(0,0,0,0.6)] backdrop-blur-3xl border"
+          className="flex h-20 items-center justify-around rounded-t-[2.5rem] px-2 shadow-[0_-8px_32px_rgba(0,0,0,0.6)] backdrop-blur-3xl border-t"
           style={{ 
             backgroundColor: "rgba(20, 20, 20, 0.45)", 
             borderColor: "rgba(255, 255, 255, 0.08)",
@@ -120,24 +120,35 @@ export function AppShell({ children }: { children: ReactNode }) {
             backdropFilter: "blur(24px) saturate(180%)"
           }}
         >
-          {NAV.map(({ to, icon: Icon }) => {
+          {NAV.map(({ to, label, icon: Icon }) => {
             const active = to === "/" ? pathname === "/" : pathname.startsWith(to);
             return (
               <Link
                 key={to}
                 to={to as any}
                 className={cn(
-                  "relative grid size-12 place-items-center rounded-full transition-all duration-400 ease-out",
-                  active ? "bg-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.15)]" : "hover:bg-white/5 active:scale-95"
+                  "relative flex flex-col items-center justify-center gap-1 w-16 h-full transition-all duration-400 ease-out",
+                  active ? "" : "active:scale-95"
                 )}
               >
-                <Icon
-                  strokeWidth={active ? 1.75 : 1.25}
-                  className={cn(
-                    "size-5 transition-all duration-400 ease-out",
-                    active ? "text-candy-lime scale-110 drop-shadow-[0_0_8px_rgba(204,255,0,0.4)]" : "text-white/60"
-                  )}
-                />
+                <div className={cn(
+                  "grid size-10 place-items-center rounded-full transition-all duration-400",
+                  active ? "bg-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.15)] scale-110" : ""
+                )}>
+                  <Icon
+                    strokeWidth={active ? 2 : 1.5}
+                    className={cn(
+                      "size-[1.15rem] transition-all duration-400 ease-out",
+                      active ? "text-candy-lime drop-shadow-[0_0_8px_rgba(204,255,0,0.4)]" : "text-white/60"
+                    )}
+                  />
+                </div>
+                <span className={cn(
+                  "text-[10px] font-medium transition-all duration-400",
+                  active ? "text-candy-lime opacity-100" : "text-white/60 opacity-80"
+                )}>
+                  {label}
+                </span>
               </Link>
             );
           })}
