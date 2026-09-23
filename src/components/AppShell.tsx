@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Home, LayoutGrid, ShoppingBag, Receipt, MapPin, ShoppingCart } from "lucide-react";
+import { Home, LayoutGrid, ShoppingBag, Receipt, MapPin, ShoppingCart, User } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Logo } from "@/components/Logo";
@@ -7,6 +7,13 @@ import { useAuth } from "@/hooks/useAuth";
 import { cartQuery } from "@/lib/queries";
 import { addressStore, type SavedAddress } from "@/lib/address";
 import { cn } from "@/lib/utils";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { supabase } from "@/integrations/supabase/client";
 
 const NAV = [
   { to: "/", label: "Inicio", icon: Home },
@@ -62,6 +69,35 @@ export function AppShell({ children }: { children: ReactNode }) {
               </span>
             )}
           </Link>
+          {user ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger className="relative grid size-10 shrink-0 place-items-center rounded-full bg-surface-2 outline-none">
+                <User className="size-5 text-muted-foreground" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48 border-border bg-surface-2 shadow-xl">
+                <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground truncate">
+                  {user.user_metadata?.full_name || user.email}
+                </div>
+                <DropdownMenuItem
+                  onClick={async () => {
+                    await supabase.auth.signOut();
+                    window.location.href = "/auth";
+                  }}
+                  className="cursor-pointer text-red-400 focus:bg-red-500/10 focus:text-red-400"
+                >
+                  Cerrar sesión
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <Link
+              to="/auth"
+              className="relative grid size-10 shrink-0 place-items-center rounded-full bg-surface-2"
+              aria-label="Entrar"
+            >
+              <User className="size-5 text-muted-foreground" />
+            </Link>
+          )}
         </div>
       </header>
 
