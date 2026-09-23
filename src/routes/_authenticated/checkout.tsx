@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/hooks/useAuth";
-import { cartQuery, cartSubtotal } from "@/lib/queries";
+import { cartQuery, cartSubtotal, deliveryFeesQuery } from "@/lib/queries";
 import { supabase } from "@/integrations/supabase/client";
 import { formatPrice } from "@/lib/format";
 import { addressStore, composeAddress, type SavedAddress } from "@/lib/address";
@@ -41,8 +41,11 @@ function CheckoutPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ label: "Casa", address: "", references: "", notes: "" });
+  const [deliveryType, setDeliveryType] = useState<"normal" | "fast">("normal");
   const [placing, setPlacing] = useState(false);
   const lock = useRef(false);
+
+  const { data: fees } = useQuery(deliveryFeesQuery());
 
   useEffect(() => {
     const sync = () => {
@@ -60,6 +63,11 @@ function CheckoutPage() {
   const subtotal = cartSubtotal(rows);
   const unavailable = rows.filter((r) => r.products?.is_available === false);
   const selected = addresses.find((a) => a.id === selectedId) ?? null;
+  const applicableFee = (fees ?? []).find(
+    (f) => subtotal >= f.min_subtotal && (f.max_subtotal === null || subtotal <= f.max_subtotal)
+  );
+  const deliveryCost = applicableFee ? applicableFee[`${deliveryType}_fee`] : 0;
+  const total = subtotal + deliveryCost;
 
   function saveAddress() {
     if (form.address.trim().length < 6) {
@@ -90,34 +98,18 @@ function CheckoutPage() {
     lock.current = true;
     setPlacing(true);
     try {
-      const { data: order, error: orderError } = await supabase
-        .from("orders")
-        .insert({
-          user_id: user.id,
-          status: "pending",
-          total: subtotal,
-          delivery_address: composeAddress(selected),
-          delivery_method: "delivery",
-          payment_method: "cash",
-        })
-        .select("id")
-        .single();
-      if (orderError || !order) throw new Error(orderError?.message ?? "No se creó el pedido");
-
-      const items = rows.map((r) => ({
-        order_id: order.id,
-        product_id: r.product_id,
-        quantity: r.quantity,
-        price_at_time: Number(r.products?.price ?? 0),
-      }));
-      const { error: itemsError } = await supabase.from("order_items").insert(items);
-      if (itemsError) throw new Error(itemsError.message);
+      const { data: orderId, error: rpcError } = await supabase.rpc("place_order", {
+        p_delivery_address: composeAddress(selected),
+        p_delivery_type: deliveryType,
+        p_payment_method: "cash",
+      });
+      if (rpcError || !orderId) throw new Error(rpcError?.message ?? "No se creó el pedido");
 
       await supabase.from("cart_items").delete().eq("user_id", user.id);
       await queryClient.invalidateQueries({ queryKey: ["cart"] });
       await queryClient.invalidateQueries({ queryKey: ["orders"] });
 
-      navigate({ to: "/pedido/$id", params: { id: order.id }, search: { nuevo: true } });
+      navigate({ to: "/pedido/$id", params: { id: orderId }, search: { nuevo: true } });
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "No pudimos crear tu pedido");
       lock.current = false;
@@ -251,6 +243,47 @@ function CheckoutPage() {
       </section>
 
       <section className="mt-4 rounded-2xl border border-border/60 bg-card p-4">
+        <h2 className="text-sm font-semibold">Tipo de entrega</h2>
+        <div className="mt-3 grid grid-cols-2 gap-3">
+          <button
+            onClick={() => setDeliveryType("normal")}
+            className={cn(
+              "flex flex-col items-center justify-center rounded-xl border p-3 text-center transition-colors",
+              deliveryType === "normal"
+                ? "border-primary bg-primary/10"
+                : "border-border bg-surface hover:bg-surface-2",
+            )}
+          >
+            <span className="font-semibold text-sm">Normal</span>
+            <span className="text-[11px] text-muted-foreground mt-0.5">~40 min</span>
+            {applicableFee && (
+              <span className="mt-1 font-bold text-primary">{formatPrice(applicableFee.normal_fee)}</span>
+            )}
+          </button>
+          <button
+            onClick={() => setDeliveryType("fast")}
+            className={cn(
+              "flex flex-col items-center justify-center rounded-xl border p-3 text-center transition-colors",
+              deliveryType === "fast"
+                ? "border-primary bg-primary/10"
+                : "border-border bg-surface hover:bg-surface-2",
+            )}
+          >
+            <span className="font-semibold text-sm">Rápida 🚀</span>
+            <span className="text-[11px] text-muted-foreground mt-0.5">~20 min</span>
+            {applicableFee && (
+              <span className="mt-1 font-bold text-primary">{formatPrice(applicableFee.fast_fee)}</span>
+            )}
+          </button>
+        </div>
+        {!applicableFee && (
+          <p className="mt-3 text-xs text-destructive">
+            No se encontraron tarifas configuradas para este subtotal.
+          </p>
+        )}
+      </section>
+
+      <section className="mt-4 rounded-2xl border border-border/60 bg-card p-4">
         <h2 className="text-sm font-semibold">Resumen</h2>
         <ul className="mt-3 space-y-2 text-sm">
           {rows.map((r) => (
@@ -269,11 +302,11 @@ function CheckoutPage() {
           </div>
           <div className="flex items-center justify-between">
             <span className="text-muted-foreground">Domicilio</span>
-            <span className="text-xs text-muted-foreground">Se confirma con la tienda</span>
+            <span>{applicableFee ? formatPrice(deliveryCost) : "..."}</span>
           </div>
           <div className="flex items-center justify-between pt-1 text-base font-bold">
             <span>Total</span>
-            <span className="candy-text">{formatPrice(subtotal)}</span>
+            <span className="candy-text">{formatPrice(total)}</span>
           </div>
         </div>
       </section>
@@ -295,9 +328,9 @@ function CheckoutPage() {
       <Button
         className="mt-5 h-12 w-full candy-gradient text-base font-semibold text-primary-foreground"
         onClick={placeOrder}
-        disabled={placing || unavailable.length > 0}
+        disabled={placing || unavailable.length > 0 || !applicableFee}
       >
-        {placing ? "Creando pedido…" : `Confirmar pedido · ${formatPrice(subtotal)}`}
+        {placing ? "Creando pedido…" : `Confirmar pedido · ${formatPrice(total)}`}
       </Button>
     </AppShell>
   );

@@ -70,6 +70,33 @@ export type Database = {
         }
         Relationships: []
       }
+      delivery_fees: {
+        Row: {
+          created_at: string | null
+          fast_fee: number
+          id: string
+          max_subtotal: number | null
+          min_subtotal: number
+          normal_fee: number
+        }
+        Insert: {
+          created_at?: string | null
+          fast_fee: number
+          id?: string
+          max_subtotal?: number | null
+          min_subtotal: number
+          normal_fee: number
+        }
+        Update: {
+          created_at?: string | null
+          fast_fee?: number
+          id?: string
+          max_subtotal?: number | null
+          min_subtotal?: number
+          normal_fee?: number
+        }
+        Relationships: []
+      }
       favorites: {
         Row: {
           created_at: string
@@ -95,6 +122,35 @@ export type Database = {
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      order_status_history: {
+        Row: {
+          created_at: string | null
+          id: string
+          order_id: string
+          status: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          order_id: string
+          status: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          order_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_status_history_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
             referencedColumns: ["id"]
           },
         ]
@@ -143,39 +199,62 @@ export type Database = {
       }
       orders: {
         Row: {
+          cancel_reason: string | null
           created_at: string
           delivery_address: string | null
+          delivery_fee: number | null
           delivery_method: string | null
+          delivery_type: string | null
+          driver_id: string | null
           id: string
           payment_method: string | null
           status: string
+          subtotal: number | null
           total: number
           updated_at: string
           user_id: string
         }
         Insert: {
+          cancel_reason?: string | null
           created_at?: string
           delivery_address?: string | null
+          delivery_fee?: number | null
           delivery_method?: string | null
+          delivery_type?: string | null
+          driver_id?: string | null
           id?: string
           payment_method?: string | null
           status?: string
-          total: number
+          subtotal?: number | null
+          total?: number
           updated_at?: string
           user_id: string
         }
         Update: {
+          cancel_reason?: string | null
           created_at?: string
           delivery_address?: string | null
+          delivery_fee?: number | null
           delivery_method?: string | null
+          delivery_type?: string | null
+          driver_id?: string | null
           id?: string
           payment_method?: string | null
           status?: string
+          subtotal?: number | null
           total?: number
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "orders_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       products: {
         Row: {
@@ -263,12 +342,54 @@ export type Database = {
         }
         Relationships: []
       }
+      push_subscriptions: {
+        Row: {
+          auth: string
+          created_at: string | null
+          endpoint: string
+          id: string
+          p256dh: string
+          user_id: string | null
+        }
+        Insert: {
+          auth: string
+          created_at?: string | null
+          endpoint: string
+          id?: string
+          p256dh: string
+          user_id?: string | null
+        }
+        Update: {
+          auth?: string
+          created_at?: string | null
+          endpoint?: string
+          id?: string
+          p256dh?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "push_subscriptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      place_order: {
+        Args: {
+          p_delivery_address: string
+          p_delivery_type: string
+          p_payment_method: string
+        }
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never

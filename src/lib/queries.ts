@@ -11,6 +11,8 @@ export type Order = Database["public"]["Tables"]["orders"]["Row"];
 export type OrderItem = Database["public"]["Tables"]["order_items"]["Row"] & {
   products: Pick<Product, "id" | "name" | "image_url"> | null;
 };
+export type DeliveryFee = Database["public"]["Tables"]["delivery_fees"]["Row"];
+export type OrderStatusHistory = Database["public"]["Tables"]["order_status_history"]["Row"];
 
 function unwrap<T>(res: { data: T | null; error: { message: string } | null }): T {
   if (res.error) throw new Error(res.error.message);
@@ -91,6 +93,44 @@ export const orderQuery = (id: string, userId: string | undefined) =>
       if (error) throw new Error(error.message);
       return data as (Order & { order_items: OrderItem[] }) | null;
     },
+  });
+
+export const orderHistoryQuery = (orderId: string | undefined) =>
+  queryOptions({
+    queryKey: ["order_history", orderId],
+    enabled: Boolean(orderId),
+    queryFn: async () =>
+      unwrap<OrderStatusHistory[]>(
+        await supabase
+          .from("order_status_history")
+          .select("*")
+          .eq("order_id", orderId!)
+          .order("created_at", { ascending: true }),
+      ),
+  });
+
+export const allOrdersQuery = () =>
+  queryOptions({
+    queryKey: ["admin_orders"],
+    queryFn: async () =>
+      unwrap<Order[]>(
+        await supabase
+          .from("orders")
+          .select("*, profiles:user_id(id)") // Optional: fetch user data if needed
+          .order("created_at", { ascending: false }),
+      ),
+  });
+
+export const deliveryFeesQuery = () =>
+  queryOptions({
+    queryKey: ["delivery_fees"],
+    queryFn: async () =>
+      unwrap<DeliveryFee[]>(
+        await supabase
+          .from("delivery_fees")
+          .select("*")
+          .order("min_subtotal", { ascending: false }),
+      ),
   });
 
 export function cartSubtotal(rows: CartRow[]): number {

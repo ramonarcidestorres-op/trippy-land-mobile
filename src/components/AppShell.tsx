@@ -78,6 +78,13 @@ export function AppShell({ children }: { children: ReactNode }) {
                 <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground truncate">
                   {user.user_metadata?.full_name || user.email}
                 </div>
+                {user.role === "admin" && (
+                  <DropdownMenuItem asChild>
+                    <Link to="/admin/pedidos" className="cursor-pointer font-medium text-candy-lime">
+                      Panel de Administración
+                    </Link>
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuItem
                   onClick={async () => {
                     await supabase.auth.signOut();
@@ -103,21 +110,30 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       <main className="mx-auto max-w-5xl px-4 pb-28 pt-4 md:pb-12">{children}</main>
 
-      <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-border/60 bg-background/95 backdrop-blur-xl md:hidden">
-        <div className="mx-auto flex max-w-5xl">
-          {NAV.map(({ to, label, icon: Icon }) => {
+      <nav className="fixed inset-x-0 bottom-6 z-30 mx-auto px-4 md:hidden">
+        <div className="flex h-16 items-center justify-around rounded-[2rem] bg-black/40 px-2 shadow-2xl backdrop-blur-2xl border border-white/10">
+          {NAV.map(({ to, icon: Icon }) => {
             const active = to === "/" ? pathname === "/" : pathname.startsWith(to);
             return (
               <Link
                 key={to}
                 to={to as any}
                 className={cn(
-                  "flex flex-1 flex-col items-center gap-1 py-2.5 text-[11px]",
-                  active ? "text-primary" : "text-muted-foreground",
+                  "relative grid size-12 place-items-center rounded-full transition-all duration-300",
+                  active ? "bg-white/10 shadow-[0_0_15px_rgba(255,255,255,0.05)]" : "hover:bg-white/5"
                 )}
               >
-                <Icon className="size-5" />
-                {label}
+                <Icon
+                  className={cn(
+                    "size-5 transition-colors duration-300",
+                    active ? "text-candy-lime" : "text-white/60"
+                  )}
+                />
+                {/* Opcional: puntito activo en vez de texto si quisieras
+                {active && (
+                  <span className="absolute bottom-1.5 size-1 rounded-full bg-primary" />
+                )}
+                */}
               </Link>
             );
           })}
