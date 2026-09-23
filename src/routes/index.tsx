@@ -72,13 +72,16 @@ function HomePage() {
         ) : categories.data?.length ? (
           <div className="flex gap-4 overflow-x-auto pb-4 hide-scrollbar snap-x snap-mandatory">
             {categories.data.map((c, index) => {
-              // Get an image based on the slug or name
-              let imgUrl = "https://images.unsplash.com/photo-1550258987-190a2d41a8ba?w=400&q=80";
-              const s = c.slug.toLowerCase();
-              if (s.includes("gomi")) imgUrl = "https://images.unsplash.com/photo-1582058091505-f87a2e55a40f?w=400&q=80";
-              else if (s.includes("choco")) imgUrl = "https://images.unsplash.com/photo-1606312619070-d48b4c652a52?w=400&q=80";
-              else if (s.includes("snack") || s.includes("sal")) imgUrl = "https://images.unsplash.com/photo-1599490659213-e2b9527bd087?w=400&q=80";
-              else if (s.includes("dulce")) imgUrl = "https://images.unsplash.com/photo-1575224300306-1b8da36134ec?w=400&q=80";
+              // Get an image from Supabase icon_url or use fallback
+              let imgUrl = c.icon_url || "https://images.unsplash.com/photo-1550258987-190a2d41a8ba?w=400&q=80";
+              const s = c.slug?.toLowerCase() || "";
+              
+              if (!c.icon_url) {
+                if (s.includes("gomi")) imgUrl = "https://images.unsplash.com/photo-1582058091505-f87a2e55a40f?w=400&q=80";
+                else if (s.includes("choco")) imgUrl = "https://images.unsplash.com/photo-1606312619070-d48b4c652a52?w=400&q=80";
+                else if (s.includes("snack") || s.includes("sal")) imgUrl = "https://images.unsplash.com/photo-1599490659213-e2b9527bd087?w=400&q=80";
+                else if (s.includes("dulce")) imgUrl = "https://images.unsplash.com/photo-1575224300306-1b8da36134ec?w=400&q=80";
+              }
 
               // Matte white active state instead of green
               const isActive = index === 1; // Just simulating an active state for visual demo since Home doesn't actually have a selected category state by default
