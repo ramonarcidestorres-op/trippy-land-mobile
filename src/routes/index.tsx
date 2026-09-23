@@ -141,6 +141,7 @@ function HomePage() {
           </h2>
           <Link 
             to="/catalogo" 
+            search={{}}
             className="text-xs font-medium text-[#F5F5DC]/80 active:text-[#F5F5DC] md:hover:text-[#F5F5DC]"
           >
             Ver todo
