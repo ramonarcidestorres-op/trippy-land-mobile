@@ -43,7 +43,7 @@ function CatalogPage() {
   );
 
   function applySearch(value: string) {
-    navigate({ search: (prev) => ({ ...prev, q: value.trim() || undefined }) });
+    navigate({ search: (prev: CatalogSearch) => ({ ...prev, q: value.trim() || undefined }) });
   }
 
   return (
@@ -69,7 +69,7 @@ function CatalogPage() {
 
       <div className="mt-4 flex flex-wrap gap-2">
         <button
-          onClick={() => navigate({ search: (prev) => ({ ...prev, categoria: undefined }) })}
+          onClick={() => navigate({ search: (prev: CatalogSearch) => ({ ...prev, categoria: undefined }) })}
           className={cn(
             "rounded-full border px-4 py-1.5 text-sm",
             !categoria ? "border-primary bg-primary/15 text-primary" : "border-border bg-surface",
@@ -80,7 +80,7 @@ function CatalogPage() {
         {categories.data?.map((c) => (
           <button
             key={c.id}
-            onClick={() => navigate({ search: (prev) => ({ ...prev, categoria: c.slug }) })}
+            onClick={() => navigate({ search: (prev: CatalogSearch) => ({ ...prev, categoria: c.slug }) })}
             className={cn(
               "rounded-full border px-4 py-1.5 text-sm",
               categoria === c.slug
