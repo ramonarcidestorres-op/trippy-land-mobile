@@ -1,0 +1,8 @@
+Need to install the following packages:
+tsc@2.0.4
+Ok to proceed? (y) 
+npm error code EPIPE
+npm error syscall read
+npm error errno -4047
+npm error read EPIPE
+npm error A complete log of this run can be found in: C:\Users\Jerian\AppData\Local\npm-cache\_logs\2026-09-23T22_08_34_815Z-debug-0.log
