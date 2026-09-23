@@ -68,7 +68,9 @@ function HomePage() {
             ))}
           </div>
         ) : categories.error ? (
-          <ErrorState error={categories.error} onRetry={() => categories.refetch()} />
+          <div className="flex items-center justify-center p-4">
+            <p className="text-sm text-muted-foreground">Las categorías no están disponibles en este momento.</p>
+          </div>
         ) : categories.data?.length ? (
           <div className="flex gap-4 overflow-x-auto pb-4 hide-scrollbar snap-x snap-mandatory">
             {categories.data.map((c, index) => {
@@ -137,7 +139,9 @@ function HomePage() {
             ))}
           </div>
         ) : products.error ? (
-          <ErrorState error={products.error} onRetry={() => products.refetch()} />
+          <div className="flex items-center justify-center p-8">
+            <p className="text-sm text-muted-foreground">No se pudieron cargar los productos.</p>
+          </div>
         ) : products.data?.length ? (
           <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
             {products.data.slice(0, 8).map((p) => (

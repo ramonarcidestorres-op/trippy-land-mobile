@@ -160,7 +160,7 @@ export function AddressManager() {
               )}
             </div>
           </div>
-          <div className="text-xs font-semibold text-primary">
+          <div className="text-xs font-semibold text-white">
             {selectedAddress ? "Cambiar" : "Agregar"}
           </div>
         </button>

@@ -42,7 +42,6 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="pointer-events-none fixed inset-x-0 top-0 h-64 glow-top opacity-60" />
       <header className="sticky top-0 z-30 border-b border-border/60 bg-background/85 backdrop-blur-xl">
         <div className="mx-auto flex max-w-5xl items-center gap-3 px-4 py-3">
           <Link to="/" className="shrink-0">
@@ -120,7 +119,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 to={to as any}
                 className={cn(
                   "relative flex flex-col items-center justify-center gap-1 w-16 h-full transition-colors",
-                  active ? "text-primary" : "text-muted-foreground hover:text-foreground"
+                  active ? "text-white" : "text-muted-foreground hover:text-foreground"
                 )}
               >
                 <Icon
