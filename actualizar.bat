@@ -1,25 +1,24 @@
 @echo off
 echo ==============================================
-echo  Sincronizando cambios con GitHub y Lovable
+echo Sincronizando cambios con GitHub y Lovable
 echo ==============================================
 
-echo.
-echo [1/3] Añadiendo archivos modificados...
+echo [1/4] Descargando cambios de Lovable (git pull)...
+git pull origin main
+
+echo [2/4] Anadiendo archivos modificados...
 git add .
 
-echo.
-echo [2/3] Creando commit...
-set /p commit_msg="Introduce un mensaje para el commit (o presiona Enter para usar 'Actualizacion de frontend'): "
-if "%commit_msg%"=="" set commit_msg=Actualizacion de frontend
+echo [3/4] Creando commit...
+set /p commit_msg="Introduce un mensaje (Enter para 'Actualizacion'): "
+if "%commit_msg%"=="" set commit_msg=Actualizacion
 git commit -m "%commit_msg%"
 
-echo.
-echo [3/3] Subiendo cambios...
+echo [4/4] Subiendo cambios (git push)...
 git push origin main
 
-echo.
 echo ==============================================
-echo  ¡Proceso finalizado! 
-echo  Tus cambios ya se estan sincronizando con Lovable.
+echo Proceso finalizado. 
+echo Revisa arriba si hubo algun error en rojo.
 echo ==============================================
 pause
