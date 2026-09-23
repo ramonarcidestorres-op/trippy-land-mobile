@@ -81,7 +81,7 @@ function HomePage() {
         {search.trim() && (
           <Link
             to="/catalogo"
-            search={(prev: any) => ({ ...prev, q: search.trim() })}
+            search={(prev) => ({ ...prev, q: search.trim() })}
             className="mt-4 block text-center text-sm text-[#F5F5DC]/80 underline underline-offset-4 active:text-[#F5F5DC]"
           >
             Ver resultados para "{search.trim()}"
@@ -109,7 +109,7 @@ function HomePage() {
               <Link
                 key={c.id}
                 to="/catalogo"
-                search={(prev: any) => ({ ...prev, categoria: c.slug })}
+                search={(prev) => ({ ...prev, categoria: c.slug })}
                 className={cn(
                   "flex items-center gap-3 rounded-xl border border-border/40 bg-surface px-4 py-3",
                   "transition-all active:scale-[0.98] active:bg-surface-2 active:border-[#F5F5DC]/20 md:hover:bg-surface-2",
