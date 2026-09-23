@@ -38,7 +38,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <div className="pointer-events-none fixed inset-x-0 top-0 h-64 glow-top opacity-60" />
       <header className="sticky top-0 z-30 border-b border-border/60 bg-background/85 backdrop-blur-xl">
         <div className="mx-auto flex max-w-5xl items-center gap-3 px-4 py-3">
-          <Link to="/" className="shrink-0">
+          <Link to="/" search={{}} className="shrink-0">
             <Logo className="h-9 w-auto" />
           </Link>
           <Link
