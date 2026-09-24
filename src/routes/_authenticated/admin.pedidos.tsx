@@ -44,69 +44,11 @@ export const Route = createFileRoute("/_authenticated/admin/pedidos")({
   component: AdminPedidosPage,
 });
 
-let sharedAudioCtx: AudioContext | null = null;
+import { playWhatsAppChime } from "@/lib/sound";
 
-function getAudioContext(): AudioContext | null {
-  try {
-    if (typeof window === "undefined") return null;
-    const AudioContextClass =
-      window.AudioContext ||
-      (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-    if (!AudioContextClass) return null;
-    if (!sharedAudioCtx) {
-      sharedAudioCtx = new AudioContextClass();
-    }
-    if (sharedAudioCtx.state === "suspended") {
-      sharedAudioCtx.resume();
-    }
-    return sharedAudioCtx;
-  } catch {
-    return null;
-  }
-}
-
-/** Reproduce un timbre sintetizado claro cuando entra un pedido nuevo */
+/** Reproduce el sonido característico de notificación estilo WhatsApp */
 function playChime() {
-  try {
-    const ctx = getAudioContext();
-    if (!ctx) return;
-
-    const executeSound = () => {
-      const now = ctx.currentTime;
-
-      // Tono 1 (D5 - 587Hz)
-      const osc1 = ctx.createOscillator();
-      const gain1 = ctx.createGain();
-      osc1.type = "sine";
-      osc1.frequency.setValueAtTime(587.33, now);
-      gain1.gain.setValueAtTime(0.6, now);
-      gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
-      osc1.connect(gain1);
-      gain1.connect(ctx.destination);
-      osc1.start(now);
-      osc1.stop(now + 0.35);
-
-      // Tono 2 (A5 - 880Hz)
-      const osc2 = ctx.createOscillator();
-      const gain2 = ctx.createGain();
-      osc2.type = "sine";
-      osc2.frequency.setValueAtTime(880, now + 0.12);
-      gain2.gain.setValueAtTime(0.6, now + 0.12);
-      gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.7);
-      osc2.connect(gain2);
-      gain2.connect(ctx.destination);
-      osc2.start(now + 0.12);
-      osc2.stop(now + 0.7);
-    };
-
-    if (ctx.state === "suspended") {
-      ctx.resume().then(executeSound).catch(() => {});
-    } else {
-      executeSound();
-    }
-  } catch {
-    // Si el navegador bloquea audio antes de interacción, se ignora silenciosamente
-  }
+  playWhatsAppChime();
 }
 
 export function AdminPedidosPage() {

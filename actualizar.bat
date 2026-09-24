@@ -1,6 +1,6 @@
 @echo off
 echo ==============================================
-echo Configurando iconos de la App...
+echo Configurando iconos y sonidos de la App...
 echo ==============================================
 if exist "public\tripi-logo-app.png" (
     copy /Y "public\tripi-logo-app.png" "public\icon-512.png" >nul
@@ -11,6 +11,7 @@ if exist "public\tripi-logo-app.png" (
 )
 
 node scripts/generate_app_icons.mjs 2>nul
+node scripts/generate_sound.mjs 2>nul
 
 echo ==============================================
 echo Subiendo tus cambios a Lovable

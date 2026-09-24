@@ -40,10 +40,12 @@ const STATUS_ANNOUNCEMENTS: Record<string, string> = {
   cancelled: "Tu pedido fue cancelado.",
 };
 
+import { playWhatsAppChime } from "@/lib/sound";
+
 function triggerVibration() {
   try {
     if (typeof window !== "undefined" && "vibrate" in navigator) {
-      navigator.vibrate([300, 100, 300, 100, 300]);
+      navigator.vibrate([100, 50, 100]);
     }
   } catch {
     // ignore
@@ -51,32 +53,7 @@ function triggerVibration() {
 }
 
 function playCustomerChime() {
-  try {
-    if (typeof window === "undefined") return;
-    const AudioContextClass =
-      window.AudioContext ||
-      (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-    if (!AudioContextClass) return;
-    const ctx = new AudioContextClass();
-    if (ctx.state === "suspended") {
-      ctx.resume().catch(() => {});
-    }
-    const now = ctx.currentTime;
-
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.type = "sine";
-    osc.frequency.setValueAtTime(523.25, now);
-    osc.frequency.exponentialRampToValueAtTime(783.99, now + 0.25);
-    gain.gain.setValueAtTime(0.5, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.start(now);
-    osc.stop(now + 0.6);
-  } catch {
-    // ignore
-  }
+  playWhatsAppChime();
 }
 
 function OrderDetailPage() {

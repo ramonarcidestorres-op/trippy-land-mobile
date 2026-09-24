@@ -14,8 +14,8 @@ self.addEventListener("push", (event) => {
   let data = {
     title: "Actualización de tu pedido",
     body: "Tienes una actualización de tu pedido",
-    icon: "/favicon.png",
-    badge: "/favicon.png",
+    icon: "/tripi-logo-app.png",
+    badge: "/tripi-logo-app.png",
     data: { url: "/" },
     tag: "default-order",
   };
@@ -31,13 +31,13 @@ self.addEventListener("push", (event) => {
 
   const options = {
     body: data.body,
-    icon: data.icon || "/favicon.png",
-    badge: data.badge || "/favicon.png",
+    icon: data.icon || "/tripi-logo-app.png",
+    badge: data.badge || "/tripi-logo-app.png",
     tag: data.tag || "order-notification",
     renotify: true,
     requireInteraction: true,
     silent: false,
-    vibrate: [300, 100, 300, 100, 300],
+    vibrate: [100, 50, 100],
     data: data.data || { url: "/" },
     actions: [
       { action: "open", title: "Ver Pedido" }
