@@ -32,6 +32,36 @@ export function PushNotificationButton({ variant, targetUserId, orderId, classNa
     }
   }, [orderId, permission, isSubscribed, subscribe, targetUserId]);
 
+  const handleTestPush = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      const reg = await navigator.serviceWorker.ready;
+      const sub = await reg.pushManager.getSubscription();
+      if (!sub) {
+        toast.error("No se encontró suscripción activa en este navegador.");
+        return;
+      }
+      toast.info("⏳ Bloquea tu celular AHORA. La notificación llegará en 4 segundos...", { duration: 5000 });
+      setTimeout(async () => {
+        try {
+          await fetch("https://cdmoyqxorxecbmqbsafz.supabase.co/functions/v1/send-order-push", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              test: true,
+              endpoint: sub.endpoint,
+              order_id: orderId,
+            }),
+          });
+        } catch {
+          // ignore
+        }
+      }, 4000);
+    } catch (err: any) {
+      toast.error("Error al preparar prueba: " + (err?.message || ""));
+    }
+  };
+
   const handleToggle = async () => {
     if (isSubscribed) {
       const res = await unsubscribe();
@@ -68,8 +98,8 @@ export function PushNotificationButton({ variant, targetUserId, orderId, classNa
 
   const label = isSubscribed
     ? variant === "admin"
-      ? "Avisos de pedidos activos"
-      : "Avisos de mi pedido activos"
+      ? "Avisos activos"
+      : "Avisos de pedido activos"
     : variant === "admin"
     ? "Activar avisos de pedidos"
     : "Activar avisos de mi pedido";
@@ -95,6 +125,14 @@ export function PushNotificationButton({ variant, targetUserId, orderId, classNa
             <BellRing className="size-4 text-primary" />
             <span>{label}</span>
             <Check className="size-3.5 text-primary ml-0.5" />
+            <span
+              role="button"
+              onClick={handleTestPush}
+              className="ml-1 rounded-lg bg-primary/25 px-2 py-0.5 text-[10px] font-extrabold uppercase text-primary hover:bg-primary/40 active:scale-90 transition-all"
+              title="Toca y bloquea tu celular para probar"
+            >
+              Probar
+            </span>
           </>
         ) : (
           <>
