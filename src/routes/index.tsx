@@ -68,8 +68,11 @@ function HomePage() {
             ))}
           </div>
         ) : categories.error ? (
-          <div className="flex items-center justify-center p-4">
+          <div className="flex flex-col items-center justify-center p-4">
             <p className="text-sm text-muted-foreground">Las categorías no están disponibles en este momento.</p>
+            <p className="mt-2 text-xs text-red-500 font-mono text-center">
+              Error real: {categories.error instanceof Error ? categories.error.message : String(categories.error)}
+            </p>
           </div>
         ) : categories.data?.length ? (
           <div className="flex gap-4 overflow-x-auto pb-4 hide-scrollbar snap-x snap-mandatory">
@@ -139,8 +142,11 @@ function HomePage() {
             ))}
           </div>
         ) : products.error ? (
-          <div className="flex items-center justify-center p-8">
+          <div className="flex flex-col items-center justify-center p-8">
             <p className="text-sm text-muted-foreground">No se pudieron cargar los productos.</p>
+            <p className="mt-2 text-xs text-red-500 font-mono text-center">
+              Error real: {products.error instanceof Error ? products.error.message : String(products.error)}
+            </p>
           </div>
         ) : products.data?.length ? (
           <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
