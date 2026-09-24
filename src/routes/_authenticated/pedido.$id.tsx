@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 type OrderDetailSearch = { nuevo?: boolean | undefined };
 
 export const Route = createFileRoute("/_authenticated/pedido/$id")({
+  ssr: false,
   validateSearch: (search: Record<string, unknown>): OrderDetailSearch => ({
     nuevo: search["nuevo"] === true || search["nuevo"] === "true" ? true : undefined,
   }),

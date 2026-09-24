@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
-import { Banknote, MapPin, ShoppingBag } from "lucide-react";
+import { Banknote, MapPin, Navigation, ShoppingBag, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { EmptyState } from "@/components/States";
@@ -12,9 +12,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { formatPrice } from "@/lib/format";
 import { addressStore, composeAddress } from "@/lib/address";
 import { AddressManager } from "@/components/AddressManager";
+import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/checkout")({
+  ssr: false,
   head: () => ({
     meta: [
       { title: "Checkout — Trippy Land Store" },
@@ -31,6 +33,9 @@ function CheckoutPage() {
   const queryClient = useQueryClient();
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [manualAddress, setManualAddress] = useState("");
+  const [manualNotes, setManualNotes] = useState("");
+  const [locating, setLocating] = useState(false);
   const [deliveryType, setDeliveryType] = useState<"normal" | "fast">("normal");
   const [placing, setPlacing] = useState(false);
   const lock = useRef(false);
@@ -45,14 +50,49 @@ function CheckoutPage() {
     window.addEventListener("tls-address-change", sync);
     return () => window.removeEventListener("tls-address-change", sync);
   }, []);
+
   const subtotal = rows.reduce((sum, r) => sum + getAdjustedPrice(r.products?.price ?? 0) * r.quantity, 0);
   const unavailable = rows.filter((r) => r.products?.is_available === false);
-  const selected = addressStore.list().find((a) => a.id === selectedId) ?? null;
+  const selected = addressStore.list().find((a) => a.id === selectedId) ?? addressStore.selected() ?? null;
+
+  // Cálculo automático según los requerimientos:
+  // - Hasta 199.999: Normal 25.000 / Rápida 50.000
+  // - 200.000 a 999.999: Normal 50.000 / Rápida 50.000
+  // - Más de 1.000.000: 100.000
   const applicableFee = (fees ?? []).find(
     (f) => subtotal >= f.min_subtotal && (f.max_subtotal === null || subtotal <= f.max_subtotal)
   );
-  const deliveryCost = applicableFee ? applicableFee[`${deliveryType}_fee`] : 0;
+  const defaultFee = subtotal >= 1000000
+    ? 100000
+    : subtotal >= 200000
+    ? 50000
+    : deliveryType === "fast"
+    ? 50000
+    : 25000;
+
+  const deliveryCost = applicableFee ? applicableFee[`${deliveryType}_fee`] : defaultFee;
   const total = subtotal + deliveryCost;
+
+  async function handleGetLocation() {
+    if (!navigator.geolocation) {
+      toast.error("Tu navegador no soporta geolocalización.");
+      return;
+    }
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setLocating(false);
+        const coords = `Ubicación GPS (${pos.coords.latitude.toFixed(5)}, ${pos.coords.longitude.toFixed(5)})`;
+        setManualAddress((prev) => prev ? `${prev} - ${coords}` : coords);
+        toast.success("Ubicación GPS detectada. Agrega nombre de calle o edificio.");
+      },
+      (err) => {
+        setLocating(false);
+        toast.error("No pudimos obtener el GPS. Escribe tu dirección manualmente.");
+      },
+      { enableHighAccuracy: true, timeout: 8000 }
+    );
+  }
 
   async function placeOrder() {
     if (lock.current) return;
@@ -61,27 +101,53 @@ function CheckoutPage() {
       toast.error("Quita del carrito los productos que ya no están disponibles.");
       return;
     }
-    if (!selected) {
-      toast.error("Selecciona o agrega una dirección de entrega.");
+
+    const effectiveAddress = selected 
+      ? composeAddress(selected) 
+      : manualAddress.trim() + (manualNotes.trim() ? ` (Ref: ${manualNotes.trim()})` : "");
+
+    if (!effectiveAddress || effectiveAddress.trim().length < 4) {
+      toast.error("Por favor escribe tu dirección de entrega para confirmar.");
       return;
     }
+
+    // Guardar dirección en el dispositivo para futuros pedidos si se ingresó manualmente
+    if (!selected && manualAddress.trim()) {
+      addressStore.save({
+        label: "Dirección",
+        address: manualAddress.trim(),
+        notes: manualNotes.trim() || undefined,
+      });
+    }
+
     lock.current = true;
     setPlacing(true);
     try {
+      const payloadCart = rows.map((r) => ({
+        id: r.products?.id || r.product_id || r.id,
+        product_id: r.products?.id || r.product_id || r.id,
+        quantity: r.quantity,
+        price: r.products?.price || 0,
+      }));
+
       const { data: orderId, error: rpcError } = await supabase.rpc("place_order_guest", {
-        p_delivery_address: composeAddress(selected),
+        p_delivery_address: effectiveAddress,
         p_delivery_type: deliveryType,
         p_payment_method: "cash",
-        p_cart_items: rows,
+        p_cart_items: payloadCart,
         p_referral_code: referralCode,
       });
-      if (rpcError || !orderId) throw new Error(rpcError?.message ?? "No se creó el pedido");
+
+      if (rpcError || !orderId) {
+        throw new Error(rpcError?.message ?? "No se creó el pedido en el servidor");
+      }
 
       clearCart();
       await queryClient.invalidateQueries({ queryKey: ["orders"] });
 
       navigate({ to: "/pedido/$id", params: { id: orderId }, search: { nuevo: true } });
     } catch (e) {
+      console.error("Order creation failed:", e);
       toast.error(e instanceof Error ? e.message : "No pudimos crear tu pedido");
       lock.current = false;
       setPlacing(false);
@@ -121,12 +187,54 @@ function CheckoutPage() {
         {/* Address Card */}
         <section className={cn(
           "rounded-[32px] p-5 transition-all",
-          !selected ? "bg-surface-2/80 border border-primary/40 shadow-sm" : "bg-surface-2/60"
+          !selected && !manualAddress.trim() ? "bg-surface-2/80 border border-primary/40 shadow-sm" : "bg-surface-2/60"
         )}>
-          <h2 className="mb-4 flex items-center gap-2 text-[15px] font-semibold text-foreground">
-            <MapPin className="size-4" /> Dirección de entrega {!selected && <span className="text-xs text-primary font-bold">(Requerida)</span>}
-          </h2>
-          <AddressManager />
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="flex items-center gap-2 text-[15px] font-semibold text-foreground">
+              <MapPin className="size-4 text-primary" /> Dirección de entrega
+            </h2>
+            <AddressManager />
+          </div>
+
+          {!selected ? (
+            <div className="space-y-3 pt-2">
+              <div>
+                <Input
+                  value={manualAddress}
+                  onChange={(e) => setManualAddress(e.target.value)}
+                  placeholder="Calle, Carrera, Edificio, Apto..."
+                  className="h-12 rounded-2xl bg-surface border-none text-[14px] text-foreground placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-primary"
+                />
+              </div>
+              <div className="flex gap-2">
+                <Input
+                  value={manualNotes}
+                  onChange={(e) => setManualNotes(e.target.value)}
+                  placeholder="Barrio o indicaciones (opcional)"
+                  className="h-11 flex-1 rounded-2xl bg-surface border-none text-[13px] text-foreground placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-primary"
+                />
+                <button
+                  type="button"
+                  onClick={handleGetLocation}
+                  disabled={locating}
+                  className="flex h-11 shrink-0 items-center gap-1.5 rounded-2xl bg-surface px-3 text-[12px] font-semibold text-primary transition-transform active:scale-95 disabled:opacity-50"
+                >
+                  {locating ? <Loader2 className="size-4 animate-spin" /> : <Navigation className="size-4" />}
+                  GPS
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="mt-2 rounded-2xl bg-surface p-3.5 flex items-center justify-between">
+              <div>
+                <p className="text-[14px] font-semibold text-foreground">{selected.address}</p>
+                {selected.references && (
+                  <p className="text-[12px] text-muted-foreground">{selected.references}</p>
+                )}
+              </div>
+              <AddressManager />
+            </div>
+          )}
         </section>
 
         {/* Delivery Type */}

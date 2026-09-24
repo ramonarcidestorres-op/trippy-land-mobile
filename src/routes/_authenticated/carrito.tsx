@@ -7,6 +7,7 @@ import { useReferral } from "@/hooks/useReferral";
 import { formatPrice } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/carrito")({
+  ssr: false,
   head: () => ({
     meta: [
       { title: "Carrito — Trippy Land Store" },
