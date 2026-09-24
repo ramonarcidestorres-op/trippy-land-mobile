@@ -28,14 +28,6 @@ function CartPage() {
         <h1 className="text-[34px] font-bold tracking-tight text-foreground">
           Carrito Trippy
         </h1>
-        {rows.length > 0 && (
-          <button
-            onClick={() => clearCart()}
-            className="text-[14px] font-semibold text-red-400 active:scale-95 transition-transform"
-          >
-            Vaciar carrito
-          </button>
-        )}
       </div>
 
       {rows.length === 0 ? (
@@ -78,7 +70,7 @@ function CartPage() {
                   </div>
                   
                   <div className="relative flex w-full overflow-x-auto snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                    <div className="flex min-w-full shrink-0 snap-start gap-4 rounded-[28px] bg-surface-2/60 p-4">
+                    <div className="flex min-w-full shrink-0 snap-start gap-4 rounded-[28px] bg-[#1E1F24] p-4">
                       <div className="size-20 shrink-0 overflow-hidden rounded-2xl bg-surface">
                         <img
                           src={imgUrl}
@@ -141,7 +133,16 @@ function CartPage() {
           </ul>
 
           {/* Resumen transparente HIG */}
-          <div className="mt-8 rounded-[32px] bg-surface-2/40 p-6">
+          <div className="mt-4 flex justify-end">
+            <button
+              onClick={() => clearCart()}
+              className="flex items-center gap-2 text-[14px] font-semibold text-muted-foreground hover:text-red-400 active:scale-95 transition-all px-4 py-2"
+            >
+              <Trash2 className="size-4" /> Vaciar carrito
+            </button>
+          </div>
+          
+          <div className="mt-4 rounded-[32px] bg-surface-2/40 p-6">
             <div className="flex items-center justify-between text-sm">
               <span className="font-medium text-muted-foreground">Subtotal</span>
               <span className="text-[15px] font-bold text-foreground">{formatPrice(subtotal)}</span>

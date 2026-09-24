@@ -48,15 +48,19 @@ export function AddressManager() {
   }, []);
 
   async function loadAddresses() {
-    if (!user) return;
-    const data = await fetchUserAddresses(user.id);
-    setAddresses(data);
-    
-    // If we have DB addresses but no local selection, or local selection is outdated, update it
-    if (data.length > 0 && !addressStore.selected()) {
-      const saved = mapDBToSaved(data[0]);
-      addressStore.save(saved);
-      addressStore.select(saved.id);
+    if (user) {
+      const data = await fetchUserAddresses(user.id);
+      setAddresses(data);
+      if (data.length > 0 && !addressStore.selected()) {
+        const saved = mapDBToSaved(data[0]);
+        addressStore.save(saved);
+        addressStore.select(saved.id);
+      }
+    } else {
+      const local = addressStore.list();
+      if (local.length > 0) {
+        setAddresses(local as any); // Type cast for simplicity, the UI only needs id, address, neighborhood, apartment
+      }
     }
   }
 
@@ -90,24 +94,34 @@ export function AddressManager() {
   }
 
   async function handleSave() {
-    if (!user) {
-      toast.error("Debes iniciar sesión para guardar direcciones.");
-      return;
-    }
     if (form.address.trim().length < 5) {
       toast.error("Escribe una dirección válida.");
       return;
     }
 
     setLoading(true);
-    const newDbAddress = await saveUserAddress({
-      address: form.address.trim(),
-      neighborhood: form.neighborhood.trim() || null,
-      apartment: form.apartment.trim() || null,
-      instructions: form.instructions.trim() || null,
-      lat: form.lat,
-      lng: form.lng,
-    }, user.id);
+    let newDbAddress: any = null;
+
+    if (user) {
+      newDbAddress = await saveUserAddress({
+        address: form.address.trim(),
+        neighborhood: form.neighborhood.trim() || null,
+        apartment: form.apartment.trim() || null,
+        instructions: form.instructions.trim() || null,
+        lat: form.lat,
+        lng: form.lng,
+      }, user.id);
+    } else {
+      newDbAddress = {
+        id: crypto.randomUUID(),
+        address: form.address.trim(),
+        neighborhood: form.neighborhood.trim() || null,
+        apartment: form.apartment.trim() || null,
+        instructions: form.instructions.trim() || null,
+        lat: form.lat,
+        lng: form.lng,
+      };
+    }
 
     setLoading(false);
 
@@ -128,8 +142,11 @@ export function AddressManager() {
     setForm({ address: "", neighborhood: "", apartment: "", instructions: "", lat: null, lng: null });
   }
 
-  function handleSelectExisting(dbAddr: DBAddress) {
-    const saved = mapDBToSaved(dbAddr);
+  function handleSelectExisting(dbAddr: any) {
+    let saved = dbAddr;
+    if (!dbAddr.label) {
+      saved = mapDBToSaved(dbAddr);
+    }
     addressStore.save(saved);
     addressStore.select(saved.id);
     setOpen(false);
