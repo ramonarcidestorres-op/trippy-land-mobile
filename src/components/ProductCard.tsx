@@ -7,6 +7,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
 
+// Sincronización forzada para Lovable
 export function ProductCard({ product }: { product: Product }) {
   const available = product.is_available !== false;
   const { user } = useAuth();
