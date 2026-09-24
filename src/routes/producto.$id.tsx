@@ -5,8 +5,9 @@ import { Candy, Minus, Plus, ChevronLeft } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { EmptyState } from "@/components/States";
-import { useAuth } from "@/hooks/useAuth";
-import { addToCart, productQuery } from "@/lib/queries";
+import { useCart } from "@/hooks/useCart";
+import { useReferral } from "@/hooks/useReferral";
+import { productQuery } from "@/lib/queries";
 import { formatPrice } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -23,9 +24,8 @@ export const Route = createFileRoute("/producto/$id")({
 
 function ProductPage() {
   const { id } = Route.useParams();
-  const { user } = useAuth();
-  const navigate = useNavigate();
-  const queryClient = useQueryClient();
+  const { addToCart } = useCart();
+  const { getAdjustedPrice } = useReferral();
   const [qty, setQty] = useState(1);
   const [busy, setBusy] = useState(false);
   const { data, isLoading, error } = useQuery(productQuery(id));
@@ -61,14 +61,9 @@ function ProductPage() {
 
   async function handleAdd() {
     if (!data || busy || !available) return;
-    if (!user) {
-      navigate({ to: "/auth", search: { redirect: `/producto/${id}` } });
-      return;
-    }
     setBusy(true);
     try {
-      await addToCart(user.id, data.id, qty);
-      await queryClient.invalidateQueries({ queryKey: ["cart"] });
+      addToCart(data, qty);
       toast.success("Agregado al carrito");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "No pudimos agregarlo al carrito");
@@ -124,8 +119,8 @@ function ProductPage() {
           {data.name}
         </h1>
         
-        <p className="mb-6 text-[28px] font-bold tracking-tight text-foreground">
-          {formatPrice(data.price)}
+        <p className="mb-6 text-[28px] font-bold tracking-tight text-[#E63946]">
+          {formatPrice(getAdjustedPrice(data.price))}
         </p>
 
         {data.description && (
@@ -176,7 +171,7 @@ function ProductPage() {
               {available ? (busy ? "Agregando..." : "Agregar") : "Agotado"}
             </span>
             <span className="text-[15px] font-bold text-primary-foreground opacity-90">
-              {formatPrice(data.price * qty)}
+              {formatPrice(getAdjustedPrice(data.price) * qty)}
             </span>
           </button>
         </div>

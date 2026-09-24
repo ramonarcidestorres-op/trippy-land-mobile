@@ -4,7 +4,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Logo } from "@/components/Logo";
 import { useAuth } from "@/hooks/useAuth";
-import { cartQuery } from "@/lib/queries";
+import { useCart } from "@/hooks/useCart";
 import { addressStore, type SavedAddress } from "@/lib/address";
 import { AddressManager } from "@/components/AddressManager";
 import { cn } from "@/lib/utils";
@@ -20,7 +20,6 @@ const NAV = [
   { to: "/", label: "Inicio", icon: Home },
   { to: "/catalogo", label: "Catálogo", icon: LayoutGrid },
   { to: "/carrito", label: "Carrito", icon: ShoppingCart },
-  { to: "/pedidos", label: "Mis compras", icon: Receipt },
 ] as const;
 
 function useSelectedAddress() {
@@ -37,8 +36,8 @@ function useSelectedAddress() {
 export function AppShell({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const address = useSelectedAddress();
-  const { data: cart } = useQuery(cartQuery(user?.id));
-  const count = (cart ?? []).reduce((s, r) => s + r.quantity, 0);
+  const { cart } = useCart();
+  const count = cart.reduce((s, r) => s + r.quantity, 0);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   return (

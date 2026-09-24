@@ -5,10 +5,8 @@ import { toast } from "sonner";
 import { Check, MapPin, Receipt, Clock, Rocket, ChevronLeft } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { EmptyState, ErrorState } from "@/components/States";
-import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
 import { orderQuery, orderHistoryQuery } from "@/lib/queries";
-import { formatDate, formatPrice, ORDER_STATUSES, STATUS_LABELS } from "@/lib/format";
+import { formatDate, formatPrice } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 type OrderDetailSearch = { nuevo?: boolean | undefined };
@@ -29,9 +27,8 @@ export const Route = createFileRoute("/_authenticated/pedido/$id")({
 function OrderDetailPage() {
   const { id } = Route.useParams();
   const { nuevo } = Route.useSearch();
-  const { user } = useAuth();
   const queryClient = useQueryClient();
-  const { data, isLoading, error, refetch } = useQuery(orderQuery(id, user?.id));
+  const { data, isLoading, error, refetch } = useQuery(orderQuery(id));
   const { data: history } = useQuery(orderHistoryQuery(data?.id));
 
   useEffect(() => {
@@ -47,15 +44,11 @@ function OrderDetailPage() {
           queryClient.invalidateQueries({ queryKey: ["orders"] });
         }
       )
-      .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "order_status_history", filter: `order_id=eq.${data.id}` },
         (payload) => {
           queryClient.invalidateQueries({ queryKey: ["order_history", data.id] });
-          const newStatus = payload.new.status;
-          if (newStatus && STATUS_LABELS[newStatus as keyof typeof STATUS_LABELS]) {
-            toast.success(`El pedido ahora está: ${STATUS_LABELS[newStatus as keyof typeof STATUS_LABELS]}`);
-          }
+          toast.success("El estado de tu pedido ha cambiado");
         }
       )
       .subscribe();
@@ -101,12 +94,49 @@ function OrderDetailPage() {
   }
 
   const cancelled = data.status === "cancelled";
-  const currentIndex = ORDER_STATUSES.indexOf(data.status as (typeof ORDER_STATUSES)[number]);
   const subtotal = data.subtotal ?? data.order_items.reduce(
     (s, i) => s + Number(i.price_at_time) * i.quantity,
     0,
   );
   const deliveryFee = data.delivery_fee ?? (Number(data.total) - subtotal);
+  
+  // Custom Timer Logic
+  const [waText, setWaText] = useState("");
+  const [waSending, setWaSending] = useState(false);
+  const [timeLeft, setTimeLeft] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (data.status !== "arrived") {
+      setTimeLeft(null);
+      return;
+    }
+    const arrivedEvent = history?.find(h => h.status === "arrived");
+    if (!arrivedEvent?.created_at) return;
+    
+    const arrivedTime = new Date(arrivedEvent.created_at).getTime();
+    const target = arrivedTime + 7 * 60 * 1000;
+
+    const interval = setInterval(() => {
+      const remaining = Math.max(0, target - Date.now());
+      setTimeLeft(remaining);
+      if (remaining <= 0) clearInterval(interval);
+    }, 1000);
+    
+    return () => clearInterval(interval);
+  }, [data.status, history]);
+
+  async function handleSendWa() {
+    if (!waText) return;
+    setWaSending(true);
+    const { error } = await supabase.from("orders").update({ whatsapp_contact: waText }).eq("id", data.id);
+    setWaSending(false);
+    if (error) {
+      toast.error("No se pudo enviar. Intenta de nuevo.");
+    } else {
+      toast.success("Número enviado al domiciliario.");
+      queryClient.invalidateQueries({ queryKey: ["order", id] });
+    }
+  }
 
   return (
     <AppShell>
@@ -155,59 +185,70 @@ function OrderDetailPage() {
           
           {cancelled ? (
             <div className="rounded-[20px] bg-red-500/10 p-5">
-              <p className="text-[15px] font-bold text-red-500">Este pedido fue cancelado.</p>
+              <p className="text-[15px] font-bold text-red-500 animate-pulse">Pedido cancelado</p>
               {data.cancel_reason && (
                 <p className="mt-1 text-[13px] font-medium text-red-400">Motivo: {data.cancel_reason}</p>
               )}
             </div>
-          ) : (
-            <ol className="relative ml-3 space-y-6">
-              {ORDER_STATUSES.map((status, i) => {
-                const done = i <= currentIndex;
-                const historyEvent = history?.find((h) => h.status === status);
-                return (
-                  <li key={status} className="flex gap-4 relative">
-                    <div className="flex flex-col items-center">
-                      <span
-                        className={cn(
-                          "relative z-10 flex size-6 shrink-0 items-center justify-center rounded-full transition-colors",
-                          done
-                            ? "bg-primary text-primary-foreground shadow-sm shadow-primary/30"
-                            : "bg-surface text-muted-foreground"
-                        )}
-                      >
-                        {done && <Check className="size-3.5" />}
-                      </span>
-                      {i < ORDER_STATUSES.length - 1 && (
-                        <div
-                          className={cn(
-                            "absolute left-3 top-6 -ml-px h-full w-[2px]",
-                            i < currentIndex ? "bg-primary" : "bg-surface"
-                          )}
-                        />
-                      )}
-                    </div>
-                    <div className="pt-0.5">
-                      <p
-                        className={cn(
-                          "text-[15px] font-semibold leading-none",
-                          done ? "text-foreground" : "text-muted-foreground"
-                        )}
-                      >
-                        {STATUS_LABELS[status]}
-                      </p>
-                      {historyEvent && (
-                        <p className="mt-1.5 flex items-center gap-1.5 text-[12px] font-medium text-muted-foreground">
-                          <Clock className="size-3" />
-                          {new Date(historyEvent.created_at ?? "").toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                        </p>
-                      )}
-                    </div>
-                  </li>
-                );
-              })}
-            </ol>
-          )}
+          ) : data.status === "pending" ? (
+            <div className="rounded-[20px] bg-surface p-5">
+              <p className="text-[15px] font-bold text-muted-foreground">Procesando...</p>
+            </div>
+          ) : data.status === "accepted" ? (
+            <div className="rounded-[20px] bg-blue-500/10 p-5">
+              <p className="text-[15px] font-bold text-blue-500 animate-pulse">Tu pedido ya está en la bodega</p>
+            </div>
+          ) : data.status === "in_transit" ? (
+            <div className="rounded-[20px] bg-yellow-500/10 p-5">
+              <p className="text-[15px] font-bold text-yellow-500 animate-pulse">Domicilio en camino</p>
+            </div>
+          ) : data.status === "arrived" || data.status === "delivered" ? (
+            <div className="rounded-[20px] bg-green-500/10 p-5 border border-green-500/20">
+              <p className="text-[18px] font-extrabold text-green-500 mb-2">Ya tu pedido llegó.</p>
+              <p className="text-[15px] font-bold text-foreground">
+                Moto: <span className="text-primary">{data.status_details || "No especificada"}</span>
+              </p>
+              
+              {/* Temporizador */}
+              {data.status === "arrived" && timeLeft !== null && timeLeft > 0 && (
+                <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-surface-2 px-3 py-1.5 text-[14px] font-semibold text-muted-foreground">
+                  <Clock className="size-4" />
+                  Tiempo de espera: {Math.floor(timeLeft / 60000)}:{(Math.floor(timeLeft / 1000) % 60).toString().padStart(2, "0")}
+                </div>
+              )}
+
+              {/* Formulario de WhatsApp tras 7 minutos */}
+              {data.status === "arrived" && timeLeft === 0 && !data.whatsapp_contact && (
+                <div className="mt-5 space-y-3 rounded-2xl bg-surface p-4">
+                  <p className="text-[14px] font-semibold text-yellow-500">
+                    Colocar tu número de teléfono porque pasó el tiempo de espera.
+                  </p>
+                  <div className="flex gap-2">
+                    <input 
+                      type="tel" 
+                      placeholder="Ej: 3001234567"
+                      className="flex-1 rounded-xl bg-surface-2 px-3 py-2 text-[15px] text-foreground outline-none focus:ring-2 focus:ring-primary/50"
+                      value={waText}
+                      onChange={(e) => setWaText(e.target.value)}
+                    />
+                    <button 
+                      onClick={handleSendWa}
+                      disabled={waSending || !waText}
+                      className="rounded-xl bg-primary px-4 font-bold text-primary-foreground transition-transform active:scale-95 disabled:opacity-50"
+                    >
+                      {waSending ? "..." : "Enviar"}
+                    </button>
+                  </div>
+                </div>
+              )}
+              
+              {data.whatsapp_contact && (
+                <p className="mt-4 text-[13px] font-medium text-muted-foreground">
+                  Número enviado: {data.whatsapp_contact}
+                </p>
+              )}
+            </div>
+          ) : null}
         </section>
 
         {/* Delivery Address */}

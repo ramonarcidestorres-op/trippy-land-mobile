@@ -4,9 +4,8 @@ import { Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { EmptyState, ErrorState } from "@/components/States";
-import { useAuth } from "@/hooks/useAuth";
-import { cartQuery, cartSubtotal } from "@/lib/queries";
-import { supabase } from "@/integrations/supabase/client";
+import { useCart } from "@/hooks/useCart";
+import { useReferral } from "@/hooks/useReferral";
 import { formatPrice } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -21,25 +20,10 @@ export const Route = createFileRoute("/_authenticated/carrito")({
 });
 
 function CartPage() {
-  const { user } = useAuth();
-  const queryClient = useQueryClient();
-  const { data, isLoading, error, refetch } = useQuery(cartQuery(user?.id));
-
-  async function setQuantity(id: string, quantity: number) {
-    if (quantity < 1) return;
-    const { error: err } = await supabase.from("cart_items").update({ quantity }).eq("id", id);
-    if (err) toast.error(err.message);
-    await queryClient.invalidateQueries({ queryKey: ["cart"] });
-  }
-
-  async function removeItem(id: string) {
-    const { error: err } = await supabase.from("cart_items").delete().eq("id", id);
-    if (err) toast.error(err.message);
-    await queryClient.invalidateQueries({ queryKey: ["cart"] });
-  }
-
-  const rows = data ?? [];
-  const subtotal = cartSubtotal(rows);
+  const { cart: rows, setQuantity, removeItem } = useCart();
+  const { getAdjustedPrice } = useReferral();
+  // Calculate subtotal with adjusted prices
+  const subtotal = rows.reduce((sum, r) => sum + getAdjustedPrice(r.products?.price ?? 0) * r.quantity, 0);
 
   return (
     <AppShell>
@@ -47,17 +31,7 @@ function CartPage() {
         Carrito
       </h1>
 
-      {isLoading ? (
-        <div className="mt-4 space-y-4">
-          {[0, 1, 2].map((i) => (
-            <div key={i} className="h-28 animate-pulse rounded-[24px] bg-surface-2/60" />
-          ))}
-        </div>
-      ) : error ? (
-        <div className="mt-4 rounded-3xl bg-surface-2/40 p-8 text-center">
-          <ErrorState error={error} onRetry={() => refetch()} />
-        </div>
-      ) : rows.length === 0 ? (
+      {rows.length === 0 ? (
         <div className="mt-10">
           <EmptyState
             icon={<ShoppingBag className="size-7" />}
@@ -116,7 +90,7 @@ function CartPage() {
                         </button>
                       </div>
                       <p className="mt-1 text-[13px] font-medium text-muted-foreground">
-                        {formatPrice(row.products?.price)} c/u
+                        {formatPrice(getAdjustedPrice(row.products?.price ?? 0))} c/u
                       </p>
                       {row.products?.is_available === false && (
                         <p className="mt-0.5 text-[11px] font-bold text-red-400">
@@ -143,7 +117,7 @@ function CartPage() {
                         </button>
                       </div>
                       <span className="text-[15px] font-bold text-foreground">
-                        {formatPrice(Number(row.products?.price ?? 0) * row.quantity)}
+                        {formatPrice(getAdjustedPrice(row.products?.price ?? 0) * row.quantity)}
                       </span>
                     </div>
                   </div>

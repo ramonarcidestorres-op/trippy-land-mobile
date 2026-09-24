@@ -95,10 +95,9 @@ export const ordersQuery = (userId: string | undefined) =>
       ),
   });
 
-export const orderQuery = (id: string, userId: string | undefined) =>
+export const orderQuery = (id: string) =>
   queryOptions({
-    queryKey: ["order", id, userId],
-    enabled: Boolean(userId),
+    queryKey: ["order", id],
     refetchInterval: 15000,
     queryFn: async () => {
       const { data, error } = await supabase

@@ -5,8 +5,9 @@ import { Banknote, MapPin, ShoppingBag } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { EmptyState } from "@/components/States";
-import { useAuth } from "@/hooks/useAuth";
-import { cartQuery, cartSubtotal, deliveryFeesQuery } from "@/lib/queries";
+import { useCart } from "@/hooks/useCart";
+import { useReferral } from "@/hooks/useReferral";
+import { deliveryFeesQuery } from "@/lib/queries";
 import { supabase } from "@/integrations/supabase/client";
 import { formatPrice } from "@/lib/format";
 import { addressStore, composeAddress } from "@/lib/address";
@@ -24,10 +25,9 @@ export const Route = createFileRoute("/_authenticated/checkout")({
 });
 
 function CheckoutPage() {
-  const { user } = useAuth();
+  const { cart: rows, clearCart } = useCart();
+  const { referralCode, getAdjustedPrice } = useReferral();
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
-  const { data, isLoading, error } = useQuery(cartQuery(user?.id));
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [deliveryType, setDeliveryType] = useState<"normal" | "fast">("normal");
@@ -44,9 +44,7 @@ function CheckoutPage() {
     window.addEventListener("tls-address-change", sync);
     return () => window.removeEventListener("tls-address-change", sync);
   }, []);
-
-  const rows = data ?? [];
-  const subtotal = cartSubtotal(rows);
+  const subtotal = rows.reduce((sum, r) => sum + getAdjustedPrice(r.products?.price ?? 0) * r.quantity, 0);
   const unavailable = rows.filter((r) => r.products?.is_available === false);
   const selected = addressStore.list().find((a) => a.id === selectedId) ?? null;
   const applicableFee = (fees ?? []).find(
@@ -56,7 +54,7 @@ function CheckoutPage() {
   const total = subtotal + deliveryCost;
 
   async function placeOrder() {
-    if (lock.current || !user) return;
+    if (lock.current) return;
     if (rows.length === 0) return;
     if (unavailable.length > 0) {
       toast.error("Quita del carrito los productos que ya no están disponibles.");
@@ -69,15 +67,16 @@ function CheckoutPage() {
     lock.current = true;
     setPlacing(true);
     try {
-      const { data: orderId, error: rpcError } = await supabase.rpc("place_order", {
+      const { data: orderId, error: rpcError } = await supabase.rpc("place_order_guest", {
         p_delivery_address: composeAddress(selected),
         p_delivery_type: deliveryType,
         p_payment_method: "cash",
+        p_cart_items: rows,
+        p_referral_code: referralCode,
       });
       if (rpcError || !orderId) throw new Error(rpcError?.message ?? "No se creó el pedido");
 
-      await supabase.from("cart_items").delete().eq("user_id", user.id);
-      await queryClient.invalidateQueries({ queryKey: ["cart"] });
+      clearCart();
       await queryClient.invalidateQueries({ queryKey: ["orders"] });
 
       navigate({ to: "/pedido/$id", params: { id: orderId }, search: { nuevo: true } });
@@ -88,18 +87,7 @@ function CheckoutPage() {
     }
   }
 
-  if (isLoading) {
-    return (
-      <AppShell>
-        <div className="space-y-4 pt-10">
-          <div className="h-32 animate-pulse rounded-[32px] bg-surface-2/60" />
-          <div className="h-48 animate-pulse rounded-[32px] bg-surface-2/60" />
-        </div>
-      </AppShell>
-    );
-  }
-
-  if (error || rows.length === 0) {
+  if (rows.length === 0) {
     return (
       <AppShell>
         <div className="pt-10">
@@ -200,7 +188,7 @@ function CheckoutPage() {
                   <span className="font-semibold text-foreground">{r.quantity}</span> × {r.products?.name}
                 </span>
                 <span className="shrink-0 text-[14px] font-medium text-foreground">
-                  {formatPrice(Number(r.products?.price ?? 0) * r.quantity)}
+                  {formatPrice(getAdjustedPrice(r.products?.price ?? 0) * r.quantity)}
                 </span>
               </li>
             ))}
