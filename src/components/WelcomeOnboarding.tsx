@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { ShieldCheck, Lock, Sparkles, ArrowRight, CheckCircle2 } from "lucide-react";
+import { Sparkles, ArrowRight, Shield, KeyRound, EyeOff } from "lucide-react";
+import { Logo } from "@/components/Logo";
 import { cn } from "@/lib/utils";
 
 export function WelcomeOnboarding() {
@@ -15,7 +16,7 @@ export function WelcomeOnboarding() {
       return;
     }
 
-    // Si ya tiene pedidos previos registrados en su dispositivo, no es su primera vez
+    // Si ya tiene pedidos previos registrados en su dispositivo, omitir onboarding
     try {
       const orders = JSON.parse(localStorage.getItem("tls_my_orders") || "[]");
       if (Array.isArray(orders) && orders.length > 0) {
@@ -26,13 +27,12 @@ export function WelcomeOnboarding() {
       // ignore
     }
 
-    // Es la primera vez que entra: mostrar splash + onboarding
     setShow(true);
 
-    // Transición del Splash al Onboarding después de la animación inicial de carga
+    // Transición del Splash al Onboarding después de la animación inicial
     const splashTimer = setTimeout(() => {
       setPhase("onboarding");
-    }, 1600);
+    }, 1500);
 
     return () => clearTimeout(splashTimer);
   }, []);
@@ -47,7 +47,7 @@ export function WelcomeOnboarding() {
     }
     setTimeout(() => {
       setShow(false);
-    }, 500);
+    }, 450);
   };
 
   if (!show) return null;
@@ -59,112 +59,99 @@ export function WelcomeOnboarding() {
         phase === "exiting" ? "opacity-0 pointer-events-none scale-105" : "opacity-100"
       )}
       style={{
-        paddingTop: "max(env(safe-area-inset-top), 24px)",
-        paddingBottom: "max(env(safe-area-inset-bottom), 24px)",
+        paddingTop: "max(env(safe-area-inset-top), 20px)",
+        paddingBottom: "max(env(safe-area-inset-bottom), 20px)",
       }}
     >
-      {/* Luz ambiental de fondo (Glow blanquito / dorado suave de lujo) */}
+      {/* Luz ambiental de fondo (Glow suave de lujo) */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div
-          className="absolute left-1/2 top-1/4 -translate-x-1/2 -translate-y-1/2 size-[340px] sm:size-[460px] rounded-full blur-[90px] opacity-40 transition-opacity duration-1000"
+          className="absolute left-1/2 top-1/4 -translate-x-1/2 -translate-y-1/2 size-[320px] sm:size-[420px] rounded-full blur-[85px] opacity-30 transition-opacity duration-1000"
           style={{
-            background: "radial-gradient(circle, rgba(255, 252, 235, 0.35) 0%, rgba(255, 255, 255, 0.08) 50%, transparent 80%)",
+            background: "radial-gradient(circle, rgba(255, 252, 235, 0.3) 0%, rgba(255, 255, 255, 0.05) 50%, transparent 80%)",
           }}
         />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom,rgba(255,255,255,0.03)_0%,transparent_70%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom,rgba(255,255,255,0.02)_0%,transparent_70%)]" />
       </div>
 
-      {/* FASE 1: SPLASH SCREEN (Logo centrado con animación suave de zoom y resplandor) */}
+      {/* FASE 1: SPLASH SCREEN (Logo SVG con zoom y resplandor) */}
       {phase === "splash" && (
         <div className="relative z-10 flex flex-1 flex-col items-center justify-center px-6 animate-in fade-in zoom-in-95 duration-1000">
           <div className="relative flex items-center justify-center">
-            {/* Halo de luz suave detrás del logo */}
-            <div className="absolute size-44 rounded-full bg-white/10 blur-2xl animate-pulse" />
-            
-            <img
-              src="/tripi-logo-app.png"
-              alt="Trippy Land Logo"
-              className="relative size-36 sm:size-44 object-contain drop-shadow-[0_15px_35px_rgba(255,255,255,0.15)] animate-[pulse_2s_ease-in-out_infinite]"
-            />
+            <div className="absolute size-48 rounded-full bg-white/10 blur-2xl animate-pulse" />
+            <Logo className="relative w-56 sm:w-64 h-auto drop-shadow-[0_10px_30px_rgba(255,252,235,0.2)] animate-[pulse_2s_ease-in-out_infinite]" />
           </div>
 
-          <div className="mt-8 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.3em] text-[#C4C4C4] animate-pulse">
-            <span className="size-1.5 rounded-full bg-white" />
+          <div className="mt-6 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.25em] text-[#A0A0A8] animate-pulse">
+            <span className="size-1 rounded-full bg-white/70" />
             <span>Acceso Privado</span>
-            <span className="size-1.5 rounded-full bg-white" />
+            <span className="size-1 rounded-full bg-white/70" />
           </div>
         </div>
       )}
 
-      {/* FASE 2: ONBOARDING COMPLETO DE BIENVENIDA */}
+      {/* FASE 2: ONBOARDING ELEGANTE */}
       {phase !== "splash" && (
-        <div className="relative z-10 flex flex-1 flex-col justify-between px-6 sm:px-10 max-w-md mx-auto w-full animate-in fade-in slide-in-from-bottom-6 duration-700">
-          {/* Header Superior: Logo con iluminación */}
+        <div className="relative z-10 flex flex-1 flex-col justify-between px-6 sm:px-8 max-w-sm mx-auto w-full animate-in fade-in slide-in-from-bottom-5 duration-700">
+          {/* Header Superior: Logo SVG con iluminación */}
           <div className="pt-2 sm:pt-4 flex flex-col items-center text-center">
-            <div className="relative mb-5 flex items-center justify-center">
+            <div className="relative mb-3 flex items-center justify-center">
               <div className="absolute size-32 rounded-full bg-white/10 blur-xl" />
-              <img
-                src="/tripi-logo-app.png"
-                alt="Trippy Land Logo"
-                className="relative size-24 sm:size-28 object-contain drop-shadow-[0_10px_25px_rgba(255,255,255,0.18)]"
-              />
+              <Logo className="relative w-40 sm:w-44 h-auto drop-shadow-[0_8px_20px_rgba(255,252,235,0.18)]" />
             </div>
 
-            <div className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-3.5 py-1 text-[11px] font-bold uppercase tracking-[0.2em] text-[#E5E5E5] backdrop-blur-md mb-3">
-              <Sparkles className="size-3 text-white" />
+            <div className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-3 py-0.5 text-[10px] font-bold uppercase tracking-[0.18em] text-[#D8D8D8] backdrop-blur-md mb-2">
+              <Sparkles className="size-2.5 text-[#fffceb]" />
               Acceso Exclusivo & Privado
             </div>
 
-            <h1 className="text-[26px] sm:text-[30px] font-extrabold tracking-tight text-white leading-tight">
-              Bienvenidos a <br />
-              <span className="bg-gradient-to-b from-white via-[#F5F5F0] to-[#B8B8B8] bg-clip-text text-transparent">
-                Trippy Land Store
-              </span>
+            <h1 className="text-[19px] sm:text-[21px] font-bold tracking-tight text-white leading-tight">
+              Bienvenidos a <span className="text-[#fffceb]">Trippy Land Store</span>
             </h1>
           </div>
 
-          {/* Cuerpo Informativo: Seguridad, Privacidad y Referidos */}
-          <div className="my-6 space-y-4">
-            <div className="rounded-3xl border border-white/10 bg-[#141418]/80 p-5 backdrop-blur-xl shadow-[0_10px_30px_rgba(0,0,0,0.5)] space-y-3 text-left">
-              <p className="text-[14px] leading-relaxed text-[#D6D6D6]">
-                Toda la información que manejamos aquí es <strong className="text-white font-bold">totalmente privada y confidencial</strong>. No solicitamos ni almacenamos datos personales innecesarios.
+          {/* Cuerpo Informativo: Letras más pequeñas y elegantes */}
+          <div className="my-4 space-y-3">
+            <div className="rounded-2xl border border-white/10 bg-[#141418]/80 p-4 backdrop-blur-xl shadow-lg space-y-2.5 text-left">
+              <p className="text-[12.5px] leading-relaxed text-[#D0D0D8]">
+                Toda la información que manejamos aquí es <strong className="text-white font-semibold">totalmente privada y confidencial</strong>. No almacenamos datos personales innecesarios.
               </p>
               
               <div className="h-px w-full bg-white/5" />
 
-              <p className="text-[13px] leading-relaxed text-[#A8A8B0]">
-                Por tu seguridad, esta plataforma no está abierta a todo público. Si llegaste hasta acá, es gracias a la invitación directa de un <span className="text-white font-semibold">referido autorizado</span>.
+              <p className="text-[12px] leading-relaxed text-[#9D9DA8]">
+                Por tu seguridad, esta plataforma no está abierta a todo público. Si llegaste hasta acá, es gracias a la invitación de un <span className="text-white font-medium">referido autorizado</span>.
               </p>
             </div>
 
-            {/* Pilares de Confianza */}
-            <div className="grid grid-cols-3 gap-2 text-center pt-1">
-              <div className="flex flex-col items-center rounded-2xl border border-white/5 bg-[#121215]/60 p-2.5">
-                <Lock className="size-4 text-white mb-1.5" />
-                <span className="text-[10px] font-bold text-[#E5E5E5] leading-tight">100% Privado</span>
+            {/* Nuevos Iconos e Indicadores de Confianza */}
+            <div className="grid grid-cols-3 gap-2 text-center">
+              <div className="flex flex-col items-center rounded-xl border border-white/5 bg-[#121215]/50 py-2.5 px-1.5">
+                <EyeOff className="size-3.5 text-[#fffceb] mb-1 opacity-90" />
+                <span className="text-[9.5px] font-semibold text-[#D4D4DC] leading-tight">100% Discreto</span>
               </div>
-              <div className="flex flex-col items-center rounded-2xl border border-white/5 bg-[#121215]/60 p-2.5">
-                <ShieldCheck className="size-4 text-white mb-1.5" />
-                <span className="text-[10px] font-bold text-[#E5E5E5] leading-tight">Sin Datos Sensibles</span>
+              <div className="flex flex-col items-center rounded-xl border border-white/5 bg-[#121215]/50 py-2.5 px-1.5">
+                <KeyRound className="size-3.5 text-[#fffceb] mb-1 opacity-90" />
+                <span className="text-[9.5px] font-semibold text-[#D4D4DC] leading-tight">Por Invitación</span>
               </div>
-              <div className="flex flex-col items-center rounded-2xl border border-white/5 bg-[#121215]/60 p-2.5">
-                <CheckCircle2 className="size-4 text-white mb-1.5" />
-                <span className="text-[10px] font-bold text-[#E5E5E5] leading-tight">Pago en Efectivo</span>
+              <div className="flex flex-col items-center rounded-xl border border-white/5 bg-[#121215]/50 py-2.5 px-1.5">
+                <Shield className="size-3.5 text-[#fffceb] mb-1 opacity-90" />
+                <span className="text-[9.5px] font-semibold text-[#D4D4DC] leading-tight">Pago en Efectivo</span>
               </div>
             </div>
           </div>
 
           {/* Botón Inferior: Entrar */}
-          <div className="pt-2 pb-2">
+          <div className="pt-2 pb-1">
             <button
               onClick={handleEnter}
-              className="group relative flex h-14 w-full items-center justify-center gap-2 rounded-full bg-white text-black font-extrabold text-[16px] shadow-[0_10px_30px_rgba(255,255,255,0.2)] transition-all duration-300 hover:bg-[#F0F0EB] hover:shadow-[0_15px_40px_rgba(255,255,255,0.3)] active:scale-[0.97]"
+              className="group relative flex h-12 w-full items-center justify-center gap-2 rounded-full bg-white text-black font-bold text-[14px] shadow-[0_8px_25px_rgba(255,255,255,0.18)] transition-all duration-300 hover:bg-[#F0F0EB] active:scale-[0.97]"
             >
               <span>Entrar a la tienda</span>
-              <ArrowRight className="size-5 transition-transform duration-300 group-hover:translate-x-1" />
+              <ArrowRight className="size-4 transition-transform duration-300 group-hover:translate-x-1" />
             </button>
-            <p className="mt-2.5 text-center text-[10px] uppercase tracking-widest text-[#737373]">
-              Trippy Land Store • Experiencia VIP
+            <p className="mt-2 text-center text-[9px] uppercase tracking-[0.2em] text-[#66666E]">
+              Trippy Land Store • Acceso Seguro
             </p>
           </div>
         </div>
