@@ -46,7 +46,10 @@ export const addressStore = {
   },
   save(entry: Omit<SavedAddress, "id"> & { id?: string }): SavedAddress {
     const list = read();
-    const item: SavedAddress = { ...entry, id: entry.id ?? crypto.randomUUID() };
+    const randomId = typeof crypto !== "undefined" && typeof crypto.randomUUID === "function" 
+      ? crypto.randomUUID() 
+      : "addr_" + Date.now() + "_" + Math.random().toString(36).substring(2, 9);
+    const item: SavedAddress = { ...entry, id: entry.id ?? randomId };
     const idx = list.findIndex((a) => a.id === item.id);
     if (idx >= 0) list[idx] = item;
     else list.push(item);

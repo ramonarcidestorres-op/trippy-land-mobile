@@ -145,7 +145,7 @@ function CheckoutPage() {
       clearCart();
       await queryClient.invalidateQueries({ queryKey: ["orders"] });
 
-      navigate({ to: "/pedido/$id", params: { id: orderId }, search: { nuevo: true } });
+      navigate({ to: "/pedido/$id", params: { id: orderId }, search: { nuevo: true } } as any);
     } catch (e) {
       console.error("Order creation failed:", e);
       toast.error(e instanceof Error ? e.message : "No pudimos crear tu pedido");

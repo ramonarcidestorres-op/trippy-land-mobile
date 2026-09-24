@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Check, MapPin, Receipt, Clock, Rocket, ChevronLeft } from "lucide-react";
+import { Check, MapPin, Receipt, Clock, Rocket, ChevronLeft, Package, Bike, CheckCircle2 } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { EmptyState, ErrorState } from "@/components/States";
 import { supabase } from "@/integrations/supabase/client";
@@ -141,6 +141,21 @@ function OrderDetailPage() {
     }
   }
 
+  const stepIndex =
+    cancelled ? -1
+    : data.status === "pending" ? 0
+    : data.status === "accepted" ? 1
+    : data.status === "in_transit" ? 2
+    : data.status === "arrived" || data.status === "delivered" ? 3
+    : 0;
+
+  const STEPS = [
+    { label: "Recibido", icon: Receipt },
+    { label: "Bodega", icon: Package },
+    { label: "En camino", icon: Bike },
+    { label: "Llegó", icon: CheckCircle2 },
+  ];
+
   return (
     <AppShell>
       {nuevo && (
@@ -178,13 +193,50 @@ function OrderDetailPage() {
         {/* Tracking */}
         <section className="rounded-[32px] bg-surface-2/60 p-6">
           <div className="mb-5 flex items-center justify-between">
-            <h2 className="text-[18px] font-bold text-foreground">Seguimiento</h2>
+            <h2 className="text-[18px] font-bold text-foreground">Seguimiento en Vivo</h2>
             {data.delivery_type === "fast" && (
               <span className="flex items-center gap-1.5 rounded-full bg-primary/20 px-3 py-1 text-[13px] font-bold text-primary">
                 <Rocket className="size-4" /> Rápido
               </span>
             )}
           </div>
+
+          {/* Stepper visual horizontal conectado */}
+          {!cancelled && (
+            <div className="mb-6 px-1">
+              <div className="relative flex items-center justify-between">
+                <div className="absolute left-6 right-6 top-1/2 h-1 -translate-y-1/2 bg-surface" />
+                <div 
+                  className="absolute left-6 top-1/2 h-1 -translate-y-1/2 bg-primary transition-all duration-500" 
+                  style={{ width: `${(Math.min(stepIndex, 3) / 3) * 82}%` }}
+                />
+                
+                {STEPS.map((s, idx) => {
+                  const isDone = idx <= stepIndex;
+                  const isCurrent = idx === stepIndex;
+                  const StepIcon = s.icon;
+                  return (
+                    <div key={s.label} className="relative z-10 flex flex-col items-center">
+                      <div className={cn(
+                        "flex size-11 items-center justify-center rounded-full transition-all duration-300",
+                        isDone 
+                          ? "bg-primary text-primary-foreground shadow-md ring-4 ring-primary/20" 
+                          : "bg-surface text-muted-foreground"
+                      )}>
+                        <StepIcon className={cn("size-5", isCurrent && "animate-pulse")} />
+                      </div>
+                      <span className={cn(
+                        "mt-2 text-[11px] font-bold tracking-tight",
+                        isDone ? "text-foreground" : "text-muted-foreground/60"
+                      )}>
+                        {s.label}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
           
           {cancelled ? (
             <div className="rounded-[20px] bg-red-500/10 p-5">

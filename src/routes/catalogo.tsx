@@ -38,7 +38,15 @@ function CatalogPage() {
   );
 
   function applySearch(value: string) {
-    navigate({ search: (prev: CatalogSearch) => ({ ...prev, q: value.trim() || undefined }) });
+    const trimmed = value.trim();
+    navigate({
+      search: (prev: CatalogSearch) => {
+        const next: Record<string, string> = {};
+        if (prev.categoria) next["categoria"] = prev.categoria;
+        if (trimmed) next["q"] = trimmed;
+        return next as any;
+      },
+    });
   }
 
   return (
@@ -66,7 +74,15 @@ function CatalogPage() {
 
       <div className="mb-8 flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
         <button
-          onClick={() => navigate({ search: (prev: CatalogSearch) => ({ ...prev, categoria: undefined }) })}
+          onClick={() =>
+            navigate({
+              search: (prev: CatalogSearch) => {
+                const next: Record<string, string> = {};
+                if (prev.q) next["q"] = prev.q;
+                return next as any;
+              },
+            })
+          }
           className={cn(
             "shrink-0 rounded-full px-5 py-2.5 text-[14px] font-semibold transition-all active:scale-95",
             !categoria ? "bg-primary text-primary-foreground shadow-sm" : "bg-surface-2/60 text-foreground hover:bg-surface-2"
@@ -93,7 +109,7 @@ function CatalogPage() {
           return (
             <button
               key={c.id}
-              onClick={() => navigate({ search: (prev: CatalogSearch) => ({ ...prev, categoria: c.slug }) })}
+              onClick={() => navigate({ search: (prev: CatalogSearch) => ({ ...prev, categoria: c.slug }) as any })}
               className={cn(
                 "shrink-0 rounded-full px-5 py-2.5 text-[14px] font-semibold transition-all active:scale-95",
                 categoria === c.slug
