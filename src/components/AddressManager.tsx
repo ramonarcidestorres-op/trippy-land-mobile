@@ -10,7 +10,7 @@ import { fetchUserAddresses, saveUserAddress, mapDBToSaved, type DBAddress } fro
 import { addressStore, type SavedAddress } from "@/lib/address";
 import { cn } from "@/lib/utils";
 
-export function AddressManager() {
+export function AddressManager({ trigger }: { trigger?: React.ReactNode } = {}) {
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
   const [view, setView] = useState<"options" | "form">("options");
@@ -29,6 +29,21 @@ export function AddressManager() {
     lat: null as number | null,
     lng: null as number | null,
   });
+
+  // Escuchar evento global para abrir la pantalla sobresaliente de dirección
+  useEffect(() => {
+    const handleOpen = () => {
+      setOpen(true);
+      const list = addressStore.list();
+      if (list.length === 0) {
+        setView("form");
+      } else {
+        setView("options");
+      }
+    };
+    window.addEventListener("tls-open-address-drawer", handleOpen);
+    return () => window.removeEventListener("tls-open-address-drawer", handleOpen);
+  }, []);
 
   // Load from DB
   useEffect(() => {
@@ -112,8 +127,11 @@ export function AddressManager() {
         lng: form.lng,
       }, user.id);
     } else {
+      const safeId = typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
+        ? crypto.randomUUID()
+        : "addr_" + Date.now() + "_" + Math.random().toString(36).substring(2, 9);
       newDbAddress = {
-        id: crypto.randomUUID(),
+        id: safeId,
         address: form.address.trim(),
         neighborhood: form.neighborhood.trim() || null,
         apartment: form.apartment.trim() || null,
@@ -158,24 +176,28 @@ export function AddressManager() {
       if (!val) resetForm();
     }}>
       <DrawerTrigger asChild>
-        <button className="flex w-full items-center justify-between p-1 transition-transform active:scale-95">
-          <div className="flex items-center gap-2.5 text-left">
-            <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-surface-2 text-foreground">
-              <MapPin className="size-3.5" />
+        {trigger ? (
+          trigger
+        ) : (
+          <button className="flex w-full items-center justify-between p-1 transition-transform active:scale-95">
+            <div className="flex items-center gap-2.5 text-left">
+              <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-surface-2 text-foreground">
+                <MapPin className="size-3.5" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">
+                  ¿Dónde entregamos?
+                </p>
+                <p className="line-clamp-1 text-[12px] font-semibold text-foreground">
+                  {selectedAddress ? selectedAddress.address : "Selecciona una dirección"}
+                </p>
+              </div>
             </div>
-            <div className="min-w-0">
-              <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">
-                ¿Dónde entregamos?
-              </p>
-              <p className="line-clamp-1 text-[12px] font-semibold text-foreground">
-                {selectedAddress ? selectedAddress.address : "Selecciona una dirección"}
-              </p>
+            <div className="ml-2 shrink-0 rounded-full bg-surface-2 px-2.5 py-1 text-[10px] font-bold text-foreground">
+              {selectedAddress ? "Cambiar" : "Agregar"}
             </div>
-          </div>
-          <div className="ml-2 shrink-0 rounded-full bg-surface-2 px-2.5 py-1 text-[10px] font-bold text-foreground">
-            {selectedAddress ? "Cambiar" : "Agregar"}
-          </div>
-        </button>
+          </button>
+        )}
       </DrawerTrigger>
       
       <DrawerContent className="bg-background max-h-[90vh]">

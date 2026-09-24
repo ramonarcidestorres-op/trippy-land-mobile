@@ -97,11 +97,12 @@ function OrderDetailPage() {
   }
 
   const cancelled = data.status === "cancelled";
-  const subtotal = data.subtotal ?? data.order_items.reduce(
-    (s, i) => s + Number(i.price_at_time) * i.quantity,
+  const items = data.order_items ?? [];
+  const subtotal = data.subtotal ?? items.reduce(
+    (s, i) => s + Number(i.price_at_time ?? 0) * i.quantity,
     0,
   );
-  const deliveryFee = data.delivery_fee ?? (Number(data.total) - subtotal);
+  const deliveryFee = data.delivery_fee ?? (Number(data.total ?? 0) - subtotal);
   
   // Custom Timer Logic
   const [waText, setWaText] = useState("");
@@ -320,7 +321,7 @@ function OrderDetailPage() {
         <section className="rounded-[32px] bg-surface-2/60 p-6">
           <h2 className="mb-4 text-[18px] font-bold text-foreground">Detalle</h2>
           <ul className="space-y-4">
-            {data.order_items.map((item) => {
+            {items.map((item) => {
               const s = item.products?.name?.toLowerCase() || "";
               let imgUrl = item.products?.image_url;
               if (!imgUrl) {

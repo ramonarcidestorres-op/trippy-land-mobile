@@ -107,7 +107,8 @@ function CheckoutPage() {
       : manualAddress.trim() + (manualNotes.trim() ? ` (Ref: ${manualNotes.trim()})` : "");
 
     if (!effectiveAddress || effectiveAddress.trim().length < 4) {
-      toast.error("Por favor escribe tu dirección de entrega para confirmar.");
+      toast.error("Por favor ingresa tu dirección de entrega para confirmar.");
+      window.dispatchEvent(new Event("tls-open-address-drawer"));
       return;
     }
 
@@ -193,11 +194,37 @@ function CheckoutPage() {
             <h2 className="flex items-center gap-2 text-[15px] font-semibold text-foreground">
               <MapPin className="size-4 text-primary" /> Dirección de entrega
             </h2>
-            <AddressManager />
+            <button
+              type="button"
+              onClick={() => window.dispatchEvent(new Event("tls-open-address-drawer"))}
+              className="text-xs font-bold text-primary hover:underline"
+            >
+              {selected ? "Cambiar" : "Abrir"}
+            </button>
           </div>
 
           {!selected ? (
-            <div className="space-y-3 pt-2">
+            <div className="space-y-3 pt-1">
+              <button
+                type="button"
+                onClick={() => window.dispatchEvent(new Event("tls-open-address-drawer"))}
+                className="flex h-12 w-full items-center justify-between rounded-2xl bg-surface px-4 text-left transition-all active:scale-[0.98] border border-dashed border-border"
+              >
+                <span className="text-[13px] font-medium text-muted-foreground flex items-center gap-2">
+                  <MapPin className="size-4 text-primary" />
+                  Toca para seleccionar dirección o GPS
+                </span>
+                <span className="text-[11px] font-bold text-primary bg-primary/10 px-2.5 py-1 rounded-full">
+                  Abrir
+                </span>
+              </button>
+
+              <div className="relative flex items-center py-0.5">
+                <div className="flex-grow border-t border-border/30"></div>
+                <span className="flex-shrink mx-2 text-[10px] uppercase font-bold text-muted-foreground/60">o escribe aquí</span>
+                <div className="flex-grow border-t border-border/30"></div>
+              </div>
+
               <div>
                 <Input
                   value={manualAddress}
@@ -232,7 +259,13 @@ function CheckoutPage() {
                   <p className="text-[12px] text-muted-foreground">{selected.references}</p>
                 )}
               </div>
-              <AddressManager />
+              <button
+                type="button"
+                onClick={() => window.dispatchEvent(new Event("tls-open-address-drawer"))}
+                className="text-[12px] font-bold text-primary ml-2 px-3 py-1.5 rounded-full bg-surface-2 transition-transform active:scale-95"
+              >
+                Cambiar
+              </button>
             </div>
           )}
         </section>
