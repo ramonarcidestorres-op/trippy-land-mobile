@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Home, LayoutGrid, ShoppingCart, User } from "lucide-react";
+import { Home, LayoutGrid, ShoppingCart, User, Receipt } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { Logo } from "@/components/Logo";
 import { useAuth } from "@/hooks/useAuth";
@@ -18,6 +18,7 @@ import { supabase } from "@/integrations/supabase/client";
 const NAV = [
   { to: "/", label: "Inicio", icon: Home },
   { to: "/catalogo", label: "Catálogo", icon: LayoutGrid },
+  { to: "/pedidos", label: "Pedidos", icon: Receipt },
   { to: "/carrito", label: "Carrito", icon: ShoppingCart },
 ] as const;
 
@@ -82,6 +83,11 @@ export function AppShell({ children }: { children: ReactNode }) {
                     </span>
                   )}
                 </div>
+                <DropdownMenuItem asChild>
+                  <Link to="/pedidos" className="cursor-pointer font-medium">
+                    Mis pedidos
+                  </Link>
+                </DropdownMenuItem>
                 {user.role === "admin" && (
                   <DropdownMenuItem asChild>
                     <Link to="/admin/pedidos" className="cursor-pointer font-medium text-candy-lime">

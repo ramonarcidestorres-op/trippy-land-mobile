@@ -84,15 +84,32 @@ export const cartQuery = (userId: string | undefined) =>
 export const ordersQuery = (userId: string | undefined) =>
   queryOptions({
     queryKey: ["orders", userId],
-    enabled: Boolean(userId),
-    queryFn: async () =>
-      unwrap<Order[]>(
-        await supabase
-          .from("orders")
-          .select("*")
-          .eq("user_id", userId!)
-          .order("created_at", { ascending: false }),
-      ),
+    queryFn: async (): Promise<(Order & { order_items?: OrderItem[] })[]> => {
+      let localIds: string[] = [];
+      try {
+        localIds = JSON.parse(localStorage.getItem("tls_my_orders") || "[]");
+      } catch {
+        // ignore storage errors
+      }
+
+      if (!userId && localIds.length === 0) return [];
+
+      let query = supabase
+        .from("orders")
+        .select("*, order_items(*, products(name, image_url))");
+
+      if (userId && localIds.length > 0) {
+        query = query.or(`user_id.eq.${userId},id.in.(${localIds.join(",")})`);
+      } else if (userId) {
+        query = query.eq("user_id", userId);
+      } else {
+        query = query.in("id", localIds);
+      }
+
+      const { data, error } = await query.order("created_at", { ascending: false });
+      if (error) throw new Error(error.message);
+      return (data || []) as (Order & { order_items?: OrderItem[] })[];
+    },
   });
 
 export const orderQuery = (id: string) =>

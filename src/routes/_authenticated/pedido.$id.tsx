@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Check, MapPin, Clock, ChevronLeft, Bike, ShoppingBag, PackageCheck } from "lucide-react";
+import { Check, MapPin, Clock, ChevronLeft, Bike, ShoppingBag, PackageCheck, Receipt, XCircle } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { AppShell } from "@/components/AppShell";
 import { EmptyState, ErrorState } from "@/components/States";
@@ -36,10 +36,24 @@ function OrderDetailPage() {
   const { data, isLoading, error, refetch } = useQuery(orderQuery(id));
   const { data: history } = useQuery(orderHistoryQuery(data?.id));
 
-  // Todos los Hooks de React DEBEN ejecutarse al inicio antes de cualquier return condicional
   const [waText, setWaText] = useState("");
   const [waSending, setWaSending] = useState(false);
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
+
+  // Guardar en localStorage para acceso seguro en "Mis pedidos"
+  useEffect(() => {
+    if (id) {
+      try {
+        const stored = JSON.parse(localStorage.getItem("tls_my_orders") || "[]");
+        if (!stored.includes(id)) {
+          stored.unshift(id);
+          localStorage.setItem("tls_my_orders", JSON.stringify(stored.slice(0, 50)));
+        }
+      } catch {
+        // ignore
+      }
+    }
+  }, [id]);
 
   useEffect(() => {
     if (!data?.id) return;
@@ -74,7 +88,6 @@ function OrderDetailPage() {
       supabase.removeChannel(channel);
     };
   }, [data?.id, id, queryClient]);
-
 
   useEffect(() => {
     if (data?.status !== "arrived") {
@@ -135,7 +148,7 @@ function OrderDetailPage() {
       <AppShell>
         <div className="pt-10">
           <EmptyState
-            icon={<Receipt className="size-7" />}
+            icon={<Receipt className="size-7 text-primary" />}
             title="Pedido no encontrado"
             description="No encontramos este pedido en tu historial."
           />
@@ -162,70 +175,82 @@ function OrderDetailPage() {
 
   const STEPS = [
     { label: "Recibido", icon: ShoppingBag },
-    { label: "Tienda Aceptó", icon: PackageCheck },
+    { label: "Aceptado", icon: PackageCheck },
     { label: "En Camino", icon: Bike },
     { label: "Llegó", icon: MapPin },
   ];
 
   return (
     <AppShell>
-      {/* Logo Trippy Land grande y centrado */}
-      <div className="flex flex-col items-center justify-center pt-2 pb-5 text-center">
-        <Logo className="h-28 sm:h-36 w-auto object-contain drop-shadow-[0_10px_25px_rgba(0,0,0,0.5)]" />
+      {/* Logo Trippy Land grande y prominente */}
+      <div className="flex flex-col items-center justify-center pt-3 pb-6 text-center">
+        <Logo className="w-56 sm:w-72 max-w-[85vw] h-auto object-contain filter drop-shadow-[0_12px_32px_rgba(0,0,0,0.65)]" />
       </div>
 
       {nuevo && (
-        <div className="mb-6 flex items-center gap-4 rounded-[28px] bg-primary p-5 text-primary-foreground shadow-lg">
-          <div className="flex size-12 shrink-0 items-center justify-center rounded-full bg-white/20">
-            <Check className="size-6" />
+        <div className="mb-6 flex items-center gap-3.5 rounded-[24px] bg-surface-2/80 p-4 text-foreground border border-primary/30 shadow-md">
+          <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-sm">
+            <Check className="size-5" />
           </div>
           <div>
-            <p className="text-[17px] font-bold">¡Pedido confirmado!</p>
-            <p className="mt-0.5 text-[14px] font-medium opacity-90">
-              Pagas en efectivo al recibir.
+            <p className="text-[16px] font-bold text-foreground">¡Pedido confirmado!</p>
+            <p className="text-[13px] font-medium text-muted-foreground">
+              Pagas en efectivo al recibir tu entrega.
             </p>
           </div>
         </div>
       )}
 
-      <div className="mb-6 flex items-start gap-4">
-        {!nuevo && (
+      {/* Cabecera con ID y botón rápido a Mis pedidos */}
+      <div className="mb-6 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
           <button
             onClick={() => window.history.back()}
-            className="mt-1 flex size-10 shrink-0 items-center justify-center rounded-full bg-surface-2/60 transition-transform active:scale-90"
+            className="flex size-10 shrink-0 items-center justify-center rounded-full bg-surface-2/80 transition-transform active:scale-90 border border-border/30"
+            aria-label="Volver"
           >
-            <ChevronLeft className="size-6 text-foreground" />
+            <ChevronLeft className="size-5 text-foreground" />
           </button>
-        )}
-        <div>
-          <h1 className="text-[34px] font-bold leading-tight tracking-tight text-foreground">
-            #{data.id.slice(0, 8).toUpperCase()}
-          </h1>
-          <p className="text-[15px] font-medium text-muted-foreground">{formatDate(data.created_at)}</p>
+          <div>
+            <h1 className="text-[24px] font-extrabold leading-tight tracking-tight text-foreground">
+              #{data.id.slice(0, 8).toUpperCase()}
+            </h1>
+            <p className="text-[12px] font-medium text-muted-foreground">{formatDate(data.created_at)}</p>
+          </div>
         </div>
+
+        <Link
+          to="/pedidos"
+          className="inline-flex items-center gap-1.5 rounded-full bg-surface-2/80 px-3.5 py-1.5 text-xs font-bold text-foreground hover:bg-surface-2 border border-border/40 transition-all active:scale-95 shrink-0"
+        >
+          <Receipt className="size-3.5 text-primary" />
+          <span>Mis pedidos</span>
+        </Link>
       </div>
 
-      <div className="space-y-4">
-        {/* Tracking en Vivo */}
-        <section className="rounded-[32px] bg-surface-2/60 p-6">
+      <div className="space-y-4 pb-20">
+        {/* Seguimiento en Vivo — Estética Minimalista Unificada */}
+        <section className="rounded-[28px] bg-surface-2/70 p-6 border border-border/40 backdrop-blur-md shadow-sm">
           <div className="mb-6 flex items-center justify-between">
             <div>
-              <h2 className="text-[19px] font-bold text-foreground">Seguimiento en Vivo</h2>
-              <p className="text-[12px] font-medium text-muted-foreground">Señal en directo del pedido</p>
+              <h2 className="text-[18px] font-extrabold text-foreground">Seguimiento en Vivo</h2>
+              <p className="text-[12px] font-medium text-muted-foreground">Estado de tu entrega</p>
             </div>
-            <div className="flex items-center gap-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 px-3 py-1 text-[11px] font-bold text-emerald-400">
-              <span className="size-2 rounded-full bg-emerald-400 animate-ping" />
-              Señal en Vivo
+            <div className="flex items-center gap-1.5 rounded-full bg-primary/10 border border-primary/25 px-3 py-1 text-[11px] font-bold text-primary">
+              <span className="size-2 rounded-full bg-primary animate-ping" />
+              En directo
             </div>
           </div>
 
-          {/* Stepper visual horizontal conectado */}
+          {/* Stepper Minimalista con Paleta Unificada */}
           {!cancelled && (
             <div className="mb-6 px-1">
               <div className="relative flex items-center justify-between">
-                <div className="absolute left-6 right-6 top-1/2 h-1 -translate-y-1/2 bg-surface" />
+                {/* Línea base */}
+                <div className="absolute left-6 right-6 top-1/2 h-1 -translate-y-1/2 bg-surface rounded-full" />
+                {/* Línea de progreso con color primario único */}
                 <div 
-                  className="absolute left-6 top-1/2 h-1 -translate-y-1/2 bg-gradient-to-r from-primary via-sky-500 via-amber-500 to-emerald-500 transition-all duration-500 rounded-full" 
+                  className="absolute left-6 top-1/2 h-1 -translate-y-1/2 bg-primary transition-all duration-500 rounded-full" 
                   style={{ width: `${(Math.min(stepIndex, 3) / 3) * 82}%` }}
                 />
                 
@@ -238,17 +263,14 @@ function OrderDetailPage() {
                       <div className={cn(
                         "flex size-12 items-center justify-center rounded-2xl transition-all duration-300",
                         isDone 
-                          ? idx === 0 ? "bg-primary text-primary-foreground shadow-md ring-4 ring-primary/20"
-                          : idx === 1 ? "bg-sky-500 text-white shadow-md ring-4 ring-sky-500/20"
-                          : idx === 2 ? "bg-amber-500 text-white shadow-md ring-4 ring-amber-500/20"
-                          : "bg-emerald-500 text-white shadow-md ring-4 ring-emerald-500/20"
-                          : "bg-surface text-muted-foreground border border-border/40"
+                          ? "bg-primary text-primary-foreground shadow-sm ring-4 ring-primary/20"
+                          : "bg-surface-2 text-muted-foreground/40 border border-border/40"
                       )}>
                         <StepIcon className={cn("size-5", isCurrent && "animate-pulse")} />
                       </div>
                       <span className={cn(
-                        "mt-2 text-[11px] font-bold tracking-tight text-center max-w-[72px]",
-                        isDone ? "text-foreground" : "text-muted-foreground/60"
+                        "mt-2 text-[11px] tracking-tight text-center max-w-[72px]",
+                        isDone ? "text-foreground font-bold" : "text-muted-foreground/50 font-medium"
                       )}>
                         {s.label}
                       </span>
@@ -259,86 +281,91 @@ function OrderDetailPage() {
             </div>
           )}
 
-          {/* Tarjeta de Estado Actual */}
+          {/* Tarjeta de Estado Actual — Minimalista y Elegante */}
           {cancelled ? (
-            <div className="rounded-[24px] bg-red-500/10 p-5 border border-red-500/20">
-              <p className="text-[16px] font-bold text-red-500">Pedido cancelado</p>
-              {data.cancel_reason && (
-                <p className="mt-1 text-[13px] font-medium text-red-400">Motivo: {data.cancel_reason}</p>
-              )}
+            <div className="rounded-[22px] bg-destructive/10 p-4 border border-destructive/30 flex items-start gap-3">
+              <XCircle className="size-5 text-destructive shrink-0 mt-0.5" />
+              <div>
+                <p className="text-[15px] font-bold text-destructive">Pedido cancelado</p>
+                {data.cancel_reason && (
+                  <p className="mt-0.5 text-[12px] text-destructive/80">Motivo: {data.cancel_reason}</p>
+                )}
+              </div>
             </div>
           ) : data.status === "pending" ? (
-            <div className="flex items-center gap-4 rounded-[24px] bg-surface p-5 border border-border/40">
-              <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-primary/20 text-primary">
-                <ShoppingBag className="size-6 animate-pulse" />
+            <div className="flex items-center gap-3.5 rounded-[22px] bg-surface/70 p-4 border border-border/30">
+              <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary border border-primary/20">
+                <ShoppingBag className="size-5 animate-pulse" />
               </div>
               <div>
-                <p className="text-[16px] font-bold text-foreground">Pedido recibido</p>
-                <p className="text-[13px] text-muted-foreground">Esperando que la tienda acepte tu pedido en breve...</p>
+                <p className="text-[15px] font-bold text-foreground">Pedido recibido</p>
+                <p className="text-[12px] text-muted-foreground">Tu pedido está en cola y la tienda lo confirmará en breve.</p>
               </div>
             </div>
           ) : data.status === "accepted" || data.status === "preparing" ? (
-            <div className="flex items-center gap-4 rounded-[24px] bg-sky-500/10 p-5 border border-sky-500/20">
-              <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-sky-500/20 text-sky-400">
-                <PackageCheck className="size-6 animate-bounce" />
+            <div className="flex items-center gap-3.5 rounded-[22px] bg-surface/70 p-4 border border-border/30">
+              <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary border border-primary/20">
+                <PackageCheck className="size-5 animate-bounce" />
               </div>
               <div>
-                <p className="text-[16px] font-bold text-sky-400">¡La tienda aceptó tu pedido!</p>
-                <p className="text-[13px] text-muted-foreground">Tu pedido está siendo empacado y alistado para despacho.</p>
+                <p className="text-[15px] font-bold text-foreground">¡La tienda aceptó tu pedido!</p>
+                <p className="text-[12px] text-muted-foreground">Tu pedido está siendo empacado y alistado para despacho.</p>
               </div>
             </div>
           ) : data.status === "in_transit" || data.status === "dispatched" ? (
-            <div className="flex items-center gap-4 rounded-[24px] bg-amber-500/10 p-5 border border-amber-500/20">
-              <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-amber-500/20 text-amber-400">
-                <Bike className="size-6 animate-pulse" />
+            <div className="flex items-center gap-3.5 rounded-[22px] bg-surface/70 p-4 border border-border/30">
+              <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary border border-primary/20">
+                <Bike className="size-5 animate-pulse" />
               </div>
               <div>
-                <p className="text-[16px] font-bold text-amber-400">El repartidor va en camino</p>
-                <p className="text-[13px] text-muted-foreground">
+                <p className="text-[15px] font-bold text-foreground">El repartidor va en camino</p>
+                <p className="text-[12px] text-muted-foreground">
                   {data.delivery_type === "fast" ? "Entrega Rápida 🚀 (~15-20 min)" : "El repartidor ya va hacia tu dirección."}
                 </p>
               </div>
             </div>
           ) : data.status === "arrived" || data.status === "delivered" ? (
-            <div className="space-y-4 rounded-[24px] bg-emerald-500/10 p-5 border border-emerald-500/20">
-              <div className="flex items-center gap-4">
-                <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-500/20 text-emerald-400">
-                  <MapPin className="size-6" />
+            <div className="space-y-3.5 rounded-[22px] bg-surface/70 p-4 border border-border/30">
+              <div className="flex items-center gap-3.5">
+                <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary border border-primary/20">
+                  <MapPin className="size-5" />
                 </div>
                 <div>
-                  <p className="text-[17px] font-extrabold text-emerald-400">¡El repartidor ya llegó!</p>
-                  <p className="text-[14px] font-bold text-foreground">
-                    Vehículo: <span className="text-primary">{data.status_details || "Repartidor en punto"}</span>
+                  <p className="text-[16px] font-extrabold text-foreground">
+                    {data.status === "delivered" ? "¡Pedido entregado!" : "¡El repartidor ya llegó!"}
+                  </p>
+                  <p className="text-[13px] text-muted-foreground">
+                    Vehículo: <span className="font-bold text-foreground">{data.status_details || "Repartidor en punto"}</span>
                   </p>
                 </div>
               </div>
               
-              {/* Temporizador */}
+              {/* Temporizador minimalista */}
               {data.status === "arrived" && timeLeft !== null && timeLeft > 0 && (
-                <div className="inline-flex items-center gap-2 rounded-full bg-surface-2 px-3 py-1.5 text-[14px] font-semibold text-muted-foreground">
-                  <Clock className="size-4 text-primary" />
-                  Tiempo de espera: {Math.floor(timeLeft / 60000)}:{(Math.floor(timeLeft / 1000) % 60).toString().padStart(2, "0")}
+                <div className="inline-flex items-center gap-2 rounded-full bg-surface-2 px-3 py-1 text-[13px] font-semibold text-foreground border border-border/30">
+                  <Clock className="size-3.5 text-primary" />
+                  <span>Tiempo de espera: {Math.floor(timeLeft / 60000)}:{(Math.floor(timeLeft / 1000) % 60).toString().padStart(2, "0")}</span>
                 </div>
               )}
 
               {/* Formulario de WhatsApp tras 7 minutos */}
               {data.status === "arrived" && timeLeft === 0 && !data.whatsapp_contact && (
-                <div className="space-y-3 rounded-2xl bg-surface p-4">
-                  <p className="text-[14px] font-semibold text-yellow-500">
-                    Colocar tu número de teléfono porque pasó el tiempo de espera.
+                <div className="space-y-2.5 rounded-xl bg-surface-2 p-3.5 border border-border/40">
+                  <p className="text-[13px] font-semibold text-amber-400">
+                    Ingresa tu número de contacto para que el repartidor pueda comunicarse:
                   </p>
                   <div className="flex gap-2">
                     <input 
                       type="tel" 
                       placeholder="Ej: 3001234567"
-                      className="flex-1 rounded-xl bg-surface-2 px-3 py-2 text-[15px] text-foreground outline-none focus:ring-2 focus:ring-primary/50"
+                      className="flex-1 rounded-xl bg-surface px-3 py-2 text-[14px] text-foreground outline-none border border-border/30 focus:border-primary"
                       value={waText}
                       onChange={(e) => setWaText(e.target.value)}
                     />
                     <button 
                       onClick={handleSendWa}
                       disabled={waSending || !waText}
-                      className="rounded-xl bg-primary px-4 font-bold text-primary-foreground transition-transform active:scale-95 disabled:opacity-50"
+                      className="rounded-xl bg-primary px-4 text-xs font-bold text-primary-foreground transition-transform active:scale-95 disabled:opacity-50"
                     >
                       {waSending ? "..." : "Enviar"}
                     </button>
@@ -347,82 +374,66 @@ function OrderDetailPage() {
               )}
               
               {data.whatsapp_contact && (
-                <p className="text-[13px] font-medium text-muted-foreground">
-                  Número enviado: {data.whatsapp_contact}
+                <p className="text-[12px] font-medium text-muted-foreground">
+                  Número enviado: <span className="text-foreground font-semibold">{data.whatsapp_contact}</span>
                 </p>
               )}
             </div>
           ) : null}
         </section>
 
-        {/* Delivery Address */}
+        {/* Dirección de Entrega */}
         {data.delivery_address && (
-          <section className="rounded-[32px] bg-surface-2/60 p-6">
-            <h2 className="mb-3 flex items-center gap-2 text-[15px] font-bold text-foreground">
-              <MapPin className="size-4" /> Entrega
+          <section className="rounded-[28px] bg-surface-2/60 p-5 border border-border/30">
+            <h2 className="mb-2 flex items-center gap-2 text-[14px] font-bold text-foreground">
+              <MapPin className="size-4 text-primary" /> Dirección de Entrega
             </h2>
-            <p className="text-[15px] font-medium text-muted-foreground leading-relaxed">{data.delivery_address}</p>
+            <p className="text-[14px] font-medium text-muted-foreground leading-relaxed">{data.delivery_address}</p>
           </section>
         )}
 
-        {/* Items & Summary */}
-        <section className="rounded-[32px] bg-surface-2/60 p-6">
-          <h2 className="mb-4 text-[18px] font-bold text-foreground">Detalle</h2>
-          <ul className="space-y-4">
-            {items.map((item) => {
-              const s = item.products?.name?.toLowerCase() || "";
-              let imgUrl = item.products?.image_url;
-              if (!imgUrl) {
-                if (s.includes("gom")) imgUrl = "https://images.unsplash.com/photo-1582058091505-f87a2e55a40f?w=400&q=80";
-                else if (s.includes("choco")) imgUrl = "https://images.unsplash.com/photo-1606312619070-d48b4c652a52?w=400&q=80";
-                else imgUrl = "https://images.unsplash.com/photo-1550258987-190a2d41a8ba?w=400&q=80";
-              }
-
-              return (
-                <li key={item.id} className="flex items-center gap-4">
-                  <div className="size-14 shrink-0 overflow-hidden rounded-2xl bg-surface">
-                    <img
-                      src={imgUrl}
-                      alt={item.products?.name ?? "Producto"}
-                      loading="lazy"
-                      className="size-full object-cover"
-                    />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-[15px] font-semibold text-foreground">{item.products?.name ?? "Producto retirado"}</p>
-                    <p className="text-[13px] font-medium text-muted-foreground">
-                      {item.quantity} × {formatPrice(item.price_at_time)}
-                    </p>
-                  </div>
-                  <span className="shrink-0 text-[15px] font-bold text-foreground">
-                    {formatPrice(Number(item.price_at_time) * item.quantity)}
-                  </span>
-                </li>
-              );
-            })}
+        {/* Detalle y Resumen de Productos */}
+        <section className="rounded-[28px] bg-surface-2/60 p-5 border border-border/30">
+          <h2 className="mb-4 text-[16px] font-bold text-foreground">Resumen de la Orden</h2>
+          <ul className="space-y-3">
+            {items.map((item) => (
+              <li key={item.id} className="flex items-center justify-between text-[14px] py-1 border-b border-border/10 last:border-none">
+                <div className="min-w-0 flex-1 pr-2">
+                  <p className="truncate font-medium text-foreground">
+                    <span className="font-bold text-primary">{item.quantity}×</span> {item.products?.name ?? "Producto"}
+                  </p>
+                  <p className="text-[12px] text-muted-foreground">
+                    {formatPrice(item.price_at_time)} c/u
+                  </p>
+                </div>
+                <span className="shrink-0 font-semibold text-foreground">
+                  {formatPrice(Number(item.price_at_time) * item.quantity)}
+                </span>
+              </li>
+            ))}
           </ul>
 
-          <div className="mt-6 space-y-2 border-t border-border/40 pt-4 text-[14px]">
+          <div className="mt-4 space-y-1.5 border-t border-border/30 pt-3 text-[13px]">
             <Row label="Subtotal" value={formatPrice(subtotal)} />
             <Row label="Domicilio" value={formatPrice(deliveryFee)} />
-            <div className="flex items-center justify-between pt-2 text-[18px] font-bold text-foreground">
+            <div className="flex items-center justify-between pt-2 text-[17px] font-extrabold text-foreground">
               <span>Total</span>
               <span>{formatPrice(data.total)}</span>
             </div>
-            <p className="pt-2 text-[13px] font-medium text-muted-foreground">
-              Pago al recibir: {data.payment_method === "cash" ? "Efectivo" : (data.payment_method ?? "—")}
+            <p className="pt-1 text-[12px] text-muted-foreground">
+              Método: {data.payment_method === "cash" ? "Efectivo al recibir" : (data.payment_method ?? "—")}
             </p>
           </div>
         </section>
 
-        {!nuevo && (
-          <Link
-            to="/pedidos"
-            className="flex h-14 w-full items-center justify-center rounded-full bg-surface-2/80 text-[16px] font-bold text-foreground transition-transform active:scale-95"
-          >
-            Ver todos mis pedidos
-          </Link>
-        )}
+        {/* Botón Permanente a Mis Pedidos */}
+        <Link
+          to="/pedidos"
+          className="flex h-14 w-full items-center justify-center gap-2 rounded-full bg-surface-2/90 border border-border/40 text-[15px] font-bold text-foreground transition-transform active:scale-95 hover:bg-surface-2"
+        >
+          <Receipt className="size-4 text-primary" />
+          <span>Ver todos mis pedidos</span>
+        </Link>
       </div>
     </AppShell>
   );

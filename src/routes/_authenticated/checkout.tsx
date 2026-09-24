@@ -143,6 +143,16 @@ function CheckoutPage() {
         throw new Error(rpcError?.message ?? "No se creó el pedido en el servidor");
       }
 
+      try {
+        const stored = JSON.parse(localStorage.getItem("tls_my_orders") || "[]");
+        if (!stored.includes(orderId)) {
+          stored.unshift(orderId);
+          localStorage.setItem("tls_my_orders", JSON.stringify(stored.slice(0, 50)));
+        }
+      } catch {
+        // ignore
+      }
+
       clearCart();
       await queryClient.invalidateQueries({ queryKey: ["orders"] });
 
