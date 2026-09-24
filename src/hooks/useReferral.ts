@@ -87,55 +87,46 @@ export function syncReferralManifest(refCode: string | null) {
 export function getStoredReferral(): string | null {
   if (typeof window === "undefined") return null;
 
-  // 1. Revisar URL primero
+  // 1. Revisar si la URL actual trae un código de referido explícito (?ref=CODIGO)
   const urlRef = new URLSearchParams(window.location.search).get("ref");
-  if (urlRef) {
+  if (urlRef && urlRef.trim() !== "") {
     const clean = urlRef.trim().toUpperCase();
     saveReferralEverywhere(clean);
     return clean;
   }
 
-  // 2. Revisar localStorage
-  const localRef = localStorage.getItem(STORAGE_KEY);
-  if (localRef) {
-    const clean = localRef.trim().toUpperCase();
-    setCookie(STORAGE_KEY, clean);
-    return clean;
-  }
-
-  // 3. Revisar Cookie (compartida entre Safari navegador y PWA en iOS)
-  const cookieRef = getCookie(STORAGE_KEY);
-  if (cookieRef) {
-    const clean = cookieRef.trim().toUpperCase();
-    localStorage.setItem(STORAGE_KEY, clean);
-    return clean;
-  }
-
+  // 2. Si la URL NO tiene ?ref=, significa que el usuario entró por el link original directo.
+  // Limpiamos cualquier rastro previo para mostrar siempre los precios base oficiales sin comisión.
+  clearReferralEverywhere();
   return null;
+}
+
+function clearReferralEverywhere() {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.removeItem(STORAGE_KEY);
+    sessionStorage.removeItem(STORAGE_KEY);
+    removeCookie(STORAGE_KEY);
+    syncReferralManifest(null);
+  } catch {
+    // ignore
+  }
 }
 
 function saveReferralEverywhere(code: string | null) {
   if (typeof window === "undefined") return;
   if (code) {
     const clean = code.trim().toUpperCase();
-    localStorage.setItem(STORAGE_KEY, clean);
-    setCookie(STORAGE_KEY, clean);
-    syncReferralManifest(clean);
-
-    // Mantener ?ref= en la barra de URL para que si Safari hace WebClip tome la URL con referido
     try {
-      const url = new URL(window.location.href);
-      if (url.searchParams.get("ref") !== clean) {
-        url.searchParams.set("ref", clean);
-        window.history.replaceState({}, "", url.toString());
-      }
+      localStorage.setItem(STORAGE_KEY, clean);
+      sessionStorage.setItem(STORAGE_KEY, clean);
+      setCookie(STORAGE_KEY, clean);
+      syncReferralManifest(clean);
     } catch {
       // ignore
     }
   } else {
-    localStorage.removeItem(STORAGE_KEY);
-    removeCookie(STORAGE_KEY);
-    syncReferralManifest(null);
+    clearReferralEverywhere();
   }
 }
 
@@ -151,7 +142,11 @@ export function useReferral() {
   }, []);
 
   const setReferralCode = (code: string | null) => {
-    saveReferralEverywhere(code);
+    if (code) {
+      saveReferralEverywhere(code);
+    } else {
+      clearReferralEverywhere();
+    }
     window.dispatchEvent(new Event(EVENT_NAME));
     setReferralState(code ? code.trim().toUpperCase() : null);
   };
@@ -160,9 +155,10 @@ export function useReferral() {
     (basePrice: number | string) => {
       const price = Number(basePrice);
       if (referralCode) {
-        // Incremento del 40% para comisionistas
+        // Incremento del 40% ÚNICAMENTE cuando se accede mediante enlace de referido
         return Math.round(price * 1.4);
       }
+      // Precio original base de la tienda
       return price;
     },
     [referralCode]
@@ -176,7 +172,8 @@ export function processUrlForReferral() {
   const current = getStoredReferral();
   if (current) {
     saveReferralEverywhere(current);
-    window.dispatchEvent(new Event(EVENT_NAME));
+  } else {
+    clearReferralEverywhere();
   }
+  window.dispatchEvent(new Event(EVENT_NAME));
 }
-
