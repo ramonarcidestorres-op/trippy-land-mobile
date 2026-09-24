@@ -119,9 +119,12 @@ function CheckoutPage() {
 
       <div className="space-y-4 pb-32">
         {/* Address Card */}
-        <section className="rounded-[32px] bg-surface-2/60 p-5">
+        <section className={cn(
+          "rounded-[32px] p-5 transition-all",
+          !selected ? "bg-surface-2/80 border border-primary/40 shadow-sm" : "bg-surface-2/60"
+        )}>
           <h2 className="mb-4 flex items-center gap-2 text-[15px] font-semibold text-foreground">
-            <MapPin className="size-4" /> Dirección de entrega
+            <MapPin className="size-4" /> Dirección de entrega {!selected && <span className="text-xs text-primary font-bold">(Requerida)</span>}
           </h2>
           <AddressManager />
         </section>
@@ -214,7 +217,7 @@ function CheckoutPage() {
       </div>
 
       {/* Fixed Bottom Action */}
-      <div className="fixed inset-x-0 bottom-[80px] z-40 mx-auto max-w-5xl px-4 md:bottom-4 md:px-0">
+      <div className="fixed inset-x-0 bottom-0 z-40 mx-auto max-w-5xl bg-gradient-to-t from-background via-background/95 to-transparent px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-4 md:bottom-4 md:px-0 md:bg-none">
         <button
           className="flex h-[56px] w-full items-center justify-center rounded-full bg-primary px-6 shadow-2xl transition-transform active:scale-95 disabled:opacity-50 disabled:active:scale-100"
           onClick={placeOrder}

@@ -140,8 +140,8 @@ function ProductPage() {
       </div>
 
       {/* Floating Bottom Action Bar */}
-      <div className="fixed inset-x-0 bottom-[80px] z-40 mx-auto max-w-5xl px-4 md:bottom-4 md:px-0">
-        <div className="flex h-16 items-center gap-4 rounded-full bg-surface-2/90 p-2 pl-4 pr-2 shadow-2xl ring-1 ring-border/50 backdrop-blur-xl">
+      <div className="fixed inset-x-0 bottom-0 z-40 mx-auto max-w-5xl bg-gradient-to-t from-background via-background/95 to-transparent px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-4 md:bottom-4 md:px-0 md:bg-none">
+        <div className="flex h-16 items-center gap-4 rounded-full bg-surface-2/95 p-2 pl-4 pr-2 shadow-2xl ring-1 ring-border/50 backdrop-blur-xl">
           {/* Quantity Selector */}
           <div className="flex items-center gap-3">
             <button

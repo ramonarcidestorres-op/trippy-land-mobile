@@ -142,7 +142,7 @@ function CartPage() {
             </button>
           </div>
           
-          <div className="mt-4 rounded-[32px] bg-surface-2/40 p-6">
+          <div className="mb-12 mt-6 rounded-[32px] bg-surface-2/40 p-6 shadow-sm">
             <div className="flex items-center justify-between text-sm">
               <span className="font-medium text-muted-foreground">Subtotal</span>
               <span className="text-[15px] font-bold text-foreground">{formatPrice(subtotal)}</span>
@@ -151,7 +151,7 @@ function CartPage() {
             <div className="mt-6">
               <Link
                 to="/checkout"
-                className="flex h-[52px] w-full items-center justify-center rounded-full bg-primary text-[16px] font-bold text-primary-foreground shadow-sm transition-transform active:scale-95"
+                className="flex h-[54px] w-full items-center justify-center rounded-full bg-primary text-[16px] font-bold text-primary-foreground shadow-sm transition-transform active:scale-95"
               >
                 Proceder al pago
               </Link>

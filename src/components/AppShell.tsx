@@ -38,6 +38,10 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { cart } = useCart();
   const count = cart.reduce((s, r) => s + r.quantity, 0);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const hideBottomNav =
+    pathname.startsWith("/checkout") ||
+    pathname.startsWith("/producto") ||
+    pathname.startsWith("/pedido");
 
   return (
     <div className="min-h-screen bg-background">
@@ -97,33 +101,35 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       </header>
 
-      <main className="mx-auto max-w-5xl px-4 pb-28 pt-4 md:pb-12">{children}</main>
+      <main className="mx-auto max-w-5xl px-4 pb-32 pt-4 md:pb-12">{children}</main>
 
-      <nav className="fixed inset-x-0 bottom-0 z-30 md:hidden bg-background/85 backdrop-blur-2xl border-t border-border/40 pb-[env(safe-area-inset-bottom)]">
-        <div className="flex h-16 items-center justify-around px-2">
-          {NAV.map(({ to, label, icon: Icon }) => {
-            const active = to === "/" ? pathname === "/" : pathname.startsWith(to);
-            return (
-              <Link
-                key={to}
-                to={to as any}
-                className={cn(
-                  "relative flex flex-col items-center justify-center gap-1 w-16 h-full transition-colors",
-                  active ? "text-white" : "text-muted-foreground hover:text-foreground"
-                )}
-              >
-                <Icon
-                  strokeWidth={active ? 2.5 : 2}
+      {!hideBottomNav && (
+        <nav className="fixed inset-x-0 bottom-0 z-30 md:hidden bg-background/85 backdrop-blur-2xl border-t border-border/40 pb-[env(safe-area-inset-bottom)]">
+          <div className="flex h-16 items-center justify-around px-2">
+            {NAV.map(({ to, label, icon: Icon }) => {
+              const active = to === "/" ? pathname === "/" : pathname.startsWith(to);
+              return (
+                <Link
+                  key={to}
+                  to={to as any}
                   className={cn(
-                    "size-5 transition-transform",
-                    active ? "scale-110" : ""
+                    "relative flex flex-col items-center justify-center gap-1 w-16 h-full transition-colors",
+                    active ? "text-white" : "text-muted-foreground hover:text-foreground"
                   )}
-                />
-              </Link>
-            );
-          })}
-        </div>
-      </nav>
+                >
+                  <Icon
+                    strokeWidth={active ? 2.5 : 2}
+                    className={cn(
+                      "size-5 transition-transform",
+                      active ? "scale-110" : ""
+                    )}
+                  />
+                </Link>
+              );
+            })}
+          </div>
+        </nav>
+      )}
     </div>
   );
 }
