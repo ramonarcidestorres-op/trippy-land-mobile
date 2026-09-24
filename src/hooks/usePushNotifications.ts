@@ -57,12 +57,13 @@ export function usePushNotifications() {
 
   const subscribe = useCallback(
     async (
-      options?: string | { targetUserId?: string; orderId?: string }
+      options?: string | { targetUserId?: string; orderId?: string; role?: "admin" | "customer" }
     ): Promise<{ success: boolean; error?: string; needsIOSInstall?: boolean }> => {
       if (typeof window === "undefined") return { success: false, error: "Navegador no disponible" };
 
       const targetUserId = typeof options === "string" ? options : options?.targetUserId;
       const orderId = typeof options === "object" ? options?.orderId : undefined;
+      const explicitRole = typeof options === "object" ? options?.role : undefined;
 
       // En iOS, las notificaciones web push requieren que la web esté añadida a la pantalla de inicio
       if (isIOS && !isStandalone) {
@@ -107,14 +108,17 @@ export function usePushNotifications() {
           throw new Error("No se pudieron obtener las claves criptográficas de la suscripción");
         }
 
-        const effectiveUserId = targetUserId || user?.id || null;
+        const isAdmin = explicitRole === "admin" || user?.role === "admin" || user?.email === "ramon.arcidestorres@gmail.com";
+        const assignedRole = isAdmin ? "admin" : "customer";
+        const effectiveUserId = targetUserId || user?.id || (isAdmin ? "72000733-ea5a-4e08-825c-8a175fbbfee5" : null);
 
-        // 4. Guardar suscripción en Supabase (soporta usuario y/o pedido)
+        // 4. Guardar suscripción en Supabase (soporta usuario, rol admin y/o pedido)
         const payload: Record<string, unknown> = {
           endpoint: sub.endpoint,
           p256dh,
           auth: authKey,
           user_id: effectiveUserId,
+          role: assignedRole,
         };
 
         if (orderId) {
@@ -137,7 +141,7 @@ export function usePushNotifications() {
         return { success: false, error: e?.message || "Error al activar notificaciones" };
       }
     },
-    [isIOS, isStandalone, isSupported, user?.id]
+    [isIOS, isStandalone, isSupported, user?.id, user?.role, user?.email]
   );
 
   const unsubscribe = useCallback(async (): Promise<{ success: boolean; error?: string }> => {

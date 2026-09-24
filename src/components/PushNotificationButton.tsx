@@ -27,10 +27,10 @@ export function PushNotificationButton({ variant, targetUserId, orderId, classNa
 
   // Si el usuario ya había otorgado permisos en su navegador, registrar automáticamente este pedido
   useEffect(() => {
-    if (orderId && permission === "granted" && !isSubscribed) {
-      subscribe({ targetUserId, orderId }).catch(() => {});
+    if (permission === "granted" && !isSubscribed) {
+      subscribe({ targetUserId, orderId, role: variant }).catch(() => {});
     }
-  }, [orderId, permission, isSubscribed, subscribe, targetUserId]);
+  }, [orderId, permission, isSubscribed, subscribe, targetUserId, variant]);
 
   const handleTestPush = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -51,6 +51,7 @@ export function PushNotificationButton({ variant, targetUserId, orderId, classNa
               test: true,
               endpoint: sub.endpoint,
               order_id: orderId,
+              role: variant,
             }),
           });
         } catch {
@@ -78,7 +79,7 @@ export function PushNotificationButton({ variant, targetUserId, orderId, classNa
       return;
     }
 
-    const res = await subscribe({ targetUserId, orderId });
+    const res = await subscribe({ targetUserId, orderId, role: variant });
     if (res.success) {
       toast.success(
         variant === "admin"

@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { PushNotificationButton } from "@/components/PushNotificationButton";
+import { AdminNotificationPromptModal } from "@/components/AdminNotificationPromptModal";
 import { EmptyState, ErrorState } from "@/components/States";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -357,6 +358,9 @@ export function AdminPedidosPage() {
 
   return (
     <AppShell>
+      {/* Modal automático para activar avisos de nuevos pedidos y guía iOS */}
+      <AdminNotificationPromptModal />
+
       <div className="space-y-6 pb-24">
         {/* Cabecera del Panel */}
         <div className="flex flex-col gap-2">
