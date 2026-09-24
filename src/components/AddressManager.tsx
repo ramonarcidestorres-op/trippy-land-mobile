@@ -141,9 +141,9 @@ export function AddressManager() {
       if (!val) resetForm();
     }}>
       <DrawerTrigger asChild>
-        <button className="flex w-full items-center justify-between rounded-full bg-surface p-1.5 pr-3 shadow-sm ring-1 ring-border/50 transition-transform active:scale-95">
+        <button className="flex w-full items-center justify-between p-1 transition-transform active:scale-95">
           <div className="flex items-center gap-2.5 text-left">
-            <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+            <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-surface-2 text-foreground">
               <MapPin className="size-3.5" />
             </div>
             <div className="min-w-0">
@@ -175,7 +175,7 @@ export function AddressManager() {
                 <Button 
                   onClick={handleGetLocation} 
                   disabled={loading}
-                  className="h-12 w-full gap-2 candy-gradient text-primary-foreground font-semibold"
+                  className="h-12 w-full gap-2 bg-surface-2 text-foreground font-semibold hover:bg-surface"
                 >
                   {loading ? <Loader2 className="size-5 animate-spin" /> : <Navigation className="size-5" />}
                   Usar mi ubicación
@@ -184,7 +184,7 @@ export function AddressManager() {
                 <Button 
                   onClick={() => setView("form")} 
                   variant="outline" 
-                  className="h-12 w-full gap-2 bg-surface"
+                  className="h-12 w-full gap-2 border-border bg-transparent text-foreground hover:bg-surface"
                 >
                   <Edit2 className="size-4" />
                   Escribir dirección
@@ -281,7 +281,7 @@ export function AddressManager() {
                 <Button 
                   onClick={handleSave} 
                   disabled={loading}
-                  className="flex-1 h-11 candy-gradient font-semibold text-primary-foreground"
+                  className="flex-1 h-11 bg-primary font-semibold text-primary-foreground"
                 >
                   {loading ? <Loader2 className="size-5 animate-spin" /> : "Guardar y Usar"}
                 </Button>

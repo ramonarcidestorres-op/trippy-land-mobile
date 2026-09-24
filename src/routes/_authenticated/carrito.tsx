@@ -17,16 +17,26 @@ export const Route = createFileRoute("/_authenticated/carrito")({
 });
 
 function CartPage() {
-  const { cart: rows, setQuantity, removeItem } = useCart();
+  const { cart: rows, setQuantity, removeItem, clearCart } = useCart();
   const { getAdjustedPrice } = useReferral();
   // Calculate subtotal with adjusted prices
   const subtotal = rows.reduce((sum, r) => sum + getAdjustedPrice(r.products?.price ?? 0) * r.quantity, 0);
 
   return (
     <AppShell>
-      <h1 className="mb-6 text-[34px] font-bold tracking-tight text-foreground">
-        Carrito
-      </h1>
+      <div className="mb-6 flex items-center justify-between">
+        <h1 className="text-[34px] font-bold tracking-tight text-foreground">
+          Carrito Trippy
+        </h1>
+        {rows.length > 0 && (
+          <button
+            onClick={() => clearCart()}
+            className="text-[14px] font-semibold text-red-400 active:scale-95 transition-transform"
+          >
+            Vaciar carrito
+          </button>
+        )}
+      </div>
 
       {rows.length === 0 ? (
         <div className="mt-10">
@@ -61,62 +71,69 @@ function CartPage() {
               return (
                 <li
                   key={row.id}
-                  className="flex gap-4 rounded-[28px] bg-surface-2/60 p-4 transition-all"
+                  className="relative overflow-hidden rounded-[28px] bg-red-500"
                 >
-                  <div className="size-20 shrink-0 overflow-hidden rounded-2xl bg-surface">
-                    <img
-                      src={imgUrl}
-                      alt={row.products?.name}
-                      loading="lazy"
-                      className="size-full object-cover"
-                    />
+                  <div className="absolute right-0 top-0 bottom-0 flex w-24 items-center justify-center">
+                    <Trash2 className="size-6 text-white" />
                   </div>
                   
-                  <div className="flex min-w-0 flex-1 flex-col justify-between">
-                    <div>
-                      <div className="flex items-start justify-between">
-                        <h3 className="line-clamp-1 pr-2 text-[15px] font-semibold leading-tight text-foreground">
-                          {row.products?.name}
-                        </h3>
-                        <button
-                          className="flex size-7 shrink-0 items-center justify-center rounded-full bg-surface text-muted-foreground transition-transform active:scale-90"
-                          onClick={() => removeItem(row.id)}
-                          aria-label="Eliminar"
-                        >
-                          <Trash2 className="size-3.5" />
-                        </button>
+                  <div className="relative flex w-full overflow-x-auto snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                    <div className="flex min-w-full shrink-0 snap-start gap-4 rounded-[28px] bg-surface-2/60 p-4">
+                      <div className="size-20 shrink-0 overflow-hidden rounded-2xl bg-surface">
+                        <img
+                          src={imgUrl}
+                          alt={row.products?.name}
+                          loading="lazy"
+                          className="size-full object-cover"
+                        />
                       </div>
-                      <p className="mt-1 text-[13px] font-medium text-muted-foreground">
-                        {formatPrice(getAdjustedPrice(row.products?.price ?? 0))} c/u
-                      </p>
-                      {row.products?.is_available === false && (
-                        <p className="mt-0.5 text-[11px] font-bold text-red-400">
-                          No disponible
-                        </p>
-                      )}
+                      
+                      <div className="flex min-w-0 flex-1 flex-col justify-between">
+                        <div>
+                          <div className="flex items-start justify-between">
+                            <h3 className="line-clamp-1 pr-2 text-[15px] font-semibold leading-tight text-foreground">
+                              {row.products?.name}
+                            </h3>
+                          </div>
+                          <p className="mt-1 text-[13px] font-medium text-muted-foreground">
+                            {formatPrice(getAdjustedPrice(row.products?.price ?? 0))} c/u
+                          </p>
+                          {row.products?.is_available === false && (
+                            <p className="mt-0.5 text-[11px] font-bold text-red-400">
+                              No disponible
+                            </p>
+                          )}
+                        </div>
+                        
+                        <div className="mt-3 flex items-center justify-between">
+                          <div className="flex items-center gap-1 rounded-full bg-surface p-1">
+                            <button
+                              className="flex size-7 items-center justify-center rounded-full bg-surface-2 transition-transform active:scale-90"
+                              onClick={() => setQuantity(row.id, row.quantity - 1)}
+                              disabled={row.quantity <= 1}
+                            >
+                              <Minus className="size-3.5" />
+                            </button>
+                            <span className="w-6 text-center text-[13px] font-bold">{row.quantity}</span>
+                            <button
+                              className="flex size-7 items-center justify-center rounded-full bg-surface-2 transition-transform active:scale-90"
+                              onClick={() => setQuantity(row.id, row.quantity + 1)}
+                            >
+                              <Plus className="size-3.5" />
+                            </button>
+                          </div>
+                          <span className="text-[15px] font-bold text-foreground">
+                            {formatPrice(getAdjustedPrice(row.products?.price ?? 0) * row.quantity)}
+                          </span>
+                        </div>
+                      </div>
                     </div>
                     
-                    <div className="mt-3 flex items-center justify-between">
-                      <div className="flex items-center gap-1 rounded-full bg-surface p-1">
-                        <button
-                          className="flex size-7 items-center justify-center rounded-full bg-surface-2 transition-transform active:scale-90"
-                          onClick={() => setQuantity(row.id, row.quantity - 1)}
-                          disabled={row.quantity <= 1}
-                        >
-                          <Minus className="size-3.5" />
-                        </button>
-                        <span className="w-6 text-center text-[13px] font-bold">{row.quantity}</span>
-                        <button
-                          className="flex size-7 items-center justify-center rounded-full bg-surface-2 transition-transform active:scale-90"
-                          onClick={() => setQuantity(row.id, row.quantity + 1)}
-                        >
-                          <Plus className="size-3.5" />
-                        </button>
-                      </div>
-                      <span className="text-[15px] font-bold text-foreground">
-                        {formatPrice(getAdjustedPrice(row.products?.price ?? 0) * row.quantity)}
-                      </span>
-                    </div>
+                    <button 
+                      className="w-24 shrink-0 snap-end" 
+                      onClick={() => removeItem(row.id)}
+                      aria-label="Eliminar"
+                    />
                   </div>
                 </li>
               );

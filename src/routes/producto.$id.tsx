@@ -110,7 +110,7 @@ function ProductPage() {
               {data.categories.name}
             </span>
           )}
-          <span className={cn("text-xs font-bold uppercase tracking-wider", available ? "text-green-400" : "text-red-400")}>
+          <span className={cn("text-xs font-bold uppercase tracking-wider", available ? "text-green-400" : "text-muted-foreground")}>
             {available ? "Disponible" : "Agotado"}
           </span>
         </div>
@@ -119,7 +119,7 @@ function ProductPage() {
           {data.name}
         </h1>
         
-        <p className="mb-6 text-[28px] font-bold tracking-tight text-[#E63946]">
+        <p className="mb-6 text-[28px] font-bold tracking-tight text-foreground">
           {formatPrice(getAdjustedPrice(data.price))}
         </p>
 

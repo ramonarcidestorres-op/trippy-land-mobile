@@ -161,11 +161,6 @@ function CheckoutPage() {
               )}
             </button>
           </div>
-          {!applicableFee && (
-            <p className="mt-4 rounded-xl bg-destructive/10 p-3 text-center text-xs font-semibold text-destructive">
-              No se encontraron tarifas configuradas para este subtotal.
-            </p>
-          )}
         </section>
 
         {/* Payment Method */}
@@ -223,7 +218,7 @@ function CheckoutPage() {
         <button
           className="flex h-[56px] w-full items-center justify-center rounded-full bg-primary px-6 shadow-2xl transition-transform active:scale-95 disabled:opacity-50 disabled:active:scale-100"
           onClick={placeOrder}
-          disabled={placing || unavailable.length > 0 || !applicableFee}
+          disabled={placing || unavailable.length > 0}
         >
           <span className="text-[17px] font-bold text-primary-foreground">
             {placing ? "Confirmando..." : `Confirmar pedido · ${formatPrice(total)}`}

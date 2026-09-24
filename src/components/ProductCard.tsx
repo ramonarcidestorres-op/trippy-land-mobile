@@ -64,28 +64,28 @@ export function ProductCard({ product }: { product: Product }) {
         )}
       </Link>
       
-      <div className="relative z-10 mt-6 flex flex-1 flex-col px-5">
+      <div className="relative z-10 mt-6 flex flex-1 flex-col px-4">
         <Link 
           to="/producto/$id"
           params={{ id: product.id }}
           className="outline-none"
         >
-          <h3 className="line-clamp-1 text-[17px] font-semibold text-white">
+          <h3 className="line-clamp-1 text-[16px] font-semibold text-white">
             {product.name}
           </h3>
-          <p className="mt-1.5 line-clamp-2 text-[13px] text-[#A0A0A0]">
+          <p className="mt-1 line-clamp-2 text-[12px] text-[#A0A0A0]">
             {product.description || "Delicioso producto seleccionado especialmente para ti."}
           </p>
         </Link>
         
-        <div className="mt-5 flex items-center justify-between">
-          <div className="flex items-center text-[12px] font-medium text-[#7D7D7D]">
-            <Clock className="mr-1.5 size-3.5" />
-            20 min.
+        <div className="mt-4 flex items-center justify-between">
+          <div className="flex items-center text-[11px] font-medium text-[#7D7D7D]">
+            <Clock className="mr-1 size-3" />
+            20 min
           </div>
           
-          <div className="flex items-center gap-3">
-            <p className="text-[16px] font-bold tracking-wide text-[#E63946]">
+          <div className="flex items-center gap-2">
+            <p className="text-[15px] font-bold tracking-tight text-white">
               {formatPrice(getAdjustedPrice(product.price))}
             </p>
             
@@ -93,10 +93,10 @@ export function ProductCard({ product }: { product: Product }) {
               <button 
                 onClick={handleAdd}
                 disabled={busy}
-                className="flex size-8 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm transition-transform active:scale-90 disabled:opacity-50"
+                className="flex size-7 shrink-0 items-center justify-center rounded-full bg-surface-2 text-foreground transition-transform active:scale-90 disabled:opacity-50"
                 aria-label="Agregar al carrito"
               >
-                {busy ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" strokeWidth={3} />}
+                {busy ? <Loader2 className="size-3.5 animate-spin" /> : <Plus className="size-3.5" strokeWidth={3} />}
               </button>
             )}
           </div>

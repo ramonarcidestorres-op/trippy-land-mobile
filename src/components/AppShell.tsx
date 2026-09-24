@@ -41,7 +41,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-30 border-b border-border/60 bg-background/85 backdrop-blur-xl">
+      <header className="sticky top-0 z-30 bg-background/85 backdrop-blur-xl">
         <div className="mx-auto flex max-w-5xl items-center gap-3 px-4 py-3">
           <div className="flex-1 min-w-0 pr-2">
             <AddressManager />
