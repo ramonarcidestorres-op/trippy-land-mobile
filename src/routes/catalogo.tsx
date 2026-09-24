@@ -87,7 +87,7 @@ function CatalogPage() {
           } else if (n.includes("farma")) {
             activeColor = "bg-[#A7C7E7] text-black shadow-sm";
           } else if (n.includes("sint")) {
-            activeColor = "bg-[#FFB5E8] text-black shadow-sm";
+            activeColor = "bg-[#FF3B30] text-black shadow-sm";
           }
 
           return (

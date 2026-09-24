@@ -95,7 +95,7 @@ function HomePage() {
                 activeColor = "bg-[#A7C7E7] text-black"; // Azul claro
                 if (!c.icon_url) imgUrl = "/categorias/farmacia.png";
               } else if (n.includes("sint")) {
-                activeColor = "bg-[#FFB5E8] text-black"; // Rosado
+                activeColor = "bg-[#FF3B30] text-black"; // Rojo HIG
                 if (!c.icon_url) imgUrl = "/categorias/sintéticos.png";
               } else {
                 if (!c.icon_url) imgUrl = `/categorias/${c.name}.png`;
