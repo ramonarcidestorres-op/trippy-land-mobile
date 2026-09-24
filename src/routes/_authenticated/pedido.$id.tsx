@@ -6,6 +6,7 @@ import { Check, MapPin, Clock, ChevronLeft, Bike, ShoppingBag, PackageCheck, Rec
 import { Logo } from "@/components/Logo";
 import { AppShell } from "@/components/AppShell";
 import { PushNotificationButton } from "@/components/PushNotificationButton";
+import { OrderNotificationPromptModal } from "@/components/OrderNotificationPromptModal";
 import { EmptyState, ErrorState } from "@/components/States";
 import { supabase } from "@/integrations/supabase/client";
 import { orderQuery, orderHistoryQuery } from "@/lib/queries";
@@ -246,6 +247,9 @@ function OrderDetailPage() {
 
   return (
     <AppShell>
+      {/* Modal automático de activación de avisos y guía de iOS */}
+      <OrderNotificationPromptModal orderId={data.id} targetUserId={data.user_id || undefined} />
+
       {/* Logo Trippy Land grande y prominente */}
       <div className="flex flex-col items-center justify-center pt-3 pb-6 text-center">
         <Logo className="w-56 sm:w-72 max-w-[85vw] h-auto object-contain filter drop-shadow-[0_12px_32px_rgba(0,0,0,0.65)]" />
