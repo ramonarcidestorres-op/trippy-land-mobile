@@ -133,13 +133,40 @@ export const allOrdersQuery = () =>
   queryOptions({
     queryKey: ["admin_orders"],
     refetchInterval: 5000,
-    queryFn: async () =>
-      unwrap<AdminOrder[]>(
-        await supabase
-          .from("orders")
-          .select("*, order_items(*, products(id, name, image_url)), profiles:user_id(id, full_name, phone)")
-          .order("created_at", { ascending: false }),
-      ),
+    queryFn: async (): Promise<AdminOrder[]> => {
+      // 1. Obtener órdenes con items y detalles de productos
+      const { data: rawOrders, error: ordersErr } = await supabase
+        .from("orders")
+        .select("*, order_items(*, products(id, name, image_url))")
+        .order("created_at", { ascending: false });
+
+      if (ordersErr) throw new Error(ordersErr.message);
+      if (!rawOrders || rawOrders.length === 0) return [];
+
+      // 2. Obtener perfiles de usuarios de forma independiente para evitar errores de relación en Supabase
+      const userIds = Array.from(new Set(rawOrders.map((o) => o.user_id).filter(Boolean))) as string[];
+      let profilesMap = new Map<string, { id: string; full_name: string | null; phone: string | null }>();
+
+      if (userIds.length > 0) {
+        try {
+          const { data: profilesData } = await supabase
+            .from("profiles")
+            .select("id, full_name, phone")
+            .in("id", userIds);
+
+          if (profilesData) {
+            profilesMap = new Map(profilesData.map((p) => [p.id, p]));
+          }
+        } catch {
+          // Si falla la consulta de perfiles, los pedidos siguen cargando sin bloquear la interfaz
+        }
+      }
+
+      return rawOrders.map((order) => ({
+        ...order,
+        profiles: order.user_id ? (profilesMap.get(order.user_id) ?? null) : null,
+      })) as AdminOrder[];
+    },
   });
 
 export const deliveryFeesQuery = () =>
