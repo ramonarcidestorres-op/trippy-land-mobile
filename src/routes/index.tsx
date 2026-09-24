@@ -3,7 +3,6 @@ import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { Candy, Search, ChevronDown } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
-import { AddressManager } from "@/components/AddressManager";
 import { ProductCard, ProductCardSkeleton } from "@/components/ProductCard";
 import { EmptyState } from "@/components/States";
 import { Input } from "@/components/ui/input";
@@ -30,12 +29,15 @@ function HomePage() {
 
   return (
     <AppShell>
-      {/* Saludo y banner de dirección */}
+      {/* Saludo y banner */}
       <div className="mb-8">
         <h1 className="mb-6 text-[34px] font-bold tracking-tight text-foreground">
           Trippy Land
         </h1>
-        <AddressManager />
+        {/* Aquí irá el banner que el usuario proveerá */}
+        <div className="w-full h-[120px] rounded-3xl bg-surface-2/60 flex items-center justify-center text-muted-foreground border border-border/50 border-dashed">
+          Espacio para el Banner
+        </div>
       </div>
 
       {/* Buscador minimalista HIG */}
@@ -44,7 +46,7 @@ function HomePage() {
         <Input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="¿Qué se te antoja hoy?"
+          placeholder="¿Qué vas a pedir hoy?"
           className="h-14 rounded-full bg-surface-2/60 border-none pl-12 pr-12 text-[15px] font-medium text-foreground placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-primary/50"
         />
         {search.trim() && (
@@ -77,34 +79,40 @@ function HomePage() {
               const n = c.name?.toLowerCase() || "";
               
               let imgUrl = c.icon_url || "https://images.unsplash.com/photo-1550258987-190a2d41a8ba?w=400&q=80";
+              let colorClasses = "bg-surface-2/60 text-foreground";
               
-              if (!c.icon_url) {
-                if (n.includes("coca")) imgUrl = "/categorias/Coca.png";
-                else if (n.includes("pre-roll") || n.includes("pre roll")) imgUrl = "/categorias/Pre-Rolls.png";
-                else if (n.includes("weed")) imgUrl = "/categorias/Weed.png";
-                else if (n.includes("farma")) imgUrl = "/categorias/farmacia.png";
-                else if (n.includes("sint")) imgUrl = "/categorias/sintéticos.png";
-                else imgUrl = `/categorias/${c.name}.png`; // Fallback genérico por si agrega más después con el nombre exacto
+              if (n.includes("coca")) {
+                colorClasses = "bg-[#F5F5F0] text-black"; // Blanco/Crema
+                if (!c.icon_url) imgUrl = "/categorias/Coca.png";
+              } else if (n.includes("pre-roll") || n.includes("pre roll")) {
+                colorClasses = "bg-[#9EAB91] text-black"; // Verde mate
+                if (!c.icon_url) imgUrl = "/categorias/Pre-Rolls.png";
+              } else if (n.includes("weed")) {
+                colorClasses = "bg-[#9EAB91] text-black"; // Verde mate
+                if (!c.icon_url) imgUrl = "/categorias/Weed.png";
+              } else if (n.includes("farma")) {
+                colorClasses = "bg-[#A7C7E7] text-black"; // Azul claro
+                if (!c.icon_url) imgUrl = "/categorias/farmacia.png";
+              } else if (n.includes("sint")) {
+                colorClasses = "bg-[#FFB5E8] text-black"; // Rosado
+                if (!c.icon_url) imgUrl = "/categorias/sintéticos.png";
+              } else {
+                if (!c.icon_url) imgUrl = `/categorias/${c.name}.png`;
               }
-
-              // Estilo crema para la primera categoría como ejemplo visual
-              const isActive = index === 0;
 
               return (
                 <Link
                   key={c.id}
                   to="/catalogo"
                   search={{ categoria: c.slug }}
-                  className={`group relative flex w-[95px] shrink-0 snap-center flex-col items-center justify-between overflow-hidden rounded-[32px] p-2 transition-transform active:scale-95 ${
-                    isActive ? "bg-primary text-primary-foreground" : "bg-surface-2/60 text-foreground"
-                  }`}
+                  className={`group relative flex w-[95px] shrink-0 snap-center flex-col items-center justify-between overflow-hidden rounded-[32px] p-2 transition-transform active:scale-95 ${colorClasses}`}
                   style={{ minHeight: "140px" }}
                 >
-                  <div className="relative mt-1 aspect-square w-[75px] overflow-hidden rounded-full bg-surface shadow-sm">
+                  <div className="relative mt-1 aspect-square w-[75px] overflow-hidden rounded-full bg-transparent">
                     <img src={imgUrl} alt={c.name} className="size-full object-cover transition-transform group-hover:scale-110" />
                   </div>
                   <div className="mb-3 mt-3 text-center">
-                    <p className={`text-[12px] font-bold leading-tight ${isActive ? "text-primary-foreground" : "text-foreground"}`}>
+                    <p className="text-[12px] font-bold leading-tight">
                       {c.name}
                     </p>
                   </div>

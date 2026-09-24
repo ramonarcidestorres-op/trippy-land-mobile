@@ -141,21 +141,21 @@ export function AddressManager() {
       if (!val) resetForm();
     }}>
       <DrawerTrigger asChild>
-        <button className="flex w-full items-center justify-between rounded-full bg-surface p-2 pr-4 shadow-sm ring-1 ring-border/50 transition-transform active:scale-95">
-          <div className="flex items-center gap-3 text-left">
-            <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-              <MapPin className="size-4" />
+        <button className="flex w-full items-center justify-between rounded-full bg-surface p-1.5 pr-3 shadow-sm ring-1 ring-border/50 transition-transform active:scale-95">
+          <div className="flex items-center gap-2.5 text-left">
+            <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+              <MapPin className="size-3.5" />
             </div>
             <div className="min-w-0">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">
                 ¿Dónde entregamos?
               </p>
-              <p className="line-clamp-1 text-[13px] font-medium text-foreground">
+              <p className="line-clamp-1 text-[12px] font-semibold text-foreground">
                 {selectedAddress ? selectedAddress.address : "Selecciona una dirección"}
               </p>
             </div>
           </div>
-          <div className="ml-4 shrink-0 rounded-full bg-surface-2 px-3 py-1 text-[11px] font-semibold text-foreground">
+          <div className="ml-2 shrink-0 rounded-full bg-surface-2 px-2.5 py-1 text-[10px] font-bold text-foreground">
             {selectedAddress ? "Cambiar" : "Agregar"}
           </div>
         </button>

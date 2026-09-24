@@ -6,6 +6,7 @@ import { Logo } from "@/components/Logo";
 import { useAuth } from "@/hooks/useAuth";
 import { cartQuery } from "@/lib/queries";
 import { addressStore, type SavedAddress } from "@/lib/address";
+import { AddressManager } from "@/components/AddressManager";
 import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
@@ -44,18 +45,9 @@ export function AppShell({ children }: { children: ReactNode }) {
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-30 border-b border-border/60 bg-background/85 backdrop-blur-xl">
         <div className="mx-auto flex max-w-5xl items-center gap-3 px-4 py-3">
-          <Link to="/" className="shrink-0">
-            <Logo className="h-9 w-auto" />
-          </Link>
-          <Link
-            to="/checkout"
-            className="flex min-w-0 flex-1 items-center gap-1.5 text-left text-xs text-muted-foreground"
-          >
-            <MapPin className="size-4 shrink-0 text-white" />
-            <span className="truncate text-[13px] font-medium">
-              {address ? address.address : "Agregar dirección de entrega"}
-            </span>
-          </Link>
+          <div className="flex-1 min-w-0 pr-2">
+            <AddressManager />
+          </div>
           <Link
             to="/carrito"
             className="relative grid size-10 shrink-0 place-items-center rounded-full bg-surface-2"
