@@ -73,14 +73,18 @@ function HomePage() {
         ) : categories.data?.length ? (
           <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory">
             {categories.data.map((c, index) => {
-              let imgUrl = c.icon_url || "https://images.unsplash.com/photo-1550258987-190a2d41a8ba?w=400&q=80";
               const s = c.slug?.toLowerCase() || "";
+              const n = c.name?.toLowerCase() || "";
+              
+              let imgUrl = c.icon_url || "https://images.unsplash.com/photo-1550258987-190a2d41a8ba?w=400&q=80";
               
               if (!c.icon_url) {
-                if (s.includes("gomi")) imgUrl = "https://images.unsplash.com/photo-1582058091505-f87a2e55a40f?w=400&q=80";
-                else if (s.includes("choco")) imgUrl = "https://images.unsplash.com/photo-1606312619070-d48b4c652a52?w=400&q=80";
-                else if (s.includes("snack") || s.includes("sal")) imgUrl = "https://images.unsplash.com/photo-1599490659213-e2b9527bd087?w=400&q=80";
-                else if (s.includes("dulce")) imgUrl = "https://images.unsplash.com/photo-1575224300306-1b8da36134ec?w=400&q=80";
+                if (n.includes("coca")) imgUrl = "/categorias/Coca.png";
+                else if (n.includes("pre-roll") || n.includes("pre roll")) imgUrl = "/categorias/Pre-Rolls.png";
+                else if (n.includes("weed")) imgUrl = "/categorias/Weed.png";
+                else if (n.includes("farma")) imgUrl = "/categorias/farmacia.png";
+                else if (n.includes("sint")) imgUrl = "/categorias/sintéticos.png";
+                else imgUrl = `/categorias/${c.name}.png`; // Fallback genérico por si agrega más después con el nombre exacto
               }
 
               // Estilo crema para la primera categoría como ejemplo visual
