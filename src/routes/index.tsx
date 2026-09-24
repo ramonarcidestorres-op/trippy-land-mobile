@@ -24,8 +24,9 @@ export const Route = createFileRoute("/")({
 
 function HomePage() {
   const [search, setSearch] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const categories = useQuery(categoriesQuery());
-  const products = useQuery(productsQuery());
+  const products = useQuery(productsQuery({ categoryId: selectedCategory }));
 
   return (
     <AppShell>
@@ -100,15 +101,13 @@ function HomePage() {
                 if (!c.icon_url) imgUrl = `/categorias/${c.name}.png`;
               }
 
-              // Dejar la primera categoría activa por defecto como ejemplo visual (o ninguna si prefieres)
-              const isActive = index === 0;
+              const isActive = selectedCategory === c.id;
               const colorClasses = isActive ? activeColor : "bg-surface-2/60 text-foreground";
 
               return (
-                <Link
+                <button
                   key={c.id}
-                  to="/catalogo"
-                  search={{ categoria: c.slug }}
+                  onClick={() => setSelectedCategory(isActive ? null : c.id)}
                   className={`group relative flex w-[95px] shrink-0 snap-center flex-col items-center justify-between overflow-hidden rounded-[32px] p-2 transition-transform active:scale-95 ${colorClasses}`}
                   style={{ minHeight: "140px" }}
                 >
@@ -120,7 +119,7 @@ function HomePage() {
                       {c.name}
                     </p>
                   </div>
-                </Link>
+                </button>
               );
             })}
           </div>
@@ -136,7 +135,11 @@ function HomePage() {
             </h2>
             <ChevronDown className="size-5 text-muted-foreground" />
           </div>
-          <Link to="/catalogo" search={{}} className="text-sm text-primary font-semibold transition-opacity active:opacity-70">
+          <Link 
+            to="/catalogo" 
+            search={selectedCategory ? { categoria: categories.data?.find(c => c.id === selectedCategory)?.slug } : {}} 
+            className="text-sm text-primary font-semibold transition-opacity active:opacity-70"
+          >
             Ver todo
           </Link>
         </div>
