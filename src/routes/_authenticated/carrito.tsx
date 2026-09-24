@@ -4,7 +4,6 @@ import { Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { EmptyState, ErrorState } from "@/components/States";
-import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { cartQuery, cartSubtotal } from "@/lib/queries";
 import { supabase } from "@/integrations/supabase/client";

@@ -1,12 +1,38 @@
-import { Link } from "@tanstack/react-router";
-import { Plus } from "lucide-react";
+import { Link, useNavigate } from "@tanstack/react-router";
+import { Plus, Loader2 } from "lucide-react";
 import { formatPrice } from "@/lib/format";
-import type { Product } from "@/lib/queries";
-import { useCart } from "@/hooks/useCart";
+import { type Product, addToCart } from "@/lib/queries";
+import { useAuth } from "@/hooks/useAuth";
+import { useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
+import { toast } from "sonner";
 
 export function ProductCard({ product }: { product: Product }) {
   const available = product.is_available !== false;
-  const { addItem } = useCart();
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  const [busy, setBusy] = useState(false);
+
+  async function handleAdd(e: React.MouseEvent) {
+    e.preventDefault();
+    if (!available || busy) return;
+    if (!user) {
+      navigate({ to: "/auth", search: { redirect: `/producto/${product.id}` } });
+      return;
+    }
+    
+    setBusy(true);
+    try {
+      await addToCart(user.id, product.id, 1);
+      await queryClient.invalidateQueries({ queryKey: ["cart"] });
+      toast.success("Agregado al carrito");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Error al agregar");
+    } finally {
+      setBusy(false);
+    }
+  }
   
   // Use unsplash fallbacks for the images to match the premium dark look if none exists
   const fallbackImg = product.name.toLowerCase().includes("gom") 
@@ -58,14 +84,12 @@ export function ProductCard({ product }: { product: Product }) {
           
           {available && (
             <button 
-              onClick={(e) => {
-                e.preventDefault();
-                addItem(product);
-              }}
-              className="flex size-8 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm transition-transform active:scale-90"
+              onClick={handleAdd}
+              disabled={busy}
+              className="flex size-8 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm transition-transform active:scale-90 disabled:opacity-50"
               aria-label="Agregar al carrito"
             >
-              <Plus className="size-4" strokeWidth={3} />
+              {busy ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" strokeWidth={3} />}
             </button>
           )}
         </div>
