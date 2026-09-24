@@ -29,6 +29,55 @@ export const Route = createFileRoute("/_authenticated/pedido/$id")({
   component: OrderDetailPage,
 });
 
+const STATUS_ANNOUNCEMENTS: Record<string, string> = {
+  accepted: "🏪 ¡Tu pedido fue aceptado por la tienda!",
+  preparing: "🏪 Tu pedido se está preparando.",
+  in_transit: "🛵 ¡Tu pedido va en camino a tu dirección!",
+  dispatched: "🛵 ¡Tu pedido va en camino!",
+  arrived: "📍 ¡Tu repartidor llegó! Está afuera en tu punto.",
+  delivered: "✅ ¡Pedido entregado! ¡Que lo disfrutes!",
+  cancelled: "❌ Tu pedido fue cancelado.",
+};
+
+function triggerVibration() {
+  try {
+    if (typeof window !== "undefined" && "vibrate" in navigator) {
+      navigator.vibrate([300, 100, 300, 100, 300]);
+    }
+  } catch {
+    // ignore
+  }
+}
+
+function playCustomerChime() {
+  try {
+    if (typeof window === "undefined") return;
+    const AudioContextClass =
+      window.AudioContext ||
+      (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    if (!AudioContextClass) return;
+    const ctx = new AudioContextClass();
+    if (ctx.state === "suspended") {
+      ctx.resume().catch(() => {});
+    }
+    const now = ctx.currentTime;
+
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(523.25, now);
+    osc.frequency.exponentialRampToValueAtTime(783.99, now + 0.25);
+    gain.gain.setValueAtTime(0.5, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.6);
+  } catch {
+    // ignore
+  }
+}
+
 function OrderDetailPage() {
   const { id } = Route.useParams();
   const { nuevo } = Route.useSearch();
@@ -64,7 +113,8 @@ function OrderDetailPage() {
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "orders", filter: `id=eq.${data.id}` },
-        (payload) => {
+        (payload: any) => {
+          const newStatus = payload.new?.status;
           if (payload.new) {
             queryClient.setQueryData(["order", id], (old: any) => {
               if (!old) return old;
@@ -73,14 +123,27 @@ function OrderDetailPage() {
           }
           queryClient.invalidateQueries({ queryKey: ["order", id] });
           queryClient.invalidateQueries({ queryKey: ["orders"] });
+
+          if (newStatus && newStatus !== payload.old?.status) {
+            triggerVibration();
+            playCustomerChime();
+            const msg = STATUS_ANNOUNCEMENTS[newStatus] || `Estado del pedido: ${newStatus}`;
+            toast.success(msg, { duration: 6000 });
+          }
         }
       )
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "order_status_history", filter: `order_id=eq.${data.id}` },
-        () => {
+        (payload: any) => {
           queryClient.invalidateQueries({ queryKey: ["order_history", data.id] });
-          toast.success("El estado de tu pedido ha cambiado");
+          const histStatus = payload.new?.status;
+          if (histStatus) {
+            triggerVibration();
+            playCustomerChime();
+            const msg = STATUS_ANNOUNCEMENTS[histStatus] || "El estado de tu pedido ha cambiado";
+            toast.success(msg, { duration: 6000 });
+          }
         }
       )
       .subscribe();
@@ -236,7 +299,12 @@ function OrderDetailPage() {
             <p className="text-[14px] font-bold text-foreground">Avisos de entrega en tu celular</p>
             <p className="text-[12px] text-muted-foreground">Recibe alertas en directo cuando tu orden sea aceptada o despachada.</p>
           </div>
-          <PushNotificationButton variant="customer" targetUserId={data.user_id || undefined} className="shrink-0" />
+          <PushNotificationButton 
+            variant="customer" 
+            targetUserId={data.user_id || undefined} 
+            orderId={data.id}
+            className="shrink-0" 
+          />
         </div>
 
         {/* Seguimiento en Vivo — Estética Minimalista Unificada */}

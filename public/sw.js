@@ -35,8 +35,10 @@ self.addEventListener("push", (event) => {
     badge: data.badge || "/favicon.png",
     tag: data.tag || "order-notification",
     renotify: true,
+    requireInteraction: true,
+    silent: false,
+    vibrate: [300, 100, 300, 100, 300],
     data: data.data || { url: "/" },
-    vibrate: [200, 100, 200],
     actions: [
       { action: "open", title: "Ver Pedido" }
     ]

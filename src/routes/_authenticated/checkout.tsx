@@ -153,6 +153,31 @@ function CheckoutPage() {
         // ignore
       }
 
+      // Si el navegador ya tiene permisos de notificaciones concedidos, vincular este pedido automáticamente
+      if (typeof window !== "undefined" && "serviceWorker" in navigator && "Notification" in window && Notification.permission === "granted") {
+        try {
+          const reg = await navigator.serviceWorker.ready;
+          const sub = await reg.pushManager.getSubscription();
+          if (sub) {
+            const jsonSub = sub.toJSON();
+            if (jsonSub.keys?.p256dh && jsonSub.keys?.auth) {
+              await supabase.from("push_subscriptions").upsert(
+                {
+                  endpoint: sub.endpoint,
+                  p256dh: jsonSub.keys.p256dh,
+                  auth: jsonSub.keys.auth,
+                  order_id: orderId,
+                  user_id: user?.id || null,
+                },
+                { onConflict: "endpoint" }
+              );
+            }
+          }
+        } catch {
+          // ignore
+        }
+      }
+
       clearCart();
       await queryClient.invalidateQueries({ queryKey: ["orders"] });
 

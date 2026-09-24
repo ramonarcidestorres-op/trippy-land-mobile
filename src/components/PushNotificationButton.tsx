@@ -8,10 +8,11 @@ import { cn } from "@/lib/utils";
 interface PushNotificationButtonProps {
   variant: "admin" | "customer";
   targetUserId?: string;
+  orderId?: string;
   className?: string;
 }
 
-export function PushNotificationButton({ variant, targetUserId, className }: PushNotificationButtonProps) {
+export function PushNotificationButton({ variant, targetUserId, orderId, className }: PushNotificationButtonProps) {
   const {
     isSupported,
     needsIOSInstall,
@@ -23,6 +24,13 @@ export function PushNotificationButton({ variant, targetUserId, className }: Pus
   } = usePushNotifications();
 
   const [showIOSModal, setShowIOSModal] = useState(false);
+
+  // Si el usuario ya había otorgado permisos en su navegador, registrar automáticamente este pedido
+  useEffect(() => {
+    if (orderId && permission === "granted" && !isSubscribed) {
+      subscribe({ targetUserId, orderId }).catch(() => {});
+    }
+  }, [orderId, permission, isSubscribed, subscribe, targetUserId]);
 
   const handleToggle = async () => {
     if (isSubscribed) {
@@ -40,7 +48,7 @@ export function PushNotificationButton({ variant, targetUserId, className }: Pus
       return;
     }
 
-    const res = await subscribe(targetUserId);
+    const res = await subscribe({ targetUserId, orderId });
     if (res.success) {
       toast.success(
         variant === "admin"
