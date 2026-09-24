@@ -22,8 +22,24 @@ function unwrap<T>(res: { data: T | null; error: { message: string } | null }): 
 export const categoriesQuery = () =>
   queryOptions({
     queryKey: ["categories"],
-    queryFn: async () =>
-      unwrap<Category[]>(await supabase.from("categories").select("*").order("name")),
+    queryFn: async () => {
+      const cats = unwrap<Category[]>(await supabase.from("categories").select("*").order("name"));
+      
+      const getPriority = (c: Category) => {
+        const s = (c.name + " " + c.slug).toLowerCase();
+        if (s.includes("sintético") || s.includes("sintetico") || s.includes("sintetic")) return 1;
+        if (s.includes("weed") || s.includes("mota")) return 2;
+        if (s.includes("coca") || s.includes("perico")) return 3;
+        return 99;
+      };
+
+      return cats.sort((a, b) => {
+        const pA = getPriority(a);
+        const pB = getPriority(b);
+        if (pA !== pB) return pA - pB;
+        return a.name.localeCompare(b.name);
+      });
+    }
   });
 
 export const productsQuery = (opts: { search?: string | undefined; categoryId?: string | null | undefined } = {}) =>
