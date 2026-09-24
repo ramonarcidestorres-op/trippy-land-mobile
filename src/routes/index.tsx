@@ -5,7 +5,7 @@ import { Candy, Search, ChevronDown } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { AddressManager } from "@/components/AddressManager";
 import { ProductCard, ProductCardSkeleton } from "@/components/ProductCard";
-import { EmptyState, ErrorState } from "@/components/States";
+import { EmptyState } from "@/components/States";
 import { Input } from "@/components/ui/input";
 import { categoriesQuery, productsQuery } from "@/lib/queries";
 
@@ -16,11 +16,6 @@ export const Route = createFileRoute("/")({
       { title: "Trippy Land Store — Dulces a domicilio" },
       {
         name: "description",
-        content: "Pide dulces a domicilio en minutos. Catálogo, carrito y pago en efectivo.",
-      },
-      { property: "og:title", content: "Trippy Land Store — Dulces a domicilio" },
-      {
-        property: "og:description",
         content: "Pide dulces a domicilio en minutos. Catálogo, carrito y pago en efectivo.",
       },
     ],
@@ -35,49 +30,49 @@ function HomePage() {
 
   return (
     <AppShell>
-      <div className="mb-6">
+      {/* Saludo y banner de dirección */}
+      <div className="mb-8">
+        <h1 className="mb-6 text-[34px] font-bold tracking-tight text-foreground">
+          Trippy Land
+        </h1>
         <AddressManager />
       </div>
 
-      {/* Search Bar */}
-      <div className="relative mb-8">
+      {/* Buscador minimalista HIG */}
+      <div className="relative mb-8 shadow-sm">
         <Search className="absolute left-4 top-1/2 size-5 -translate-y-1/2 text-muted-foreground" />
         <Input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search..."
-          className="h-14 rounded-2xl bg-[#1a1a1a] border-none pl-12 text-base text-foreground placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-primary/50"
+          placeholder="¿Qué se te antoja hoy?"
+          className="h-14 rounded-full bg-surface-2/60 border-none pl-12 pr-12 text-[15px] font-medium text-foreground placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-primary/50"
         />
         {search.trim() && (
           <Link
             to="/catalogo"
             search={{ q: search.trim() }}
-            className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-primary font-medium"
+            className="absolute right-2 top-1/2 -translate-y-1/2 flex h-10 items-center justify-center rounded-full bg-primary px-4 text-xs font-bold text-primary-foreground transition-transform active:scale-95"
           >
-            Go
+            Buscar
           </Link>
         )}
       </div>
 
-      {/* Categories */}
-      <section className="mb-8">
+      {/* Categorías Visuales inspiradas en la referencia */}
+      <section className="mb-10">
         {categories.isLoading ? (
-          <div className="flex gap-4 overflow-x-auto pb-4 hide-scrollbar">
+          <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
             {[0, 1, 2, 3].map((i) => (
-              <div key={i} className="h-[120px] w-[90px] shrink-0 animate-pulse rounded-[24px] bg-[#1a1a1a]" />
+              <div key={i} className="h-[140px] w-[95px] shrink-0 animate-pulse rounded-[32px] bg-surface-2/60" />
             ))}
           </div>
         ) : categories.error ? (
-          <div className="flex flex-col items-center justify-center p-4">
-            <p className="text-sm text-muted-foreground">Las categorías no están disponibles en este momento.</p>
-            <p className="mt-2 text-xs text-red-500 font-mono text-center">
-              Error real: {categories.error instanceof Error ? categories.error.message : String(categories.error)}
-            </p>
+          <div className="rounded-3xl bg-surface-2/40 p-6 text-center">
+            <p className="text-sm text-muted-foreground">Error al cargar categorías</p>
           </div>
         ) : categories.data?.length ? (
-          <div className="flex gap-4 overflow-x-auto pb-4 hide-scrollbar snap-x snap-mandatory">
+          <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory">
             {categories.data.map((c, index) => {
-              // Get an image from Supabase icon_url or use fallback
               let imgUrl = c.icon_url || "https://images.unsplash.com/photo-1550258987-190a2d41a8ba?w=400&q=80";
               const s = c.slug?.toLowerCase() || "";
               
@@ -88,68 +83,59 @@ function HomePage() {
                 else if (s.includes("dulce")) imgUrl = "https://images.unsplash.com/photo-1575224300306-1b8da36134ec?w=400&q=80";
               }
 
-              // Matte white active state instead of green
-              const isActive = index === 1; // Just simulating an active state for visual demo since Home doesn't actually have a selected category state by default
+              // Estilo crema para la primera categoría como ejemplo visual
+              const isActive = index === 0;
 
               return (
                 <Link
                   key={c.id}
                   to="/catalogo"
                   search={{ categoria: c.slug }}
-                  className={`group relative flex w-[90px] shrink-0 snap-center flex-col items-center justify-between overflow-hidden rounded-[32px] p-2 transition-all duration-300 ${
-                    isActive ? "bg-[#e5e5e5] text-black" : "bg-[#1a1a1a] text-white"
+                  className={`group relative flex w-[95px] shrink-0 snap-center flex-col items-center justify-between overflow-hidden rounded-[32px] p-2 transition-transform active:scale-95 ${
+                    isActive ? "bg-primary text-primary-foreground" : "bg-surface-2/60 text-foreground"
                   }`}
-                  style={{ minHeight: "130px" }}
+                  style={{ minHeight: "140px" }}
                 >
-                  <div className="relative aspect-square w-full overflow-hidden rounded-full bg-surface-2 shadow-sm">
-                    <img src={imgUrl} alt={c.name} className="size-full object-cover" />
+                  <div className="relative mt-1 aspect-square w-[75px] overflow-hidden rounded-full bg-surface shadow-sm">
+                    <img src={imgUrl} alt={c.name} className="size-full object-cover transition-transform group-hover:scale-110" />
                   </div>
-                  <div className="mb-2 mt-3 text-center">
-                    <p className={`text-[13px] font-bold leading-tight ${isActive ? "text-black" : "text-white"}`}>
+                  <div className="mb-3 mt-3 text-center">
+                    <p className={`text-[12px] font-bold leading-tight ${isActive ? "text-primary-foreground" : "text-foreground"}`}>
                       {c.name}
-                    </p>
-                    <p className={`text-[10px] ${isActive ? "text-black/60" : "text-white/50"}`}>
-                      Dulces
                     </p>
                   </div>
                 </Link>
               );
             })}
           </div>
-        ) : (
-          <p className="text-sm text-muted-foreground">
-            Aún no hay categorías cargadas en el sistema.
-          </p>
-        )}
+        ) : null}
       </section>
 
+      {/* Populares */}
       <section className="mb-8">
-        <div className="mb-4 flex items-center justify-between">
-          <div className="flex items-center gap-1 cursor-pointer">
-            <h2 className="text-xl font-medium text-foreground">
-              Popular Dishes
+        <div className="mb-5 flex items-center justify-between">
+          <div className="flex items-center gap-1.5 cursor-pointer">
+            <h2 className="text-[22px] font-bold tracking-tight text-foreground">
+              Destacados
             </h2>
-            <ChevronDown className="size-5 text-muted-foreground mt-0.5" />
+            <ChevronDown className="size-5 text-muted-foreground" />
           </div>
-          <Link to="/catalogo" search={{}} className="text-xs text-primary font-medium">
+          <Link to="/catalogo" search={{}} className="text-sm text-primary font-semibold transition-opacity active:opacity-70">
             Ver todo
           </Link>
         </div>
         {products.isLoading ? (
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
             {[0, 1, 2, 3].map((i) => (
               <ProductCardSkeleton key={i} />
             ))}
           </div>
         ) : products.error ? (
-          <div className="flex flex-col items-center justify-center p-8">
+          <div className="rounded-3xl bg-surface-2/40 p-8 text-center">
             <p className="text-sm text-muted-foreground">No se pudieron cargar los productos.</p>
-            <p className="mt-2 text-xs text-red-500 font-mono text-center">
-              Error real: {products.error instanceof Error ? products.error.message : String(products.error)}
-            </p>
           </div>
         ) : products.data?.length ? (
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
             {products.data.slice(0, 8).map((p) => (
               <ProductCard key={p.id} product={p} />
             ))}

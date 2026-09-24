@@ -51,8 +51,8 @@ export function AppShell({ children }: { children: ReactNode }) {
             to="/checkout"
             className="flex min-w-0 flex-1 items-center gap-1.5 text-left text-xs text-muted-foreground"
           >
-            <MapPin className="size-3.5 shrink-0 text-candy-lime" />
-            <span className="truncate">
+            <MapPin className="size-4 shrink-0 text-white" />
+            <span className="truncate text-[13px] font-medium">
               {address ? address.address : "Agregar dirección de entrega"}
             </span>
           </Link>
@@ -109,7 +109,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       <main className="mx-auto max-w-5xl px-4 pb-28 pt-4 md:pb-12">{children}</main>
 
-      <nav className="fixed inset-x-0 bottom-0 z-30 md:hidden bg-[#121212] border-t border-border/20">
+      <nav className="fixed inset-x-0 bottom-0 z-30 md:hidden bg-background/85 backdrop-blur-2xl border-t border-border/40 pb-[env(safe-area-inset-bottom)]">
         <div className="flex h-16 items-center justify-around px-2">
           {NAV.map(({ to, label, icon: Icon }) => {
             const active = to === "/" ? pathname === "/" : pathname.startsWith(to);

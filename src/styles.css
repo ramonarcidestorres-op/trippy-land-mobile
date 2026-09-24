@@ -49,15 +49,15 @@
 :root {
   --radius: 1rem;
 
-  --background: oklch(0.14 0.005 285);
+  --background: oklch(0.10 0 0); /* Almost pure black for matte effect */
   --foreground: oklch(0.97 0.002 285);
 
-  --surface: oklch(0.18 0.008 285);
-  --surface-2: oklch(0.23 0.01 285);
+  --surface: oklch(0.16 0 0);
+  --surface-2: oklch(0.20 0 0);
 
-  --card: oklch(0.18 0.008 285);
+  --card: oklch(0.16 0 0);
   --card-foreground: oklch(0.97 0.002 285);
-  --popover: oklch(0.18 0.008 285);
+  --popover: oklch(0.16 0 0);
   --popover-foreground: oklch(0.97 0.002 285);
 
   --candy-pink: oklch(0.72 0.21 349);
@@ -65,9 +65,9 @@
   --candy-grape: oklch(0.63 0.21 300);
   --candy-tangerine: oklch(0.78 0.18 60);
 
-  --primary: oklch(0.72 0.21 349);
-  --primary-foreground: oklch(0.14 0.005 285);
-  --secondary: oklch(0.23 0.01 285);
+  --primary: oklch(0.96 0.01 90); /* Cream white */
+  --primary-foreground: oklch(0.10 0 0); /* Dark text on primary */
+  --secondary: oklch(0.20 0 0);
   --secondary-foreground: oklch(0.97 0.002 285);
   --muted: oklch(0.23 0.01 285);
   --muted-foreground: oklch(0.68 0.008 285);
@@ -141,8 +141,12 @@
   }
 }
 
-/* Ocultar badge de Lovable */
+/* Ocultar badge de Lovable y botones flotantes de desarrollo (como la X de devtools) */
 #lovable-badge-wrap, 
-a[href*="lovable.dev/"] {
+a[href*="lovable.dev/"],
+.tsrd-toggle-btn,
+button[aria-label*="TanStack"],
+div[class*="TanStackRouterDevtools"],
+div[id*="tanstack"] {
   display: none !important;
 }

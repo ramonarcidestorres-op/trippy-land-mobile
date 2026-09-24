@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Candy, Search } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { ProductCard, ProductCardSkeleton } from "@/components/ProductCard";
-import { EmptyState, ErrorState } from "@/components/States";
+import { EmptyState } from "@/components/States";
 import { Input } from "@/components/ui/input";
 import { categoriesQuery, productsQuery } from "@/lib/queries";
 import { cn } from "@/lib/utils";
@@ -21,11 +21,6 @@ export const Route = createFileRoute("/catalogo")({
     meta: [
       { title: "Catálogo — Trippy Land Store" },
       { name: "description", content: "Explora todos los dulces disponibles por categoría." },
-      { property: "og:title", content: "Catálogo — Trippy Land Store" },
-      {
-        property: "og:description",
-        content: "Explora todos los dulces disponibles por categoría.",
-      },
     ],
   }),
   component: CatalogPage,
@@ -48,44 +43,46 @@ function CatalogPage() {
 
   return (
     <AppShell>
-      <h1 className="text-xl font-bold">Catálogo</h1>
+      <h1 className="mb-6 text-[34px] font-bold tracking-tight text-foreground">
+        Catálogo
+      </h1>
 
       <form
-        className="relative mt-3"
+        className="relative mb-6 shadow-sm"
         onSubmit={(e) => {
           e.preventDefault();
           applySearch(term);
         }}
       >
-        <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+        <Search className="absolute left-4 top-1/2 size-5 -translate-y-1/2 text-muted-foreground" />
         <Input
           value={term}
           onChange={(e) => setTerm(e.target.value)}
           onBlur={() => applySearch(term)}
-          placeholder="Buscar por nombre…"
-          className="h-11 rounded-full bg-surface-2 pl-9"
+          placeholder="Buscar dulces..."
+          className="h-14 rounded-full bg-surface-2/60 border-none pl-12 pr-4 text-[15px] font-medium text-foreground placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-primary/50"
         />
       </form>
 
-      <div className="mt-4 flex flex-wrap gap-2">
+      <div className="mb-8 flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
         <button
           onClick={() => navigate({ search: (prev: CatalogSearch) => ({ ...prev, categoria: undefined }) })}
           className={cn(
-            "rounded-full border px-4 py-1.5 text-sm",
-            !categoria ? "border-primary bg-primary/15 text-primary" : "border-border bg-surface",
+            "shrink-0 rounded-full px-5 py-2.5 text-[14px] font-semibold transition-all active:scale-95",
+            !categoria ? "bg-primary text-primary-foreground shadow-sm" : "bg-surface-2/60 text-foreground hover:bg-surface-2"
           )}
         >
-          Todo
+          Todos
         </button>
         {categories.data?.map((c) => (
           <button
             key={c.id}
             onClick={() => navigate({ search: (prev: CatalogSearch) => ({ ...prev, categoria: c.slug }) })}
             className={cn(
-              "rounded-full border px-4 py-1.5 text-sm",
+              "shrink-0 rounded-full px-5 py-2.5 text-[14px] font-semibold transition-all active:scale-95",
               categoria === c.slug
-                ? "border-primary bg-primary/15 text-primary"
-                : "border-border bg-surface",
+                ? "bg-primary text-primary-foreground shadow-sm"
+                : "bg-surface-2/60 text-foreground hover:bg-surface-2"
             )}
           >
             {c.name}
@@ -93,17 +90,19 @@ function CatalogPage() {
         ))}
       </div>
 
-      <div className="mt-5">
+      <div className="mb-8">
         {products.isLoading ? (
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
             {[0, 1, 2, 3, 4, 5].map((i) => (
               <ProductCardSkeleton key={i} />
             ))}
           </div>
         ) : products.error ? (
-          <ErrorState error={products.error} onRetry={() => products.refetch()} />
+          <div className="rounded-3xl bg-surface-2/40 p-8 text-center">
+            <p className="text-sm text-muted-foreground">No se pudieron cargar los productos.</p>
+          </div>
         ) : products.data?.length ? (
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
             {products.data.map((p) => (
               <ProductCard key={p.id} product={p} />
             ))}

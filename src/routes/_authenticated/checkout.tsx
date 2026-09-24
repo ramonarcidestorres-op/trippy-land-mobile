@@ -1,14 +1,10 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
-import { Banknote, MapPin, Plus, ShoppingBag } from "lucide-react";
+import { Banknote, MapPin, ShoppingBag } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
-import { EmptyState, ErrorState } from "@/components/States";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { EmptyState } from "@/components/States";
 import { useAuth } from "@/hooks/useAuth";
 import { cartQuery, cartSubtotal, deliveryFeesQuery } from "@/lib/queries";
 import { supabase } from "@/integrations/supabase/client";
@@ -22,11 +18,6 @@ export const Route = createFileRoute("/_authenticated/checkout")({
     meta: [
       { title: "Checkout — Trippy Land Store" },
       { name: "description", content: "Confirma tu dirección y paga en efectivo al recibir." },
-      { property: "og:title", content: "Checkout — Trippy Land Store" },
-      {
-        property: "og:description",
-        content: "Confirma tu dirección y paga en efectivo al recibir.",
-      },
     ],
   }),
   component: CheckoutPage,
@@ -36,7 +27,7 @@ function CheckoutPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { data, isLoading, error, refetch } = useQuery(cartQuery(user?.id));
+  const { data, isLoading, error } = useQuery(cartQuery(user?.id));
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [deliveryType, setDeliveryType] = useState<"normal" | "fast">("normal");
@@ -100,141 +91,156 @@ function CheckoutPage() {
   if (isLoading) {
     return (
       <AppShell>
-        <div className="space-y-3">
-          <div className="h-28 animate-pulse rounded-2xl bg-surface-2" />
-          <div className="h-40 animate-pulse rounded-2xl bg-surface-2" />
+        <div className="space-y-4 pt-10">
+          <div className="h-32 animate-pulse rounded-[32px] bg-surface-2/60" />
+          <div className="h-48 animate-pulse rounded-[32px] bg-surface-2/60" />
         </div>
       </AppShell>
     );
   }
 
-  if (error) {
+  if (error || rows.length === 0) {
     return (
       <AppShell>
-        <ErrorState error={error} onRetry={() => refetch()} />
-      </AppShell>
-    );
-  }
-
-  if (rows.length === 0) {
-    return (
-      <AppShell>
-        <EmptyState
-          icon={<ShoppingBag className="size-7" />}
-          title="No hay nada para pedir"
-          description="Agrega productos al carrito para continuar con el checkout."
-          action={
-            <Button asChild variant="secondary">
-              <Link to="/catalogo" search={{}}>Ir al catálogo</Link>
-            </Button>
-          }
-        />
+        <div className="pt-10">
+          <EmptyState
+            icon={<ShoppingBag className="size-7" />}
+            title="Nada por aquí"
+            description="Tu carrito está vacío. Agrega algo antes de confirmar."
+            action={
+              <Link
+                to="/catalogo"
+                search={{}}
+                className="mt-4 flex h-12 w-full items-center justify-center rounded-full bg-primary font-bold text-primary-foreground shadow-sm transition-transform active:scale-95"
+              >
+                Volver al catálogo
+              </Link>
+            }
+          />
+        </div>
       </AppShell>
     );
   }
 
   return (
     <AppShell>
-      <h1 className="text-xl font-bold">Checkout</h1>
+      <h1 className="mb-6 text-[34px] font-bold tracking-tight text-foreground">
+        Checkout
+      </h1>
 
-      <section className="mt-4 rounded-2xl border border-border/60 bg-card p-4">
-        <h2 className="flex items-center gap-2 text-sm font-semibold mb-3">
-          <MapPin className="size-4 text-candy-lime" /> Dirección de entrega
-        </h2>
-        
-        <AddressManager />
-      </section>
+      <div className="space-y-4 pb-32">
+        {/* Address Card */}
+        <section className="rounded-[32px] bg-surface-2/60 p-5">
+          <h2 className="mb-4 flex items-center gap-2 text-[15px] font-semibold text-foreground">
+            <MapPin className="size-4" /> Dirección de entrega
+          </h2>
+          <AddressManager />
+        </section>
 
-      <section className="mt-4 rounded-2xl border border-border/60 bg-card p-4">
-        <h2 className="text-sm font-semibold">Tipo de entrega</h2>
-        <div className="mt-3 grid grid-cols-2 gap-3">
-          <button
-            onClick={() => setDeliveryType("normal")}
-            className={cn(
-              "flex flex-col items-center justify-center rounded-xl border p-3 text-center transition-colors",
-              deliveryType === "normal"
-                ? "border-primary bg-primary/10"
-                : "border-border bg-surface hover:bg-surface-2",
-            )}
-          >
-            <span className="font-semibold text-sm">Normal</span>
-            <span className="text-[11px] text-muted-foreground mt-0.5">~40 min</span>
-            {applicableFee && (
-              <span className="mt-1 font-bold text-primary">{formatPrice(applicableFee.normal_fee)}</span>
-            )}
-          </button>
-          <button
-            onClick={() => setDeliveryType("fast")}
-            className={cn(
-              "flex flex-col items-center justify-center rounded-xl border p-3 text-center transition-colors",
-              deliveryType === "fast"
-                ? "border-primary bg-primary/10"
-                : "border-border bg-surface hover:bg-surface-2",
-            )}
-          >
-            <span className="font-semibold text-sm">Rápida 🚀</span>
-            <span className="text-[11px] text-muted-foreground mt-0.5">~20 min</span>
-            {applicableFee && (
-              <span className="mt-1 font-bold text-primary">{formatPrice(applicableFee.fast_fee)}</span>
-            )}
-          </button>
-        </div>
-        {!applicableFee && (
-          <p className="mt-3 text-xs text-destructive">
-            No se encontraron tarifas configuradas para este subtotal.
+        {/* Delivery Type */}
+        <section className="rounded-[32px] bg-surface-2/60 p-5">
+          <h2 className="mb-4 text-[15px] font-semibold text-foreground">Tipo de entrega</h2>
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              onClick={() => setDeliveryType("normal")}
+              className={cn(
+                "flex flex-col items-center justify-center rounded-[24px] border p-4 text-center transition-transform active:scale-95",
+                deliveryType === "normal"
+                  ? "border-transparent bg-primary text-primary-foreground shadow-md"
+                  : "border-border/50 bg-surface text-foreground"
+              )}
+            >
+              <span className="text-[15px] font-bold">Normal</span>
+              <span className={cn("mt-1 text-[12px] font-medium opacity-80")}>~40 min</span>
+              {applicableFee && (
+                <span className="mt-2 text-[14px] font-extrabold">{formatPrice(applicableFee.normal_fee)}</span>
+              )}
+            </button>
+            <button
+              onClick={() => setDeliveryType("fast")}
+              className={cn(
+                "flex flex-col items-center justify-center rounded-[24px] border p-4 text-center transition-transform active:scale-95",
+                deliveryType === "fast"
+                  ? "border-transparent bg-primary text-primary-foreground shadow-md"
+                  : "border-border/50 bg-surface text-foreground"
+              )}
+            >
+              <span className="text-[15px] font-bold">Rápida 🚀</span>
+              <span className={cn("mt-1 text-[12px] font-medium opacity-80")}>~20 min</span>
+              {applicableFee && (
+                <span className="mt-2 text-[14px] font-extrabold">{formatPrice(applicableFee.fast_fee)}</span>
+              )}
+            </button>
+          </div>
+          {!applicableFee && (
+            <p className="mt-4 rounded-xl bg-destructive/10 p-3 text-center text-xs font-semibold text-destructive">
+              No se encontraron tarifas configuradas para este subtotal.
+            </p>
+          )}
+        </section>
+
+        {/* Payment Method */}
+        <section className="flex items-center gap-4 rounded-[32px] bg-surface-2/60 p-5">
+          <div className="flex size-12 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+            <Banknote className="size-6" />
+          </div>
+          <div>
+            <p className="text-[15px] font-semibold text-foreground">Pago en efectivo</p>
+            <p className="mt-0.5 text-[13px] text-muted-foreground">Pagas al recibir tu pedido.</p>
+          </div>
+        </section>
+
+        {/* Summary */}
+        <section className="rounded-[32px] bg-surface-2/60 p-6">
+          <h2 className="mb-4 text-[15px] font-semibold text-foreground">Resumen</h2>
+          <ul className="mb-6 space-y-3">
+            {rows.map((r) => (
+              <li key={r.id} className="flex items-start justify-between gap-4">
+                <span className="text-[14px] text-muted-foreground">
+                  <span className="font-semibold text-foreground">{r.quantity}</span> × {r.products?.name}
+                </span>
+                <span className="shrink-0 text-[14px] font-medium text-foreground">
+                  {formatPrice(Number(r.products?.price ?? 0) * r.quantity)}
+                </span>
+              </li>
+            ))}
+          </ul>
+          
+          <div className="space-y-2 border-t border-border/40 pt-4">
+            <div className="flex items-center justify-between text-[14px]">
+              <span className="text-muted-foreground">Subtotal</span>
+              <span className="font-medium text-foreground">{formatPrice(subtotal)}</span>
+            </div>
+            <div className="flex items-center justify-between text-[14px]">
+              <span className="text-muted-foreground">Domicilio</span>
+              <span className="font-medium text-foreground">{applicableFee ? formatPrice(deliveryCost) : "..."}</span>
+            </div>
+            <div className="pt-2 flex items-center justify-between text-[18px] font-bold text-foreground">
+              <span>Total</span>
+              <span>{formatPrice(total)}</span>
+            </div>
+          </div>
+        </section>
+
+        {unavailable.length > 0 && (
+          <p className="text-center text-sm font-semibold text-destructive">
+            Quita los productos agotados de tu carrito para continuar.
           </p>
         )}
-      </section>
+      </div>
 
-      <section className="mt-4 rounded-2xl border border-border/60 bg-card p-4">
-        <h2 className="text-sm font-semibold">Resumen</h2>
-        <ul className="mt-3 space-y-2 text-sm">
-          {rows.map((r) => (
-            <li key={r.id} className="flex items-center justify-between gap-3">
-              <span className="min-w-0 truncate text-muted-foreground">
-                {r.quantity} × {r.products?.name}
-              </span>
-              <span>{formatPrice(Number(r.products?.price ?? 0) * r.quantity)}</span>
-            </li>
-          ))}
-        </ul>
-        <div className="mt-4 space-y-1.5 border-t border-border pt-3 text-sm">
-          <div className="flex items-center justify-between">
-            <span className="text-muted-foreground">Subtotal</span>
-            <span>{formatPrice(subtotal)}</span>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-muted-foreground">Domicilio</span>
-            <span>{applicableFee ? formatPrice(deliveryCost) : "..."}</span>
-          </div>
-          <div className="flex items-center justify-between pt-1 text-base font-bold">
-            <span>Total</span>
-            <span className="candy-text">{formatPrice(total)}</span>
-          </div>
-        </div>
-      </section>
-
-      <section className="mt-4 flex items-center gap-3 rounded-2xl border border-border/60 bg-card p-4">
-        <Banknote className="size-5 text-candy-lime" />
-        <div>
-          <p className="text-sm font-medium">Pago en efectivo</p>
-          <p className="text-xs text-muted-foreground">Pagas al domiciliario cuando recibes.</p>
-        </div>
-      </section>
-
-      {unavailable.length > 0 && (
-        <p className="mt-3 text-sm text-destructive">
-          Hay productos agotados en tu carrito. Quítalos para poder confirmar.
-        </p>
-      )}
-
-      <Button
-        className="mt-5 h-12 w-full candy-gradient text-base font-semibold text-primary-foreground"
-        onClick={placeOrder}
-        disabled={placing || unavailable.length > 0 || !applicableFee}
-      >
-        {placing ? "Creando pedido…" : `Confirmar pedido · ${formatPrice(total)}`}
-      </Button>
+      {/* Fixed Bottom Action */}
+      <div className="fixed inset-x-0 bottom-[80px] z-40 mx-auto max-w-5xl px-4 md:bottom-4 md:px-0">
+        <button
+          className="flex h-[56px] w-full items-center justify-center rounded-full bg-primary px-6 shadow-2xl transition-transform active:scale-95 disabled:opacity-50 disabled:active:scale-100"
+          onClick={placeOrder}
+          disabled={placing || unavailable.length > 0 || !applicableFee}
+        >
+          <span className="text-[17px] font-bold text-primary-foreground">
+            {placing ? "Confirmando..." : `Confirmar pedido · ${formatPrice(total)}`}
+          </span>
+        </button>
+      </div>
     </AppShell>
   );
 }
