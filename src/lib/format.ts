@@ -14,24 +14,37 @@ export function formatDate(value: string): string {
   }).format(new Date(value));
 }
 
+export function formatRelativeTime(value: string): string {
+  const date = new Date(value);
+  const now = new Date();
+  const diffSec = Math.floor((now.getTime() - date.getTime()) / 1000);
+  if (diffSec < 60) return "Hace un momento";
+  const diffMin = Math.floor(diffSec / 60);
+  if (diffMin < 60) return `Hace ${diffMin} min`;
+  const diffHour = Math.floor(diffMin / 60);
+  if (diffHour < 24) return `Hace ${diffHour} h`;
+  const diffDay = Math.floor(diffHour / 24);
+  return `Hace ${diffDay} d`;
+}
+
 /** Valores reales del CHECK constraint orders_status_check en Supabase. */
 export const ORDER_STATUSES = [
   "pending",
-  "confirmed",
-  "preparing",
-  "ready",
+  "accepted",
   "in_transit",
+  "arrived",
   "delivered",
 ] as const;
 
-export type OrderStatus = (typeof ORDER_STATUSES)[number] | "cancelled";
+export type OrderStatus = (typeof ORDER_STATUSES)[number] | "cancelled" | "preparing" | "ready" | "dispatched";
 
 export const STATUS_LABELS: Record<string, string> = {
-  pending: "Pendiente",
-  confirmed: "Confirmado",
+  pending: "Recibido",
+  accepted: "Tienda Aceptó",
   preparing: "En preparación",
-  ready: "Listo",
   in_transit: "En camino",
+  dispatched: "Despachado",
+  arrived: "Llegó",
   delivered: "Entregado",
   cancelled: "Cancelado",
 };

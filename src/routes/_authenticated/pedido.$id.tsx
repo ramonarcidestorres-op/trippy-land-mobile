@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Check, MapPin, Clock, ChevronLeft, Bike, ShoppingBag, PackageCheck } from "lucide-react";
+import { Logo } from "@/components/Logo";
 import { AppShell } from "@/components/AppShell";
 import { EmptyState, ErrorState } from "@/components/States";
 import { supabase } from "@/integrations/supabase/client";
@@ -168,6 +169,11 @@ function OrderDetailPage() {
 
   return (
     <AppShell>
+      {/* Logo Trippy Land grande y centrado */}
+      <div className="flex flex-col items-center justify-center pt-2 pb-5 text-center">
+        <Logo className="h-28 sm:h-36 w-auto object-contain drop-shadow-[0_10px_25px_rgba(0,0,0,0.5)]" />
+      </div>
+
       {nuevo && (
         <div className="mb-6 flex items-center gap-4 rounded-[28px] bg-primary p-5 text-primary-foreground shadow-lg">
           <div className="flex size-12 shrink-0 items-center justify-center rounded-full bg-white/20">

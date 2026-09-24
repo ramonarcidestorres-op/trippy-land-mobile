@@ -60,13 +60,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => sub.subscription.unsubscribe();
   }, []);
 
+  const isAdminEmail = session?.user?.email === "ramon.arcidestorres@gmail.com";
+  const effectiveRole = isAdminEmail ? "admin" : (role || undefined);
+
   const value = useMemo(
     () => ({
       session,
-      user: session?.user ? ({ ...session.user, role: role || undefined } as AuthUser) : null,
+      user: session?.user ? ({ ...session.user, role: effectiveRole } as AuthUser) : null,
       loading,
     }),
-    [session, role, loading],
+    [session, effectiveRole, loading],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

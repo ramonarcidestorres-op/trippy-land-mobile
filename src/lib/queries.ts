@@ -124,14 +124,20 @@ export const orderHistoryQuery = (orderId: string | undefined) =>
       ),
   });
 
+export type AdminOrder = Order & {
+  order_items: (OrderItem & { products: Pick<Product, "id" | "name" | "image_url"> | null })[];
+  profiles: { id: string; full_name: string | null; phone: string | null } | null;
+};
+
 export const allOrdersQuery = () =>
   queryOptions({
     queryKey: ["admin_orders"],
+    refetchInterval: 5000,
     queryFn: async () =>
-      unwrap<Order[]>(
+      unwrap<AdminOrder[]>(
         await supabase
           .from("orders")
-          .select("*, profiles:user_id(id)") // Optional: fetch user data if needed
+          .select("*, order_items(*, products(id, name, image_url)), profiles:user_id(id, full_name, phone)")
           .order("created_at", { ascending: false }),
       ),
   });

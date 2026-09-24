@@ -41,7 +41,8 @@ export function AppShell({ children }: { children: ReactNode }) {
   const hideBottomNav =
     pathname.startsWith("/checkout") ||
     pathname.startsWith("/producto") ||
-    pathname.startsWith("/pedido");
+    pathname.startsWith("/pedido") ||
+    pathname.startsWith("/admin");
 
   return (
     <div className="min-h-screen bg-background">
@@ -66,10 +67,20 @@ export function AppShell({ children }: { children: ReactNode }) {
             <DropdownMenu>
               <DropdownMenuTrigger className="relative grid size-10 shrink-0 place-items-center rounded-full bg-surface-2 outline-none">
                 <User className="size-5 text-muted-foreground" />
+                {user.role === "admin" && (
+                  <span className="absolute -top-1 -right-1 flex size-3.5 items-center justify-center rounded-full bg-candy-lime text-[8px] font-black text-black ring-2 ring-background">
+                    ★
+                  </span>
+                )}
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48 border-border bg-surface-2 shadow-xl">
-                <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground truncate">
-                  {user.user_metadata?.full_name || user.email}
+                <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground truncate flex items-center justify-between">
+                  <span className="truncate">{user.user_metadata?.full_name || user.email}</span>
+                  {user.role === "admin" && (
+                    <span className="shrink-0 ml-1 rounded bg-candy-lime/20 px-1 py-0.5 text-[9px] font-extrabold text-candy-lime">
+                      ADMIN
+                    </span>
+                  )}
                 </div>
                 {user.role === "admin" && (
                   <DropdownMenuItem asChild>
