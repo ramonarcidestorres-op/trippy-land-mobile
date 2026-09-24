@@ -7,6 +7,7 @@ import { AppShell } from "@/components/AppShell";
 import { EmptyState } from "@/components/States";
 import { useCart } from "@/hooks/useCart";
 import { useReferral } from "@/hooks/useReferral";
+import { useAuth } from "@/hooks/useAuth";
 import { deliveryFeesQuery } from "@/lib/queries";
 import { supabase } from "@/integrations/supabase/client";
 import { formatPrice } from "@/lib/format";
@@ -27,6 +28,7 @@ export const Route = createFileRoute("/_authenticated/checkout")({
 });
 
 function CheckoutPage() {
+  const { user } = useAuth();
   const { cart: rows, clearCart } = useCart();
   const { referralCode, getAdjustedPrice } = useReferral();
   const navigate = useNavigate();
