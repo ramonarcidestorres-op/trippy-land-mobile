@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useCart } from "@/hooks/useCart";
 import { addressStore, type SavedAddress } from "@/lib/address";
 import { AddressManager } from "@/components/AddressManager";
+import { AppNotificationPrompt } from "@/components/AppNotificationPrompt";
 import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
@@ -47,8 +48,9 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-30 bg-background/85 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-5xl items-center gap-3 px-4 py-3">
+      <AppNotificationPrompt />
+      <header className="sticky top-0 z-30 bg-background/90 backdrop-blur-2xl pt-[max(env(safe-area-inset-top),16px)] pb-2.5 border-b border-border/20">
+        <div className="mx-auto flex max-w-5xl items-center gap-3 px-4 py-1">
           <div className="flex-1 min-w-0 pr-2">
             <AddressManager />
           </div>

@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
-import { BellRing, Check, Share, PlusSquare, Sparkles, Lock, Loader2, ArrowDown, ShieldAlert } from "lucide-react";
+import { Check, Share, PlusSquare, Sparkles, Lock, Loader2, ArrowDown, ShieldAlert } from "lucide-react";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
+import { LogoEye } from "@/components/Logo";
 
 export function AdminNotificationPromptModal() {
   const {
@@ -49,7 +50,7 @@ export function AdminNotificationPromptModal() {
   const handleActivate = async () => {
     const res = await subscribe({ role: "admin" });
     if (res.success) {
-      toast.success("🔔 ¡Alertas de nuevos pedidos activadas!");
+      toast.success("Alertas de nuevos pedidos activadas");
     } else if (res.needsIOSInstall) {
       // Ya mostrará la vista de iOS
     } else {
@@ -174,8 +175,8 @@ export function AdminNotificationPromptModal() {
             {!isSubscribed ? (
               <>
                 <DialogHeader className="text-center sm:text-left">
-                  <div className="mx-auto sm:mx-0 flex size-14 items-center justify-center rounded-3xl bg-primary/15 text-primary ring-8 ring-primary/10">
-                    <BellRing className="size-7 animate-pulse" />
+                  <div className="mx-auto sm:mx-0 flex size-16 items-center justify-center rounded-3xl bg-surface-2 p-3 shadow-inner ring-1 ring-border/50">
+                    <LogoEye className="w-12 h-auto text-primary filter drop-shadow-[0_0_12px_rgba(255,252,235,0.25)]" />
                   </div>
                   <DialogTitle className="text-[22px] font-extrabold text-foreground pt-3 leading-snug">
                     ¿Activar alertas de nuevos pedidos?
@@ -196,7 +197,7 @@ export function AdminNotificationPromptModal() {
                       <Loader2 className="size-5 animate-spin" />
                     ) : (
                       <>
-                        <BellRing className="size-5" />
+                        <LogoEye className="size-5 inline-block" />
                         <span>Activar alertas de pedidos</span>
                       </>
                     )}

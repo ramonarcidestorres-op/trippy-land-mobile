@@ -1,17 +1,11 @@
 import { useState, useEffect } from "react";
-import { Check, Share, PlusSquare, Sparkles, ChevronRight, Lock, Loader2, ArrowDown } from "lucide-react";
+import { Check, Share, PlusSquare, Sparkles, Loader2, ArrowDown } from "lucide-react";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { LogoEye } from "@/components/Logo";
-import { cn } from "@/lib/utils";
 
-interface OrderNotificationPromptModalProps {
-  orderId: string;
-  targetUserId?: string;
-}
-
-export function OrderNotificationPromptModal({ orderId, targetUserId }: OrderNotificationPromptModalProps) {
+export function AppNotificationPrompt() {
   const {
     isSupported,
     needsIOSInstall,
@@ -24,85 +18,58 @@ export function OrderNotificationPromptModal({ orderId, targetUserId }: OrderNot
   } = usePushNotifications();
 
   const [isOpen, setIsOpen] = useState(false);
-  const [testSent, setTestSent] = useState(false);
-  const [testLoading, setTestLoading] = useState(false);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    // Si ya está suscrito o el permiso fue explícitamente denegado en el navegador, no molestamos con modal automático
+    // Si ya está suscrito o el permiso fue explícitamente bloqueado, no mostrar
     if (isSubscribed || permission === "denied") {
       return;
     }
 
-    // Verificar si ya cerró este prompt en esta sesión para este pedido
-    const dismissed = sessionStorage.getItem(`tls_prompt_dismissed_${orderId}`);
+    // Verificar si el usuario ya lo cerró en esta sesión
+    const dismissed = sessionStorage.getItem("tls_app_push_dismissed");
     if (dismissed) {
       return;
     }
 
-    // Aparecer automáticamente a los 700ms tras entrar a la pantalla de tracking
+    // Mostrar apenas el usuario entra a la app (1.2 segundos después de cargar)
     const timer = setTimeout(() => {
       setIsOpen(true);
-    }, 700);
+    }, 1200);
 
     return () => clearTimeout(timer);
-  }, [orderId, isSubscribed, permission]);
+  }, [isSubscribed, permission]);
 
   const handleClose = () => {
     setIsOpen(false);
     try {
-      sessionStorage.setItem(`tls_prompt_dismissed_${orderId}`, "true");
+      sessionStorage.setItem("tls_app_push_dismissed", "true");
     } catch {
       // ignore
     }
   };
 
   const handleActivate = async () => {
-    const res = await subscribe({ targetUserId, orderId });
+    // Si hay un pedido reciente en localStorage, vincularlo
+    let recentOrderId: string | undefined;
+    try {
+      const orders = JSON.parse(localStorage.getItem("tls_my_orders") || "[]");
+      if (Array.isArray(orders) && orders.length > 0) {
+        recentOrderId = orders[0];
+      }
+    } catch {
+      // ignore
+    }
+
+    const res = await subscribe({ orderId: recentOrderId });
     if (res.success) {
       toast.success("Avisos activados con éxito");
+      setIsOpen(false);
     } else if (res.needsIOSInstall) {
-      // Ya mostrará la vista de iOS
+      // Mostrará instrucciones de iOS
     } else {
       toast.error(res.error || "No se pudieron activar las notificaciones");
-    }
-  };
-
-  const handleTestNotification = async () => {
-    setTestLoading(true);
-    try {
-      const reg = await navigator.serviceWorker.ready;
-      const sub = await reg.pushManager.getSubscription();
-      if (!sub) {
-        toast.error("No se encontró suscripción activa.");
-        setTestLoading(false);
-        return;
-      }
-
-      toast.info("⏳ Bloquea tu celular AHORA. La notificación llegará en 4 segundos...", { duration: 5000 });
-      setTestSent(true);
-
-      setTimeout(async () => {
-        try {
-          await fetch("https://cdmoyqxorxecbmqbsafz.supabase.co/functions/v1/send-order-push", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              test: true,
-              endpoint: sub.endpoint,
-              order_id: orderId,
-            }),
-          });
-        } catch {
-          // ignore
-        } finally {
-          setTestLoading(false);
-        }
-      }, 4000);
-    } catch (err: any) {
-      setTestLoading(false);
-      toast.error("Error al preparar prueba: " + (err?.message || ""));
     }
   };
 
@@ -111,24 +78,27 @@ export function OrderNotificationPromptModal({ orderId, targetUserId }: OrderNot
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => {
-      if (!open) handleClose();
-      else setIsOpen(true);
-    }}>
+    <Dialog
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (!open) handleClose();
+        else setIsOpen(true);
+      }}
+    >
       <DialogContent className="max-w-md rounded-[32px] bg-surface-2/95 border-border/60 p-6 shadow-2xl backdrop-blur-xl">
         {/* Caso A: iPhone en Safari regular (Instrucciones visuales para PWA) */}
         {needsIOSInstall && (
           <div className="space-y-4">
             <DialogHeader className="text-left">
               <div className="flex items-center gap-2 text-primary font-bold text-xs uppercase tracking-wider">
-                <Sparkles className="size-4" />
-                Apple iPhone / Safari
+                <LogoEye className="size-5 inline-block" />
+                <span>Trippy Land Store</span>
               </div>
               <DialogTitle className="text-[20px] font-extrabold text-foreground pt-1 leading-snug">
                 Recibe avisos de tu pedido con tu celular bloqueado
               </DialogTitle>
               <DialogDescription className="text-[13px] text-muted-foreground pt-1.5 leading-relaxed">
-                Apple exige que añadas Trippy Land a tu inicio para poder enviarte notificaciones y hacer vibrar tu celular:
+                Apple exige que agregues Trippy Land a tu inicio para poder enviarte notificaciones y hacer vibrar tu celular:
               </DialogDescription>
             </DialogHeader>
 
@@ -173,7 +143,6 @@ export function OrderNotificationPromptModal({ orderId, targetUserId }: OrderNot
               </button>
             </div>
 
-            {/* Flecha indicadora animada apuntando a la barra de Safari */}
             <div className="flex items-center justify-center gap-1.5 text-[11px] font-semibold text-muted-foreground animate-bounce pt-1">
               <span>El botón compartir está abajo en tu pantalla</span>
               <ArrowDown className="size-3.5 text-primary" />
@@ -181,7 +150,7 @@ export function OrderNotificationPromptModal({ orderId, targetUserId }: OrderNot
           </div>
         )}
 
-        {/* Caso B: Android, Computador o iPhone instalado en inicio */}
+        {/* Caso B: Android, Computador o iPhone instalado en pantalla de inicio */}
         {!needsIOSInstall && (
           <div className="space-y-4">
             {!isSubscribed ? (
@@ -227,42 +196,24 @@ export function OrderNotificationPromptModal({ orderId, targetUserId }: OrderNot
             ) : (
               <>
                 <DialogHeader className="text-center sm:text-left">
-                  <div className="mx-auto sm:mx-0 flex size-14 items-center justify-center rounded-3xl bg-emerald-500/15 text-emerald-400 ring-8 ring-emerald-500/10">
-                    <Check className="size-7" />
+                  <div className="mx-auto sm:mx-0 flex size-16 items-center justify-center rounded-3xl bg-emerald-500/15 text-emerald-400 ring-8 ring-emerald-500/10">
+                    <Check className="size-8" />
                   </div>
                   <DialogTitle className="text-[22px] font-extrabold text-foreground pt-3 leading-snug">
-                    ¡Avisos activados con éxito!
+                    Avisos activados con éxito
                   </DialogTitle>
                   <DialogDescription className="text-[13px] text-muted-foreground pt-1.5 leading-relaxed">
-                    Tu celular ya está vinculado a este pedido. Puedes hacer una prueba ahora mismo para ver cómo vibra y se enciende con la pantalla bloqueada:
+                    Tu celular recibirá alertas en pantalla bloqueada con sonido y vibración cada vez que haya novedades sobre tus pedidos.
                   </DialogDescription>
                 </DialogHeader>
 
-                <div className="flex flex-col gap-2.5 pt-2">
-                  <button
-                    type="button"
-                    onClick={handleTestNotification}
-                    disabled={testLoading}
-                    className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-surface text-foreground border border-primary/40 font-extrabold shadow-sm transition-transform active:scale-95 disabled:opacity-50 hover:bg-surface-2"
-                  >
-                    {testLoading ? (
-                      <Loader2 className="size-4 animate-spin text-primary" />
-                    ) : (
-                      <>
-                        <Lock className="size-4 text-primary" />
-                        <span>{testSent ? "Probar de nuevo" : "Probar con pantalla bloqueada"}</span>
-                      </>
-                    )}
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={handleClose}
-                    className="flex h-11 w-full items-center justify-center rounded-full bg-primary font-bold text-primary-foreground shadow-sm transition-transform active:scale-95"
-                  >
-                    Listo, ver seguimiento
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  onClick={handleClose}
+                  className="flex h-11 w-full items-center justify-center rounded-full bg-surface-2 font-bold text-foreground transition-colors hover:bg-surface"
+                >
+                  Continuar
+                </button>
               </>
             )}
           </div>

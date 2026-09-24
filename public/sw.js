@@ -12,7 +12,7 @@ self.addEventListener("activate", (event) => {
 // Escuchar notificaciones Push entrantes
 self.addEventListener("push", (event) => {
   let data = {
-    title: "Trippy Land Store",
+    title: "Actualización de tu pedido",
     body: "Tienes una actualización de tu pedido",
     icon: "/favicon.png",
     badge: "/favicon.png",

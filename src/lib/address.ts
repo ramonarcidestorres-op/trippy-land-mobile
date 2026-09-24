@@ -7,6 +7,8 @@ export type SavedAddress = {
   id: string;
   label: string;
   address: string;
+  neighborhood?: string;
+  apartment?: string;
   references?: string;
   notes?: string;
 };
@@ -63,7 +65,13 @@ export const addressStore = {
 };
 
 export function composeAddress(a: SavedAddress): string {
-  return [a.address, a.references && `Ref: ${a.references}`, a.notes && `Nota: ${a.notes}`]
+  return [
+    a.address,
+    a.neighborhood && `Barrio: ${a.neighborhood}`,
+    a.apartment && `Apto/Casa: ${a.apartment}`,
+    a.references && `Ref: ${a.references}`,
+    a.notes && `Nota: ${a.notes}`,
+  ]
     .filter(Boolean)
-    .join(" | ");
+    .join(" • ");
 }

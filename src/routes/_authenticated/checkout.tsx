@@ -36,7 +36,10 @@ function CheckoutPage() {
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [manualAddress, setManualAddress] = useState("");
+  const [manualNeighborhood, setManualNeighborhood] = useState("");
+  const [manualApartment, setManualApartment] = useState("");
   const [manualNotes, setManualNotes] = useState("");
+  const [isEditingAddress, setIsEditingAddress] = useState(false);
   const [locating, setLocating] = useState(false);
   const [deliveryType, setDeliveryType] = useState<"normal" | "fast">("normal");
   const [placing, setPlacing] = useState(false);
@@ -84,9 +87,9 @@ function CheckoutPage() {
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         setLocating(false);
-        const coords = `Ubicación GPS (${pos.coords.latitude.toFixed(5)}, ${pos.coords.longitude.toFixed(5)})`;
-        setManualAddress((prev) => prev ? `${prev} - ${coords}` : coords);
-        toast.success("Ubicación GPS detectada. Agrega nombre de calle o edificio.");
+        const coords = `GPS (${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)})`;
+        setManualAddress((prev) => (prev ? `${prev} [${coords}]` : coords));
+        toast.success("Ubicación GPS capturada. Agrega tu calle o edificio.");
       },
       (err) => {
         setLocating(false);
@@ -104,21 +107,30 @@ function CheckoutPage() {
       return;
     }
 
-    const effectiveAddress = selected 
-      ? composeAddress(selected) 
-      : manualAddress.trim() + (manualNotes.trim() ? ` (Ref: ${manualNotes.trim()})` : "");
+    const effectiveAddress = selected && !isEditingAddress
+      ? composeAddress(selected)
+      : [
+          manualAddress.trim(),
+          manualNeighborhood.trim() && `Barrio: ${manualNeighborhood.trim()}`,
+          manualApartment.trim() && `Apto/Casa: ${manualApartment.trim()}`,
+          manualNotes.trim() && `Nota: ${manualNotes.trim()}`,
+        ]
+          .filter(Boolean)
+          .join(" • ");
 
     if (!effectiveAddress || effectiveAddress.trim().length < 4) {
       toast.error("Por favor ingresa tu dirección de entrega para confirmar.");
-      window.dispatchEvent(new Event("tls-open-address-drawer"));
+      setIsEditingAddress(true);
       return;
     }
 
     // Guardar dirección en el dispositivo para futuros pedidos si se ingresó manualmente
-    if (!selected && manualAddress.trim()) {
+    if ((!selected || isEditingAddress) && manualAddress.trim()) {
       addressStore.save({
-        label: "Dirección",
+        label: "Mi dirección",
         address: manualAddress.trim(),
+        neighborhood: manualNeighborhood.trim() || undefined,
+        apartment: manualApartment.trim() || undefined,
         notes: manualNotes.trim() || undefined,
       });
     }
@@ -223,86 +235,170 @@ function CheckoutPage() {
 
       <div className="space-y-4 pb-32">
         {/* Address Card */}
-        <section className={cn(
-          "rounded-[32px] p-5 transition-all",
-          !selected && !manualAddress.trim() ? "bg-surface-2/80 border border-primary/40 shadow-sm" : "bg-surface-2/60"
-        )}>
+        <section className="rounded-[32px] bg-surface-2/60 p-5 shadow-sm">
           <div className="mb-3 flex items-center justify-between">
             <h2 className="flex items-center gap-2 text-[15px] font-semibold text-foreground">
               <MapPin className="size-4 text-primary" /> Dirección de entrega
             </h2>
-            <button
-              type="button"
-              onClick={() => window.dispatchEvent(new Event("tls-open-address-drawer"))}
-              className="text-xs font-bold text-primary hover:underline"
-            >
-              {selected ? "Cambiar" : "Abrir"}
-            </button>
-          </div>
-
-          {!selected ? (
-            <div className="space-y-3 pt-1">
+            {selected && !isEditingAddress && (
               <button
                 type="button"
-                onClick={() => window.dispatchEvent(new Event("tls-open-address-drawer"))}
-                className="flex h-12 w-full items-center justify-between rounded-2xl bg-surface px-4 text-left transition-all active:scale-[0.98] border border-dashed border-border"
+                onClick={() => {
+                  setManualAddress(selected.address || "");
+                  setManualNeighborhood(selected.neighborhood || "");
+                  setManualApartment(selected.apartment || "");
+                  setManualNotes(selected.notes || selected.references || "");
+                  setIsEditingAddress(true);
+                }}
+                className="text-xs font-bold text-primary hover:underline"
               >
-                <span className="text-[13px] font-medium text-muted-foreground flex items-center gap-2">
-                  <MapPin className="size-4 text-primary" />
-                  Toca para seleccionar dirección o GPS
-                </span>
-                <span className="text-[11px] font-bold text-primary bg-primary/10 px-2.5 py-1 rounded-full">
-                  Abrir
-                </span>
+                Cambiar
               </button>
+            )}
+          </div>
 
-              <div className="relative flex items-center py-0.5">
-                <div className="flex-grow border-t border-border/30"></div>
-                <span className="flex-shrink mx-2 text-[10px] uppercase font-bold text-muted-foreground/60">o escribe aquí</span>
-                <div className="flex-grow border-t border-border/30"></div>
-              </div>
-
-              <div>
-                <Input
-                  value={manualAddress}
-                  onChange={(e) => setManualAddress(e.target.value)}
-                  placeholder="Calle, Carrera, Edificio, Apto..."
-                  className="h-12 rounded-2xl bg-surface border-none text-[14px] text-foreground placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-primary"
-                />
-              </div>
-              <div className="flex gap-2">
-                <Input
-                  value={manualNotes}
-                  onChange={(e) => setManualNotes(e.target.value)}
-                  placeholder="Barrio o indicaciones (opcional)"
-                  className="h-11 flex-1 rounded-2xl bg-surface border-none text-[13px] text-foreground placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-primary"
-                />
+          {selected && !isEditingAddress ? (
+            <div className="rounded-2xl bg-surface/90 border border-border/50 p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-start gap-3 min-w-0">
+                  <div className="size-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
+                    <MapPin className="size-4 text-primary" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[14px] font-bold text-foreground leading-snug break-words">{selected.address}</p>
+                    {(selected.neighborhood || selected.apartment) && (
+                      <p className="text-[12px] text-muted-foreground mt-0.5">
+                        {[selected.neighborhood, selected.apartment].filter(Boolean).join(" • ")}
+                      </p>
+                    )}
+                    {(selected.notes || selected.references) && (
+                      <p className="text-[11px] text-muted-foreground/80 mt-1 italic">
+                        Ref: {selected.notes || selected.references}
+                      </p>
+                    )}
+                  </div>
+                </div>
                 <button
                   type="button"
-                  onClick={handleGetLocation}
-                  disabled={locating}
-                  className="flex h-11 shrink-0 items-center gap-1.5 rounded-2xl bg-surface px-3 text-[12px] font-semibold text-primary transition-transform active:scale-95 disabled:opacity-50"
+                  onClick={() => {
+                    setManualAddress(selected.address || "");
+                    setManualNeighborhood(selected.neighborhood || "");
+                    setManualApartment(selected.apartment || "");
+                    setManualNotes(selected.notes || selected.references || "");
+                    setIsEditingAddress(true);
+                  }}
+                  className="text-[12px] font-bold text-primary px-3 py-1.5 rounded-full bg-surface-2 hover:bg-surface border border-border/40 transition-transform active:scale-95 shrink-0"
                 >
-                  {locating ? <Loader2 className="size-4 animate-spin" /> : <Navigation className="size-4" />}
-                  GPS
+                  Editar
                 </button>
               </div>
             </div>
           ) : (
-            <div className="mt-2 rounded-2xl bg-surface p-3.5 flex items-center justify-between">
-              <div>
-                <p className="text-[14px] font-semibold text-foreground">{selected.address}</p>
-                {selected.references && (
-                  <p className="text-[12px] text-muted-foreground">{selected.references}</p>
-                )}
-              </div>
+            <div className="space-y-3 pt-1">
+              {/* Botón rápido de GPS */}
               <button
                 type="button"
-                onClick={() => window.dispatchEvent(new Event("tls-open-address-drawer"))}
-                className="text-[12px] font-bold text-primary ml-2 px-3 py-1.5 rounded-full bg-surface-2 transition-transform active:scale-95"
+                onClick={handleGetLocation}
+                disabled={locating}
+                className="flex w-full items-center justify-center gap-2 h-11 rounded-2xl bg-surface hover:bg-surface-2 border border-border/50 text-[13px] font-semibold text-primary transition-all active:scale-[0.98] disabled:opacity-50"
               >
-                Cambiar
+                {locating ? <Loader2 className="size-4 animate-spin text-primary" /> : <Navigation className="size-4 text-primary" />}
+                <span>{locating ? "Obteniendo ubicación GPS..." : "Detectar mi ubicación actual con GPS"}</span>
               </button>
+
+              {/* Lista de direcciones guardadas previamente (si existen) */}
+              {addressStore.list().length > 0 && (
+                <div className="pt-1">
+                  <p className="text-[11px] uppercase tracking-wider font-bold text-muted-foreground/70 mb-2">
+                    O selecciona una guardada:
+                  </p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {addressStore.list().map((addr) => (
+                      <button
+                        key={addr.id}
+                        type="button"
+                        onClick={() => {
+                          addressStore.select(addr.id);
+                          setSelectedId(addr.id);
+                          setIsEditingAddress(false);
+                        }}
+                        className={cn(
+                          "px-3 py-1.5 rounded-xl text-xs font-medium border transition-all text-left truncate max-w-full",
+                          selected?.id === addr.id
+                            ? "bg-primary/15 border-primary text-primary"
+                            : "bg-surface border-border/40 text-muted-foreground hover:text-foreground"
+                        )}
+                      >
+                        📍 {addr.address}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Campos estructurados claros y elegantes */}
+              <div className="space-y-2.5 pt-1">
+                <div>
+                  <label className="text-[11px] font-semibold text-muted-foreground mb-1 block">
+                    Dirección principal <span className="text-primary">*</span>
+                  </label>
+                  <Input
+                    value={manualAddress}
+                    onChange={(e) => setManualAddress(e.target.value)}
+                    placeholder="Ej: Calle 45 # 12-34 o Edificio / Conjunto"
+                    className="h-11 rounded-2xl bg-surface border-border/40 text-[13px] text-foreground placeholder:text-muted-foreground/60 focus-visible:ring-1 focus-visible:ring-primary"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="text-[11px] font-semibold text-muted-foreground mb-1 block">
+                      Barrio o Sector
+                    </label>
+                    <Input
+                      value={manualNeighborhood}
+                      onChange={(e) => setManualNeighborhood(e.target.value)}
+                      placeholder="Ej: El Poblado"
+                      className="h-11 rounded-2xl bg-surface border-border/40 text-[13px] text-foreground placeholder:text-muted-foreground/60 focus-visible:ring-1 focus-visible:ring-primary"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[11px] font-semibold text-muted-foreground mb-1 block">
+                      Apto / Casa (Opcional)
+                    </label>
+                    <Input
+                      value={manualApartment}
+                      onChange={(e) => setManualApartment(e.target.value)}
+                      placeholder="Ej: Apto 301, Torre 2"
+                      className="h-11 rounded-2xl bg-surface border-border/40 text-[13px] text-foreground placeholder:text-muted-foreground/60 focus-visible:ring-1 focus-visible:ring-primary"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-[11px] font-semibold text-muted-foreground mb-1 block">
+                    Indicaciones para el repartidor (Opcional)
+                  </label>
+                  <Input
+                    value={manualNotes}
+                    onChange={(e) => setManualNotes(e.target.value)}
+                    placeholder="Ej: Dejar en portería, casa de reja negra..."
+                    className="h-11 rounded-2xl bg-surface border-border/40 text-[13px] text-foreground placeholder:text-muted-foreground/60 focus-visible:ring-1 focus-visible:ring-primary"
+                  />
+                </div>
+              </div>
+
+              {selected && isEditingAddress && (
+                <div className="flex justify-end pt-1">
+                  <button
+                    type="button"
+                    onClick={() => setIsEditingAddress(false)}
+                    className="text-xs text-muted-foreground hover:text-foreground font-semibold px-2 py-1"
+                  >
+                    Cancelar edición
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </section>

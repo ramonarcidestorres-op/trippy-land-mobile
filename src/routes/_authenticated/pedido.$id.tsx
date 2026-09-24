@@ -31,13 +31,13 @@ export const Route = createFileRoute("/_authenticated/pedido/$id")({
 });
 
 const STATUS_ANNOUNCEMENTS: Record<string, string> = {
-  accepted: "🏪 ¡Tu pedido fue aceptado por la tienda!",
-  preparing: "🏪 Tu pedido se está preparando.",
-  in_transit: "🛵 ¡Tu pedido va en camino a tu dirección!",
-  dispatched: "🛵 ¡Tu pedido va en camino!",
-  arrived: "📍 ¡Tu repartidor llegó! Está afuera en tu punto.",
-  delivered: "✅ ¡Pedido entregado! ¡Que lo disfrutes!",
-  cancelled: "❌ Tu pedido fue cancelado.",
+  accepted: "Tu pedido fue aceptado por la tienda.",
+  preparing: "Tu pedido se está preparando.",
+  in_transit: "Tu pedido va en camino a tu dirección.",
+  dispatched: "Tu pedido va en camino.",
+  arrived: "Tu repartidor llegó y está afuera en tu punto.",
+  delivered: "Pedido entregado con éxito. Que lo disfrutes.",
+  cancelled: "Tu pedido fue cancelado.",
 };
 
 function triggerVibration() {
