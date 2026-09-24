@@ -43,35 +43,66 @@ export const Route = createFileRoute("/_authenticated/admin/pedidos")({
   component: AdminPedidosPage,
 });
 
-/** Reproduce un timbre sintetizado suave (dual tone) cuando entra un pedido nuevo */
+let sharedAudioCtx: AudioContext | null = null;
+
+function getAudioContext(): AudioContext | null {
+  try {
+    if (typeof window === "undefined") return null;
+    const AudioContextClass =
+      window.AudioContext ||
+      (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    if (!AudioContextClass) return null;
+    if (!sharedAudioCtx) {
+      sharedAudioCtx = new AudioContextClass();
+    }
+    if (sharedAudioCtx.state === "suspended") {
+      sharedAudioCtx.resume();
+    }
+    return sharedAudioCtx;
+  } catch {
+    return null;
+  }
+}
+
+/** Reproduce un timbre sintetizado claro cuando entra un pedido nuevo */
 function playChime() {
   try {
-    const AudioContextClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-    if (!AudioContextClass) return;
-    const ctx = new AudioContextClass();
-    const now = ctx.currentTime;
+    const ctx = getAudioContext();
+    if (!ctx) return;
 
-    const osc1 = ctx.createOscillator();
-    const gain1 = ctx.createGain();
-    osc1.type = "sine";
-    osc1.frequency.setValueAtTime(587.33, now); // D5
-    gain1.gain.setValueAtTime(0.25, now);
-    gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
-    osc1.connect(gain1);
-    gain1.connect(ctx.destination);
-    osc1.start(now);
-    osc1.stop(now + 0.4);
+    const executeSound = () => {
+      const now = ctx.currentTime;
 
-    const osc2 = ctx.createOscillator();
-    const gain2 = ctx.createGain();
-    osc2.type = "sine";
-    osc2.frequency.setValueAtTime(880, now + 0.12); // A5
-    gain2.gain.setValueAtTime(0.25, now + 0.12);
-    gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
-    osc2.connect(gain2);
-    gain2.connect(ctx.destination);
-    osc2.start(now + 0.12);
-    osc2.stop(now + 0.6);
+      // Tono 1 (D5 - 587Hz)
+      const osc1 = ctx.createOscillator();
+      const gain1 = ctx.createGain();
+      osc1.type = "sine";
+      osc1.frequency.setValueAtTime(587.33, now);
+      gain1.gain.setValueAtTime(0.6, now);
+      gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+      osc1.connect(gain1);
+      gain1.connect(ctx.destination);
+      osc1.start(now);
+      osc1.stop(now + 0.35);
+
+      // Tono 2 (A5 - 880Hz)
+      const osc2 = ctx.createOscillator();
+      const gain2 = ctx.createGain();
+      osc2.type = "sine";
+      osc2.frequency.setValueAtTime(880, now + 0.12);
+      gain2.gain.setValueAtTime(0.6, now + 0.12);
+      gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.7);
+      osc2.connect(gain2);
+      gain2.connect(ctx.destination);
+      osc2.start(now + 0.12);
+      osc2.stop(now + 0.7);
+    };
+
+    if (ctx.state === "suspended") {
+      ctx.resume().then(executeSound).catch(() => {});
+    } else {
+      executeSound();
+    }
   } catch {
     // Si el navegador bloquea audio antes de interacción, se ignora silenciosamente
   }
@@ -109,11 +140,32 @@ export function AdminPedidosPage() {
     }
     if (next) {
       playChime();
-      toast.info("Sonido de notificaciones activado");
+      toast.success("🔔 Sonido activado (timbre de prueba)");
     } else {
       toast.info("Sonido de notificaciones desactivado");
     }
   };
+
+  const testChime = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    playChime();
+    toast.success("🔔 Timbre de prueba reproducido");
+  };
+
+  // Desbloquear audio automáticamente al primer clic o toque en la pantalla
+  useEffect(() => {
+    const unlock = () => {
+      getAudioContext();
+      window.removeEventListener("click", unlock);
+      window.removeEventListener("touchstart", unlock);
+    };
+    window.addEventListener("click", unlock, { passive: true });
+    window.addEventListener("touchstart", unlock, { passive: true });
+    return () => {
+      window.removeEventListener("click", unlock);
+      window.removeEventListener("touchstart", unlock);
+    };
+  }, []);
 
   // Escucha en tiempo real de nuevos pedidos o cambios de estado
   useEffect(() => {
@@ -324,15 +376,25 @@ export function AdminPedidosPage() {
                 type="button"
                 onClick={toggleSound}
                 className={cn(
-                  "flex items-center gap-1.5 h-9 rounded-2xl px-3 text-xs font-bold border transition-all active:scale-95",
+                  "flex items-center gap-1.5 h-9 rounded-2xl px-2.5 text-xs font-bold border transition-all active:scale-95",
                   soundEnabled
                     ? "border-primary/40 bg-primary/10 text-primary"
                     : "border-border/40 bg-surface-2 text-muted-foreground"
                 )}
-                title={soundEnabled ? "Desactivar sonido de pedidos" : "Activar sonido de pedidos"}
+                title={soundEnabled ? "Clic para desactivar sonido" : "Clic para activar sonido"}
               >
                 {soundEnabled ? <Volume2 className="size-3.5" /> : <VolumeX className="size-3.5" />}
-                <span className="text-[11px]">Sonido</span>
+                <span className="text-[11px]">{soundEnabled ? "Sonido ON" : "Silencio"}</span>
+                {soundEnabled && (
+                  <span
+                    role="button"
+                    onClick={testChime}
+                    className="ml-1 rounded-md bg-primary/20 px-1 py-0.5 text-[9px] font-extrabold uppercase text-primary hover:bg-primary/30"
+                    title="Probar timbre ahora"
+                  >
+                    Probar
+                  </span>
+                )}
               </button>
 
               <button
