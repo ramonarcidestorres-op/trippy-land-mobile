@@ -98,7 +98,7 @@ export const ordersQuery = (userId: string | undefined) =>
 export const orderQuery = (id: string) =>
   queryOptions({
     queryKey: ["order", id],
-    refetchInterval: 15000,
+    refetchInterval: 3000,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("orders")

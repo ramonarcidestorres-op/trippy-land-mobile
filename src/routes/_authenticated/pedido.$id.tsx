@@ -1,14 +1,15 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Check, MapPin, Receipt, Clock, Rocket, ChevronLeft, Package, Bike, CheckCircle2 } from "lucide-react";
+import { Check, MapPin, Receipt, Clock, ChevronLeft, Bike, CheckCircle2, ShieldCheck, Store, Play, RotateCcw } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { EmptyState, ErrorState } from "@/components/States";
 import { supabase } from "@/integrations/supabase/client";
 import { orderQuery, orderHistoryQuery } from "@/lib/queries";
 import { formatDate, formatPrice } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/useAuth";
 
 type OrderDetailSearch = { nuevo?: boolean | undefined };
 
@@ -29,6 +30,7 @@ export const Route = createFileRoute("/_authenticated/pedido/$id")({
 function OrderDetailPage() {
   const { id } = Route.useParams();
   const { nuevo } = Route.useSearch();
+  const { user } = useAuth();
   const queryClient = useQueryClient();
   const { data, isLoading, error, refetch } = useQuery(orderQuery(id));
   const { data: history } = useQuery(orderHistoryQuery(data?.id));
@@ -37,6 +39,54 @@ function OrderDetailPage() {
   const [waText, setWaText] = useState("");
   const [waSending, setWaSending] = useState(false);
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
+  const [isSimulating, setIsSimulating] = useState(false);
+
+  async function handleAdminStatusChange(newStatus: string, customMoto?: string) {
+    if (!data?.id) return;
+    let motoDetails = customMoto ?? data.status_details;
+    if (newStatus === "arrived" && !motoDetails) {
+      motoDetails = "NMAX Negra - Placa TLC-42D";
+    }
+
+    // Actualización optimista inmediata en la UI
+    queryClient.setQueryData(["order", id], (old: any) => {
+      if (!old) return old;
+      return { ...old, status: newStatus, status_details: motoDetails };
+    });
+
+    const { error: updErr } = await supabase
+      .from("orders")
+      .update({ status: newStatus, status_details: motoDetails })
+      .eq("id", data.id);
+    if (updErr) {
+      toast.error("Error al actualizar: " + updErr.message);
+      queryClient.invalidateQueries({ queryKey: ["order", id] });
+    } else {
+      toast.success("Estado actualizado: " + newStatus);
+      queryClient.invalidateQueries({ queryKey: ["order", id] });
+      queryClient.invalidateQueries({ queryKey: ["orders"] });
+      queryClient.invalidateQueries({ queryKey: ["order_history", data.id] });
+    }
+  }
+
+  async function handleRunSimulation() {
+    if (!data?.id || isSimulating) return;
+    setIsSimulating(true);
+    toast.info("Iniciando señal en vivo...");
+    
+    // Paso 1: Tienda acepta
+    await handleAdminStatusChange("accepted");
+    await new Promise(r => setTimeout(r, 2000));
+    
+    // Paso 2: Repartidor en camino
+    await handleAdminStatusChange("in_transit");
+    await new Promise(r => setTimeout(r, 3000));
+    
+    // Paso 3: Repartidor llegó
+    await handleAdminStatusChange("arrived", "NMAX Negra - Placa TLC-42D");
+    toast.success("¡El repartidor ya llegó!");
+    setIsSimulating(false);
+  }
 
   useEffect(() => {
     if (!data?.id) return;
@@ -46,7 +96,13 @@ function OrderDetailPage() {
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "orders", filter: `id=eq.${data.id}` },
-        () => {
+        (payload) => {
+          if (payload.new) {
+            queryClient.setQueryData(["order", id], (old: any) => {
+              if (!old) return old;
+              return { ...old, ...(payload.new as object) };
+            });
+          }
           queryClient.invalidateQueries({ queryKey: ["order", id] });
           queryClient.invalidateQueries({ queryKey: ["orders"] });
         }
@@ -54,7 +110,7 @@ function OrderDetailPage() {
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "order_status_history", filter: `order_id=eq.${data.id}` },
-        (payload) => {
+        () => {
           queryClient.invalidateQueries({ queryKey: ["order_history", data.id] });
           toast.success("El estado de tu pedido ha cambiado");
         }
@@ -65,6 +121,7 @@ function OrderDetailPage() {
       supabase.removeChannel(channel);
     };
   }, [data?.id, id, queryClient]);
+
 
   useEffect(() => {
     if (data?.status !== "arrived") {
@@ -152,8 +209,8 @@ function OrderDetailPage() {
 
   const STEPS = [
     { label: "Recibido", icon: Receipt },
-    { label: "Bodega", icon: Package },
-    { label: "En camino", icon: Bike },
+    { label: "Tienda Aceptó", icon: Store },
+    { label: "En Camino", icon: Bike },
     { label: "Llegó", icon: CheckCircle2 },
   ];
 
@@ -191,15 +248,17 @@ function OrderDetailPage() {
       </div>
 
       <div className="space-y-4">
-        {/* Tracking */}
+        {/* Tracking Sencillo en Vivo */}
         <section className="rounded-[32px] bg-surface-2/60 p-6">
-          <div className="mb-5 flex items-center justify-between">
-            <h2 className="text-[18px] font-bold text-foreground">Seguimiento en Vivo</h2>
-            {data.delivery_type === "fast" && (
-              <span className="flex items-center gap-1.5 rounded-full bg-primary/20 px-3 py-1 text-[13px] font-bold text-primary">
-                <Rocket className="size-4" /> Rápido
-              </span>
-            )}
+          <div className="mb-6 flex items-center justify-between">
+            <div>
+              <h2 className="text-[19px] font-bold text-foreground">Seguimiento en Vivo</h2>
+              <p className="text-[12px] font-medium text-muted-foreground">Señal en directo del pedido</p>
+            </div>
+            <div className="flex items-center gap-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 px-3 py-1 text-[11px] font-bold text-emerald-400">
+              <span className="size-2 rounded-full bg-emerald-400 animate-ping" />
+              Señal en Vivo
+            </div>
           </div>
 
           {/* Stepper visual horizontal conectado */}
@@ -227,7 +286,7 @@ function OrderDetailPage() {
                         <StepIcon className={cn("size-5", isCurrent && "animate-pulse")} />
                       </div>
                       <span className={cn(
-                        "mt-2 text-[11px] font-bold tracking-tight",
+                        "mt-2 text-[11px] font-bold tracking-tight text-center",
                         isDone ? "text-foreground" : "text-muted-foreground/60"
                       )}>
                         {s.label}
@@ -238,44 +297,72 @@ function OrderDetailPage() {
               </div>
             </div>
           )}
-          
+
+          {/* Tarjeta de Estado Actual */}
           {cancelled ? (
-            <div className="rounded-[20px] bg-red-500/10 p-5">
-              <p className="text-[15px] font-bold text-red-500 animate-pulse">Pedido cancelado</p>
+            <div className="rounded-[24px] bg-red-500/10 p-5 border border-red-500/20">
+              <p className="text-[16px] font-bold text-red-500">Pedido cancelado</p>
               {data.cancel_reason && (
                 <p className="mt-1 text-[13px] font-medium text-red-400">Motivo: {data.cancel_reason}</p>
               )}
             </div>
           ) : data.status === "pending" ? (
-            <div className="rounded-[20px] bg-surface p-5">
-              <p className="text-[15px] font-bold text-muted-foreground">Procesando...</p>
+            <div className="flex items-center gap-4 rounded-[24px] bg-surface p-5 border border-border/40">
+              <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-surface-2 text-primary">
+                <Receipt className="size-6 animate-pulse" />
+              </div>
+              <div>
+                <p className="text-[16px] font-bold text-foreground">Pedido recibido</p>
+                <p className="text-[13px] text-muted-foreground">Esperando que la tienda acepte tu pedido en breve...</p>
+              </div>
             </div>
           ) : data.status === "accepted" ? (
-            <div className="rounded-[20px] bg-blue-500/10 p-5">
-              <p className="text-[15px] font-bold text-blue-500 animate-pulse">Tu pedido ya está en la bodega</p>
+            <div className="flex items-center gap-4 rounded-[24px] bg-blue-500/10 p-5 border border-blue-500/20">
+              <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-blue-500/20 text-blue-400">
+                <Store className="size-6 animate-bounce" />
+              </div>
+              <div>
+                <p className="text-[16px] font-bold text-blue-400">¡La tienda aceptó tu pedido!</p>
+                <p className="text-[13px] text-muted-foreground">Tu pedido está siendo empacado y alistado para despacho.</p>
+              </div>
             </div>
           ) : data.status === "in_transit" ? (
-            <div className="rounded-[20px] bg-yellow-500/10 p-5">
-              <p className="text-[15px] font-bold text-yellow-500 animate-pulse">Domicilio en camino</p>
+            <div className="flex items-center gap-4 rounded-[24px] bg-amber-500/10 p-5 border border-amber-500/20">
+              <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-amber-500/20 text-amber-400">
+                <Bike className="size-6 animate-pulse" />
+              </div>
+              <div>
+                <p className="text-[16px] font-bold text-amber-400">El repartidor va en camino</p>
+                <p className="text-[13px] text-muted-foreground">
+                  {data.delivery_type === "fast" ? "Entrega Rápida 🚀 (~15-20 min)" : "El repartidor ya va hacia tu dirección."}
+                </p>
+              </div>
             </div>
           ) : data.status === "arrived" || data.status === "delivered" ? (
-            <div className="rounded-[20px] bg-green-500/10 p-5 border border-green-500/20">
-              <p className="text-[18px] font-extrabold text-green-500 mb-2">Ya tu pedido llegó.</p>
-              <p className="text-[15px] font-bold text-foreground">
-                Moto: <span className="text-primary">{data.status_details || "No especificada"}</span>
-              </p>
+            <div className="space-y-4 rounded-[24px] bg-green-500/10 p-5 border border-green-500/20">
+              <div className="flex items-center gap-4">
+                <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-green-500/20 text-green-400">
+                  <CheckCircle2 className="size-6" />
+                </div>
+                <div>
+                  <p className="text-[17px] font-extrabold text-green-400">¡El repartidor ya llegó!</p>
+                  <p className="text-[14px] font-bold text-foreground">
+                    Vehículo: <span className="text-primary">{data.status_details || "Repartidor en punto"}</span>
+                  </p>
+                </div>
+              </div>
               
               {/* Temporizador */}
               {data.status === "arrived" && timeLeft !== null && timeLeft > 0 && (
-                <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-surface-2 px-3 py-1.5 text-[14px] font-semibold text-muted-foreground">
-                  <Clock className="size-4" />
+                <div className="inline-flex items-center gap-2 rounded-full bg-surface-2 px-3 py-1.5 text-[14px] font-semibold text-muted-foreground">
+                  <Clock className="size-4 text-primary" />
                   Tiempo de espera: {Math.floor(timeLeft / 60000)}:{(Math.floor(timeLeft / 1000) % 60).toString().padStart(2, "0")}
                 </div>
               )}
 
               {/* Formulario de WhatsApp tras 7 minutos */}
               {data.status === "arrived" && timeLeft === 0 && !data.whatsapp_contact && (
-                <div className="mt-5 space-y-3 rounded-2xl bg-surface p-4">
+                <div className="space-y-3 rounded-2xl bg-surface p-4">
                   <p className="text-[14px] font-semibold text-yellow-500">
                     Colocar tu número de teléfono porque pasó el tiempo de espera.
                   </p>
@@ -299,13 +386,74 @@ function OrderDetailPage() {
               )}
               
               {data.whatsapp_contact && (
-                <p className="mt-4 text-[13px] font-medium text-muted-foreground">
+                <p className="text-[13px] font-medium text-muted-foreground">
                   Número enviado: {data.whatsapp_contact}
                 </p>
               )}
             </div>
           ) : null}
         </section>
+
+        {/* Barra de Control de Señal (Admin y Pruebas) */}
+        {(user?.role === "admin" || user?.id === data.user_id) && (
+          <section className="rounded-[32px] border border-primary/30 bg-surface-2/70 p-5 shadow-lg backdrop-blur-md">
+            <div className="mb-3 flex items-center justify-between">
+              <span className="text-[13px] font-bold text-primary uppercase tracking-wider flex items-center gap-1.5">
+                <ShieldCheck className="size-4" /> Control de Señal
+              </span>
+              <button
+                type="button"
+                onClick={handleRunSimulation}
+                disabled={isSimulating}
+                className="flex items-center gap-1.5 rounded-full bg-primary/20 px-3 py-1 text-[11px] font-extrabold text-primary hover:bg-primary/30 transition-transform active:scale-95 disabled:opacity-50"
+              >
+                <Play className="size-3 fill-current" /> {isSimulating ? "Simulando..." : "Simular Señal"}
+              </button>
+            </div>
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
+              <button
+                type="button"
+                onClick={() => handleAdminStatusChange("accepted")}
+                disabled={isSimulating || data.status === "accepted" || data.status === "in_transit" || data.status === "arrived" || data.status === "delivered"}
+                className="flex items-center justify-center gap-1.5 h-11 rounded-2xl bg-blue-500/20 text-blue-400 font-bold text-xs transition-transform active:scale-95 disabled:opacity-30"
+              >
+                <Store className="size-3.5" /> Tienda Acepta
+              </button>
+              <button
+                type="button"
+                onClick={() => handleAdminStatusChange("in_transit")}
+                disabled={isSimulating || data.status === "in_transit" || data.status === "arrived" || data.status === "delivered"}
+                className="flex items-center justify-center gap-1.5 h-11 rounded-2xl bg-amber-500/20 text-amber-400 font-bold text-xs transition-transform active:scale-95 disabled:opacity-30"
+              >
+                <Bike className="size-3.5" /> Repartidor
+              </button>
+              <button
+                type="button"
+                onClick={() => handleAdminStatusChange("arrived")}
+                disabled={isSimulating || data.status === "arrived" || data.status === "delivered"}
+                className="flex items-center justify-center gap-1.5 h-11 rounded-2xl bg-green-500/20 text-green-400 font-bold text-xs transition-transform active:scale-95 disabled:opacity-30"
+              >
+                <CheckCircle2 className="size-3.5" /> Ya Llegó
+              </button>
+              <button
+                type="button"
+                onClick={() => handleAdminStatusChange("delivered")}
+                disabled={isSimulating || data.status === "delivered"}
+                className="flex items-center justify-center gap-1.5 h-11 rounded-2xl bg-emerald-500 text-black font-bold text-xs transition-transform active:scale-95 disabled:opacity-30"
+              >
+                <Check className="size-3.5" /> Entregado
+              </button>
+              <button
+                type="button"
+                onClick={() => handleAdminStatusChange("pending")}
+                disabled={isSimulating || data.status === "pending"}
+                className="flex items-center justify-center gap-1.5 h-11 rounded-2xl bg-surface text-muted-foreground font-bold text-xs transition-transform active:scale-95 disabled:opacity-30 col-span-2 sm:col-span-1"
+              >
+                <RotateCcw className="size-3.5" /> Reiniciar
+              </button>
+            </div>
+          </section>
+        )}
 
         {/* Delivery Address */}
         {data.delivery_address && (
