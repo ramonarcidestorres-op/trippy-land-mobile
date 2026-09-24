@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Check, MapPin, Receipt, Clock, Rocket, ChevronLeft } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { EmptyState, ErrorState } from "@/components/States";
+import { supabase } from "@/integrations/supabase/client";
 import { orderQuery, orderHistoryQuery } from "@/lib/queries";
 import { formatDate, formatPrice } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -44,6 +45,7 @@ function OrderDetailPage() {
           queryClient.invalidateQueries({ queryKey: ["orders"] });
         }
       )
+      .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "order_status_history", filter: `order_id=eq.${data.id}` },
         (payload) => {

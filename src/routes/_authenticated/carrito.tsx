@@ -1,13 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
-import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
-import { EmptyState, ErrorState } from "@/components/States";
+import { EmptyState } from "@/components/States";
 import { useCart } from "@/hooks/useCart";
 import { useReferral } from "@/hooks/useReferral";
 import { formatPrice } from "@/lib/format";
-import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/carrito")({
   head: () => ({

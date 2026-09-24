@@ -28,6 +28,7 @@ function CheckoutPage() {
   const { cart: rows, clearCart } = useCart();
   const { referralCode, getAdjustedPrice } = useReferral();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [deliveryType, setDeliveryType] = useState<"normal" | "fast">("normal");
