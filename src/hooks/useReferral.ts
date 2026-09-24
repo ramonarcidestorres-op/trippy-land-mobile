@@ -31,8 +31,8 @@ export function useReferral() {
   const getAdjustedPrice = useCallback((basePrice: number | string) => {
     const price = Number(basePrice);
     if (referralCode) {
-      // Incremento del 30% para comisionistas
-      return Math.round(price * 1.30);
+      // Incremento del 40% para comisionistas
+      return Math.round(price * 1.40);
     }
     return price;
   }, [referralCode]);

@@ -32,9 +32,9 @@ BEGIN
     -- Obtener precio original
     SELECT price INTO v_item_price FROM products WHERE id = v_cart_item.product_id;
     
-    -- MAGIA: Si viene con un código de comisionista, le sumamos el 30% al valor real
+    -- MAGIA: Si viene con un código de comisionista, le sumamos el 40% al valor real
     IF p_referral_code IS NOT NULL AND p_referral_code != '' THEN
-      v_item_price := ROUND(v_item_price * 1.30);
+      v_item_price := ROUND(v_item_price * 1.40);
     END IF;
 
     -- Guardar el producto dentro del pedido con el nuevo precio ya modificado
