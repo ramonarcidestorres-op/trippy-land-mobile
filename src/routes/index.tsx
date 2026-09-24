@@ -102,7 +102,9 @@ function HomePage() {
               }
 
               const isActive = selectedCategory === c.id;
-              const colorClasses = isActive ? activeColor : "bg-surface-2/60 text-foreground";
+              const colorClasses = isActive 
+                ? `${activeColor} shadow-lg shadow-black/20` 
+                : "bg-white/5 backdrop-blur-lg border border-white/10 shadow-xl text-foreground";
 
               return (
                 <button

@@ -45,7 +45,7 @@ export function ProductCard({ product }: { product: Product }) {
   const img = product.image_url || fallbackImg;
 
   return (
-    <div className="group relative flex w-full flex-col overflow-hidden rounded-[28px] bg-surface-2/60 pb-4 transition-all focus-within:ring-2 focus-within:ring-primary/30 active:scale-[0.98]">
+    <div className="group relative flex w-full flex-col overflow-hidden rounded-[28px] bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl shadow-black/40 pb-4 transition-all focus-within:ring-2 focus-within:ring-primary/30 active:scale-[0.98]">
       <Link
         to="/producto/$id"
         params={{ id: product.id }}
@@ -101,7 +101,7 @@ export function ProductCard({ product }: { product: Product }) {
 
 export function ProductCardSkeleton() {
   return (
-    <div className="relative flex w-full flex-col overflow-hidden rounded-[28px] bg-surface-2/60 pb-4">
+    <div className="relative flex w-full flex-col overflow-hidden rounded-[28px] bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl shadow-black/40 pb-4">
       <div className="relative z-10 mx-auto mt-4 aspect-[4/3] w-11/12 animate-pulse rounded-2xl bg-surface" />
       <div className="relative z-10 mt-4 flex flex-1 flex-col px-4 space-y-2">
         <div className="space-y-1.5">
