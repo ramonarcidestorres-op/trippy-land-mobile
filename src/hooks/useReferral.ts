@@ -40,21 +40,38 @@ export function syncReferralManifest(refCode: string | null) {
       description: "Dulces y snacks a domicilio en minutos. Pago contra entrega en efectivo.",
       start_url: startUrl,
       display: "standalone",
-      background_color: "#0b0b0d",
-      theme_color: "#0b0b0d",
+      background_color: "#0e0e0e",
+      theme_color: "#0e0e0e",
       orientation: "portrait",
       icons: [
         {
-          src: "/favicon.png",
+          src: "/tripi%20logo%20app.svg",
+          sizes: "any",
+          type: "image/svg+xml",
+          purpose: "any maskable",
+        },
+        {
+          src: "/app-icon.svg",
+          sizes: "any",
+          type: "image/svg+xml",
+          purpose: "any maskable",
+        },
+        {
+          src: "/icon-192.png",
           sizes: "192x192",
           type: "image/png",
           purpose: "any maskable",
         },
         {
-          src: "/favicon.png",
+          src: "/icon-512.png",
           sizes: "512x512",
           type: "image/png",
           purpose: "any maskable",
+        },
+        {
+          src: "/apple-touch-icon.png",
+          sizes: "180x180",
+          type: "image/png",
         },
       ],
     };

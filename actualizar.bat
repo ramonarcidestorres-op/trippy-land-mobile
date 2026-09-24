@@ -1,5 +1,10 @@
 @echo off
 echo ==============================================
+echo Generando iconos nativos centrados (iOS y Android)...
+echo ==============================================
+node scripts/generate_app_icons.mjs
+
+echo ==============================================
 echo Subiendo tus cambios a Lovable
 echo ==============================================
 
