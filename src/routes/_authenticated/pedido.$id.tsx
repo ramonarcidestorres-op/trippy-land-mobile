@@ -33,6 +33,11 @@ function OrderDetailPage() {
   const { data, isLoading, error, refetch } = useQuery(orderQuery(id));
   const { data: history } = useQuery(orderHistoryQuery(data?.id));
 
+  // Todos los Hooks de React DEBEN ejecutarse al inicio antes de cualquier return condicional
+  const [waText, setWaText] = useState("");
+  const [waSending, setWaSending] = useState(false);
+  const [timeLeft, setTimeLeft] = useState<number | null>(null);
+
   useEffect(() => {
     if (!data?.id) return;
     
@@ -60,6 +65,39 @@ function OrderDetailPage() {
       supabase.removeChannel(channel);
     };
   }, [data?.id, id, queryClient]);
+
+  useEffect(() => {
+    if (data?.status !== "arrived") {
+      setTimeLeft(null);
+      return;
+    }
+    const arrivedEvent = history?.find(h => h.status === "arrived");
+    if (!arrivedEvent?.created_at) return;
+    
+    const arrivedTime = new Date(arrivedEvent.created_at).getTime();
+    const target = arrivedTime + 7 * 60 * 1000;
+
+    const interval = setInterval(() => {
+      const remaining = Math.max(0, target - Date.now());
+      setTimeLeft(remaining);
+      if (remaining <= 0) clearInterval(interval);
+    }, 1000);
+    
+    return () => clearInterval(interval);
+  }, [data?.status, history]);
+
+  async function handleSendWa() {
+    if (!waText || !data?.id) return;
+    setWaSending(true);
+    const { error } = await supabase.from("orders").update({ whatsapp_contact: waText }).eq("id", data.id);
+    setWaSending(false);
+    if (error) {
+      toast.error("No se pudo enviar. Intenta de nuevo.");
+    } else {
+      toast.success("Número enviado al domiciliario.");
+      queryClient.invalidateQueries({ queryKey: ["order", id] });
+    }
+  }
 
   if (isLoading) {
     return (
@@ -103,44 +141,6 @@ function OrderDetailPage() {
     0,
   );
   const deliveryFee = data.delivery_fee ?? (Number(data.total ?? 0) - subtotal);
-  
-  // Custom Timer Logic
-  const [waText, setWaText] = useState("");
-  const [waSending, setWaSending] = useState(false);
-  const [timeLeft, setTimeLeft] = useState<number | null>(null);
-
-  useEffect(() => {
-    if (data.status !== "arrived") {
-      setTimeLeft(null);
-      return;
-    }
-    const arrivedEvent = history?.find(h => h.status === "arrived");
-    if (!arrivedEvent?.created_at) return;
-    
-    const arrivedTime = new Date(arrivedEvent.created_at).getTime();
-    const target = arrivedTime + 7 * 60 * 1000;
-
-    const interval = setInterval(() => {
-      const remaining = Math.max(0, target - Date.now());
-      setTimeLeft(remaining);
-      if (remaining <= 0) clearInterval(interval);
-    }, 1000);
-    
-    return () => clearInterval(interval);
-  }, [data.status, history]);
-
-  async function handleSendWa() {
-    if (!waText) return;
-    setWaSending(true);
-    const { error } = await supabase.from("orders").update({ whatsapp_contact: waText }).eq("id", data.id);
-    setWaSending(false);
-    if (error) {
-      toast.error("No se pudo enviar. Intenta de nuevo.");
-    } else {
-      toast.success("Número enviado al domiciliario.");
-      queryClient.invalidateQueries({ queryKey: ["order", id] });
-    }
-  }
 
   const stepIndex =
     cancelled ? -1
