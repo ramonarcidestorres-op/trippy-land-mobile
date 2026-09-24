@@ -45,31 +45,31 @@ export function syncReferralManifest(refCode: string | null) {
       orientation: "portrait",
       icons: [
         {
-          src: "/tripi%20logo%20app.svg",
-          sizes: "any",
-          type: "image/svg+xml",
-          purpose: "any maskable",
-        },
-        {
-          src: "/app-icon.svg",
-          sizes: "any",
-          type: "image/svg+xml",
-          purpose: "any maskable",
-        },
-        {
-          src: "/icon-192.png",
+          src: "/tripi-logo-app.png",
           sizes: "192x192",
           type: "image/png",
-          purpose: "any maskable",
+          purpose: "any",
         },
         {
-          src: "/icon-512.png",
+          src: "/tripi-logo-app.png",
           sizes: "512x512",
           type: "image/png",
-          purpose: "any maskable",
+          purpose: "any",
         },
         {
-          src: "/apple-touch-icon.png",
+          src: "/tripi-logo-app.png",
+          sizes: "192x192",
+          type: "image/png",
+          purpose: "maskable",
+        },
+        {
+          src: "/tripi-logo-app.png",
+          sizes: "512x512",
+          type: "image/png",
+          purpose: "maskable",
+        },
+        {
+          src: "/tripi-logo-app.png",
           sizes: "180x180",
           type: "image/png",
         },

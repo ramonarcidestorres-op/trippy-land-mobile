@@ -1,8 +1,16 @@
 @echo off
 echo ==============================================
-echo Generando iconos nativos centrados (iOS y Android)...
+echo Configurando iconos de la App...
 echo ==============================================
-node scripts/generate_app_icons.mjs
+if exist "public\tripi-logo-app.png" (
+    copy /Y "public\tripi-logo-app.png" "public\icon-512.png" >nul
+    copy /Y "public\tripi-logo-app.png" "public\favicon.png" >nul
+    copy /Y "public\tripi-logo-app.png" "public\icon-192.png" >nul
+    copy /Y "public\tripi-logo-app.png" "public\apple-touch-icon.png" >nul
+    echo Iconos actualizados con tripi-logo-app.png correctamente.
+)
+
+node scripts/generate_app_icons.mjs 2>nul
 
 echo ==============================================
 echo Subiendo tus cambios a Lovable
