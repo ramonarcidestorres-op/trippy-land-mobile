@@ -95,20 +95,29 @@ export function AdminPedidosPage() {
     toast.success("🔔 Timbre de prueba reproducido");
   };
 
-  // Desbloquear audio automáticamente al primer clic o toque en la pantalla
+  // Asegurar que la suscripción push actual quede registrada con rol de admin
   useEffect(() => {
-    const unlock = () => {
-      getAudioContext();
-      window.removeEventListener("click", unlock);
-      window.removeEventListener("touchstart", unlock);
-    };
-    window.addEventListener("click", unlock, { passive: true });
-    window.addEventListener("touchstart", unlock, { passive: true });
-    return () => {
-      window.removeEventListener("click", unlock);
-      window.removeEventListener("touchstart", unlock);
-    };
-  }, []);
+    if (typeof window === "undefined" || !("serviceWorker" in navigator)) return;
+    navigator.serviceWorker.ready.then((reg) => {
+      reg.pushManager.getSubscription().then(async (sub) => {
+        if (sub) {
+          const jsonSub = sub.toJSON();
+          if (jsonSub.keys?.p256dh && jsonSub.keys?.auth) {
+            await supabase.from("push_subscriptions").upsert(
+              {
+                endpoint: sub.endpoint,
+                p256dh: jsonSub.keys.p256dh,
+                auth: jsonSub.keys.auth,
+                user_id: user?.id || null,
+                role: "admin",
+              },
+              { onConflict: "endpoint" }
+            );
+          }
+        }
+      });
+    }).catch(() => {});
+  }, [user]);
 
   // Escucha en tiempo real de nuevos pedidos o cambios de estado
   useEffect(() => {

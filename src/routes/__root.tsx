@@ -127,12 +127,29 @@ function RootShell({ children }: { children: ReactNode }) {
   );
 }
 
+import { playWhatsAppChime } from "../lib/sound";
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
   useEffect(() => {
     processUrlForReferral();
 
+    // Escuchar mensajes del Service Worker para reproducir sonido de notificación
+    if (typeof window !== "undefined" && "serviceWorker" in navigator) {
+      const handleMessage = (event: MessageEvent) => {
+        if (event.data?.type === "PLAY_WHATSAPP_SOUND") {
+          playWhatsAppChime();
+        }
+      };
+      navigator.serviceWorker.addEventListener("message", handleMessage);
+      return () => {
+        navigator.serviceWorker.removeEventListener("message", handleMessage);
+      };
+    }
+  }, []);
+
+  useEffect(() => {
     const removeDevTools = () => {
       const selectors = [
         ".tsrd-toggle-btn",

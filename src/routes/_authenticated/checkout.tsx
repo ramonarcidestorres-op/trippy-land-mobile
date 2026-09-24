@@ -192,6 +192,15 @@ function CheckoutPage() {
         }
       }
 
+      // Notificar a los administradores de inmediato vía Push
+      try {
+        supabase.functions.invoke("send-order-push", {
+          body: { order_id: orderId, status: "pending" },
+        }).catch(() => {});
+      } catch {
+        // ignore
+      }
+
       clearCart();
       await queryClient.invalidateQueries({ queryKey: ["orders"] });
 

@@ -16,6 +16,7 @@ self.addEventListener("push", (event) => {
     body: "Tienes una actualización de tu pedido",
     icon: "/tripi-logo-app.png",
     badge: "/tripi-logo-app.png",
+    sound: "/notification.wav",
     data: { url: "/" },
     tag: "default-order",
   };
@@ -29,20 +30,31 @@ self.addEventListener("push", (event) => {
     }
   }
 
+  // Patrón de vibración fuerte y extendido estilo WhatsApp
+  const strongVibration = [500, 110, 500, 110, 450];
+
   const options = {
     body: data.body,
     icon: data.icon || "/tripi-logo-app.png",
     badge: data.badge || "/tripi-logo-app.png",
+    sound: data.sound || "/notification.wav",
     tag: data.tag || "order-notification",
     renotify: true,
     requireInteraction: true,
     silent: false,
-    vibrate: [100, 50, 100],
+    vibrate: data.vibrate || strongVibration,
     data: data.data || { url: "/" },
     actions: [
       { action: "open", title: "Ver Pedido" }
     ]
   };
+
+  // Notificar a las ventanas abiertas para reproducir el tono de WhatsApp por altavoz
+  self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clients) => {
+    for (const client of clients) {
+      client.postMessage({ type: "PLAY_WHATSAPP_SOUND", data });
+    }
+  });
 
   event.waitUntil(
     self.registration.showNotification(data.title, options)

@@ -108,9 +108,9 @@ export function usePushNotifications() {
           throw new Error("No se pudieron obtener las claves criptográficas de la suscripción");
         }
 
-        const isAdmin = explicitRole === "admin" || user?.role === "admin" || user?.email === "ramon.arcidestorres@gmail.com";
+        const isAdmin = explicitRole === "admin" || user?.role === "admin";
         const assignedRole = isAdmin ? "admin" : "customer";
-        const effectiveUserId = targetUserId || user?.id || (isAdmin ? "72000733-ea5a-4e08-825c-8a175fbbfee5" : null);
+        const effectiveUserId = targetUserId || user?.id || null;
 
         // 4. Guardar suscripción en Supabase (soporta usuario, rol admin y/o pedido)
         const payload: Record<string, unknown> = {
