@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Check, MapPin, Clock, ChevronLeft, Bike, ShoppingBag, PackageCheck, Receipt, XCircle } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { AppShell } from "@/components/AppShell";
+import { PushNotificationButton } from "@/components/PushNotificationButton";
 import { EmptyState, ErrorState } from "@/components/States";
 import { supabase } from "@/integrations/supabase/client";
 import { orderQuery, orderHistoryQuery } from "@/lib/queries";
@@ -229,6 +230,15 @@ function OrderDetailPage() {
       </div>
 
       <div className="space-y-4 pb-20">
+        {/* Activar avisos Push para este pedido */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-[24px] bg-surface-2/60 p-4 border border-border/30">
+          <div className="min-w-0">
+            <p className="text-[14px] font-bold text-foreground">Avisos de entrega en tu celular</p>
+            <p className="text-[12px] text-muted-foreground">Recibe alertas en directo cuando tu orden sea aceptada o despachada.</p>
+          </div>
+          <PushNotificationButton variant="customer" targetUserId={data.user_id || undefined} className="shrink-0" />
+        </div>
+
         {/* Seguimiento en Vivo — Estética Minimalista Unificada */}
         <section className="rounded-[28px] bg-surface-2/70 p-6 border border-border/40 backdrop-blur-md shadow-sm">
           <div className="mb-6 flex items-center justify-between">

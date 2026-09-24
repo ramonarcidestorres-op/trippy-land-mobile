@@ -26,6 +26,7 @@ import {
   ArrowLeft
 } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
+import { PushNotificationButton } from "@/components/PushNotificationButton";
 import { EmptyState, ErrorState } from "@/components/States";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -316,25 +317,28 @@ export function AdminPedidosPage() {
               <span>Tienda</span>
             </Link>
 
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <PushNotificationButton variant="admin" />
+
               <button
                 type="button"
                 onClick={toggleSound}
                 className={cn(
-                  "flex size-8 items-center justify-center rounded-full border transition-all active:scale-95",
+                  "flex items-center gap-1.5 h-9 rounded-2xl px-3 text-xs font-bold border transition-all active:scale-95",
                   soundEnabled
                     ? "border-primary/40 bg-primary/10 text-primary"
                     : "border-border/40 bg-surface-2 text-muted-foreground"
                 )}
-                title={soundEnabled ? "Silenciar notificaciones" : "Activar sonido"}
+                title={soundEnabled ? "Desactivar sonido de pedidos" : "Activar sonido de pedidos"}
               >
-                {soundEnabled ? <Volume2 className="size-4" /> : <VolumeX className="size-4" />}
+                {soundEnabled ? <Volume2 className="size-3.5" /> : <VolumeX className="size-3.5" />}
+                <span className="text-[11px]">Sonido</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => refetch()}
-                className="flex size-8 items-center justify-center rounded-full border border-border/40 bg-surface-2 text-muted-foreground hover:text-foreground transition-all active:scale-95"
+                className="flex size-9 items-center justify-center rounded-2xl border border-border/40 bg-surface-2 text-muted-foreground hover:text-foreground transition-all active:scale-95"
                 title="Actualizar ahora"
               >
                 <RotateCw className={cn("size-3.5", isFetching > 0 && "animate-spin text-primary")} />
