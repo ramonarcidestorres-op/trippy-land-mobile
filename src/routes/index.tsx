@@ -79,26 +79,30 @@ function HomePage() {
               const n = c.name?.toLowerCase() || "";
               
               let imgUrl = c.icon_url || "https://images.unsplash.com/photo-1550258987-190a2d41a8ba?w=400&q=80";
-              let colorClasses = "bg-surface-2/60 text-foreground";
               
+              let activeColor = "bg-primary text-primary-foreground";
               if (n.includes("coca")) {
-                colorClasses = "bg-[#F5F5F0] text-black"; // Blanco/Crema
+                activeColor = "bg-[#F5F5F0] text-black"; // Blanco/Crema
                 if (!c.icon_url) imgUrl = "/categorias/Coca.png";
               } else if (n.includes("pre-roll") || n.includes("pre roll")) {
-                colorClasses = "bg-[#9EAB91] text-black"; // Verde mate
+                activeColor = "bg-[#9EAB91] text-black"; // Verde mate
                 if (!c.icon_url) imgUrl = "/categorias/Pre-Rolls.png";
               } else if (n.includes("weed")) {
-                colorClasses = "bg-[#9EAB91] text-black"; // Verde mate
+                activeColor = "bg-[#9EAB91] text-black"; // Verde mate
                 if (!c.icon_url) imgUrl = "/categorias/Weed.png";
               } else if (n.includes("farma")) {
-                colorClasses = "bg-[#A7C7E7] text-black"; // Azul claro
+                activeColor = "bg-[#A7C7E7] text-black"; // Azul claro
                 if (!c.icon_url) imgUrl = "/categorias/farmacia.png";
               } else if (n.includes("sint")) {
-                colorClasses = "bg-[#FFB5E8] text-black"; // Rosado
+                activeColor = "bg-[#FFB5E8] text-black"; // Rosado
                 if (!c.icon_url) imgUrl = "/categorias/sintéticos.png";
               } else {
                 if (!c.icon_url) imgUrl = `/categorias/${c.name}.png`;
               }
+
+              // Dejar la primera categoría activa por defecto como ejemplo visual (o ninguna si prefieres)
+              const isActive = index === 0;
+              const colorClasses = isActive ? activeColor : "bg-surface-2/60 text-foreground";
 
               return (
                 <Link
@@ -112,7 +116,7 @@ function HomePage() {
                     <img src={imgUrl} alt={c.name} className="size-full object-cover transition-transform group-hover:scale-110" />
                   </div>
                   <div className="mb-3 mt-3 text-center">
-                    <p className="text-[12px] font-bold leading-tight">
+                    <p className={`text-[12px] font-bold leading-tight ${isActive ? "" : "text-foreground"}`}>
                       {c.name}
                     </p>
                   </div>

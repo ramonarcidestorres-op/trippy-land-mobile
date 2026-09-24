@@ -74,20 +74,37 @@ function CatalogPage() {
         >
           Todos
         </button>
-        {categories.data?.map((c) => (
-          <button
-            key={c.id}
-            onClick={() => navigate({ search: (prev: CatalogSearch) => ({ ...prev, categoria: c.slug }) })}
-            className={cn(
-              "shrink-0 rounded-full px-5 py-2.5 text-[14px] font-semibold transition-all active:scale-95",
-              categoria === c.slug
-                ? "bg-primary text-primary-foreground shadow-sm"
-                : "bg-surface-2/60 text-foreground hover:bg-surface-2"
-            )}
-          >
-            {c.name}
-          </button>
-        ))}
+        {categories.data?.map((c) => {
+          const n = c.name?.toLowerCase() || "";
+          let activeColor = "bg-primary text-primary-foreground shadow-sm";
+          
+          if (n.includes("coca")) {
+            activeColor = "bg-[#F5F5F0] text-black shadow-sm";
+          } else if (n.includes("pre-roll") || n.includes("pre roll")) {
+            activeColor = "bg-[#9EAB91] text-black shadow-sm";
+          } else if (n.includes("weed")) {
+            activeColor = "bg-[#9EAB91] text-black shadow-sm";
+          } else if (n.includes("farma")) {
+            activeColor = "bg-[#A7C7E7] text-black shadow-sm";
+          } else if (n.includes("sint")) {
+            activeColor = "bg-[#FFB5E8] text-black shadow-sm";
+          }
+
+          return (
+            <button
+              key={c.id}
+              onClick={() => navigate({ search: (prev: CatalogSearch) => ({ ...prev, categoria: c.slug }) })}
+              className={cn(
+                "shrink-0 rounded-full px-5 py-2.5 text-[14px] font-semibold transition-all active:scale-95",
+                categoria === c.slug
+                  ? activeColor
+                  : "bg-surface-2/60 text-foreground hover:bg-surface-2"
+              )}
+            >
+              {c.name}
+            </button>
+          );
+        })}
       </div>
 
       <div className="mb-8">
