@@ -22,23 +22,41 @@ export function AppNotificationPrompt() {
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    // Si ya está suscrito o el permiso fue explícitamente bloqueado, no mostrar
     if (isSubscribed || permission === "denied") {
       return;
     }
 
-    // Verificar si el usuario ya lo cerró en esta sesión
     const dismissed = sessionStorage.getItem("tls_app_push_dismissed");
     if (dismissed) {
       return;
     }
 
-    // Mostrar apenas el usuario entra a la app (1.2 segundos después de cargar)
-    const timer = setTimeout(() => {
-      setIsOpen(true);
-    }, 1200);
+    const checkAndShow = (delayMs = 1500) => {
+      const completed = localStorage.getItem("tls_onboarding_completed");
+      // Si el onboarding aún no se completa, esperar al evento
+      if (completed !== "true") {
+        return;
+      }
+      const timer = setTimeout(() => {
+        setIsOpen(true);
+      }, delayMs);
+      return timer;
+    };
 
-    return () => clearTimeout(timer);
+    const initialTimer = checkAndShow(1500);
+
+    const handleOnboardingDone = () => {
+      setTimeout(() => {
+        setIsOpen(true);
+      }, 1500);
+    };
+
+    window.addEventListener("tls_onboarding_done", handleOnboardingDone);
+
+    return () => {
+      if (initialTimer) clearTimeout(initialTimer);
+      window.removeEventListener("tls_onboarding_done", handleOnboardingDone);
+    };
   }, [isSubscribed, permission]);
 
   const handleClose = () => {

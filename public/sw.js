@@ -69,10 +69,11 @@ self.addEventListener("notificationclick", (event) => {
 
   event.waitUntil(
     self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {
-      // Si ya hay una ventana abierta con esa URL o de la app, enfocarla
+      // Si ya hay una ventana abierta con esa URL o de la app, enfocarla y sonar
       for (const client of clientList) {
         if ("focus" in client) {
-          if (client.url.includes(targetUrl)) {
+          if (client.url.includes(targetUrl) || client.url.includes(self.location.origin)) {
+            client.postMessage({ type: "PLAY_WHATSAPP_SOUND" });
             return client.focus();
           }
         }
