@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Check, MapPin, Receipt, Clock, ChevronLeft, Bike, CheckCircle2, ShieldCheck, Store, Play, RotateCcw } from "lucide-react";
+import { Check, MapPin, Clock, ChevronLeft, Bike, ShoppingBag, PackageCheck } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { EmptyState, ErrorState } from "@/components/States";
 import { supabase } from "@/integrations/supabase/client";
@@ -39,54 +39,6 @@ function OrderDetailPage() {
   const [waText, setWaText] = useState("");
   const [waSending, setWaSending] = useState(false);
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
-  const [isSimulating, setIsSimulating] = useState(false);
-
-  async function handleAdminStatusChange(newStatus: string, customMoto?: string) {
-    if (!data?.id) return;
-    let motoDetails = customMoto ?? data.status_details;
-    if (newStatus === "arrived" && !motoDetails) {
-      motoDetails = "NMAX Negra - Placa TLC-42D";
-    }
-
-    // Actualización optimista inmediata en la UI
-    queryClient.setQueryData(["order", id], (old: any) => {
-      if (!old) return old;
-      return { ...old, status: newStatus, status_details: motoDetails };
-    });
-
-    const { error: updErr } = await supabase
-      .from("orders")
-      .update({ status: newStatus, status_details: motoDetails })
-      .eq("id", data.id);
-    if (updErr) {
-      toast.error("Error al actualizar: " + updErr.message);
-      queryClient.invalidateQueries({ queryKey: ["order", id] });
-    } else {
-      toast.success("Estado actualizado: " + newStatus);
-      queryClient.invalidateQueries({ queryKey: ["order", id] });
-      queryClient.invalidateQueries({ queryKey: ["orders"] });
-      queryClient.invalidateQueries({ queryKey: ["order_history", data.id] });
-    }
-  }
-
-  async function handleRunSimulation() {
-    if (!data?.id || isSimulating) return;
-    setIsSimulating(true);
-    toast.info("Iniciando señal en vivo...");
-    
-    // Paso 1: Tienda acepta
-    await handleAdminStatusChange("accepted");
-    await new Promise(r => setTimeout(r, 2000));
-    
-    // Paso 2: Repartidor en camino
-    await handleAdminStatusChange("in_transit");
-    await new Promise(r => setTimeout(r, 3000));
-    
-    // Paso 3: Repartidor llegó
-    await handleAdminStatusChange("arrived", "NMAX Negra - Placa TLC-42D");
-    toast.success("¡El repartidor ya llegó!");
-    setIsSimulating(false);
-  }
 
   useEffect(() => {
     if (!data?.id) return;
@@ -202,16 +154,16 @@ function OrderDetailPage() {
   const stepIndex =
     cancelled ? -1
     : data.status === "pending" ? 0
-    : data.status === "accepted" ? 1
-    : data.status === "in_transit" ? 2
+    : data.status === "accepted" || data.status === "preparing" ? 1
+    : data.status === "in_transit" || data.status === "dispatched" ? 2
     : data.status === "arrived" || data.status === "delivered" ? 3
     : 0;
 
   const STEPS = [
-    { label: "Recibido", icon: Receipt },
-    { label: "Tienda Aceptó", icon: Store },
+    { label: "Recibido", icon: ShoppingBag },
+    { label: "Tienda Aceptó", icon: PackageCheck },
     { label: "En Camino", icon: Bike },
-    { label: "Llegó", icon: CheckCircle2 },
+    { label: "Llegó", icon: MapPin },
   ];
 
   return (
@@ -248,7 +200,7 @@ function OrderDetailPage() {
       </div>
 
       <div className="space-y-4">
-        {/* Tracking Sencillo en Vivo */}
+        {/* Tracking en Vivo */}
         <section className="rounded-[32px] bg-surface-2/60 p-6">
           <div className="mb-6 flex items-center justify-between">
             <div>
@@ -267,7 +219,7 @@ function OrderDetailPage() {
               <div className="relative flex items-center justify-between">
                 <div className="absolute left-6 right-6 top-1/2 h-1 -translate-y-1/2 bg-surface" />
                 <div 
-                  className="absolute left-6 top-1/2 h-1 -translate-y-1/2 bg-primary transition-all duration-500" 
+                  className="absolute left-6 top-1/2 h-1 -translate-y-1/2 bg-gradient-to-r from-primary via-sky-500 via-amber-500 to-emerald-500 transition-all duration-500 rounded-full" 
                   style={{ width: `${(Math.min(stepIndex, 3) / 3) * 82}%` }}
                 />
                 
@@ -278,15 +230,18 @@ function OrderDetailPage() {
                   return (
                     <div key={s.label} className="relative z-10 flex flex-col items-center">
                       <div className={cn(
-                        "flex size-11 items-center justify-center rounded-full transition-all duration-300",
+                        "flex size-12 items-center justify-center rounded-2xl transition-all duration-300",
                         isDone 
-                          ? "bg-primary text-primary-foreground shadow-md ring-4 ring-primary/20" 
-                          : "bg-surface text-muted-foreground"
+                          ? idx === 0 ? "bg-primary text-primary-foreground shadow-md ring-4 ring-primary/20"
+                          : idx === 1 ? "bg-sky-500 text-white shadow-md ring-4 ring-sky-500/20"
+                          : idx === 2 ? "bg-amber-500 text-white shadow-md ring-4 ring-amber-500/20"
+                          : "bg-emerald-500 text-white shadow-md ring-4 ring-emerald-500/20"
+                          : "bg-surface text-muted-foreground border border-border/40"
                       )}>
                         <StepIcon className={cn("size-5", isCurrent && "animate-pulse")} />
                       </div>
                       <span className={cn(
-                        "mt-2 text-[11px] font-bold tracking-tight text-center",
+                        "mt-2 text-[11px] font-bold tracking-tight text-center max-w-[72px]",
                         isDone ? "text-foreground" : "text-muted-foreground/60"
                       )}>
                         {s.label}
@@ -308,25 +263,25 @@ function OrderDetailPage() {
             </div>
           ) : data.status === "pending" ? (
             <div className="flex items-center gap-4 rounded-[24px] bg-surface p-5 border border-border/40">
-              <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-surface-2 text-primary">
-                <Receipt className="size-6 animate-pulse" />
+              <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-primary/20 text-primary">
+                <ShoppingBag className="size-6 animate-pulse" />
               </div>
               <div>
                 <p className="text-[16px] font-bold text-foreground">Pedido recibido</p>
                 <p className="text-[13px] text-muted-foreground">Esperando que la tienda acepte tu pedido en breve...</p>
               </div>
             </div>
-          ) : data.status === "accepted" ? (
-            <div className="flex items-center gap-4 rounded-[24px] bg-blue-500/10 p-5 border border-blue-500/20">
-              <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-blue-500/20 text-blue-400">
-                <Store className="size-6 animate-bounce" />
+          ) : data.status === "accepted" || data.status === "preparing" ? (
+            <div className="flex items-center gap-4 rounded-[24px] bg-sky-500/10 p-5 border border-sky-500/20">
+              <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-sky-500/20 text-sky-400">
+                <PackageCheck className="size-6 animate-bounce" />
               </div>
               <div>
-                <p className="text-[16px] font-bold text-blue-400">¡La tienda aceptó tu pedido!</p>
+                <p className="text-[16px] font-bold text-sky-400">¡La tienda aceptó tu pedido!</p>
                 <p className="text-[13px] text-muted-foreground">Tu pedido está siendo empacado y alistado para despacho.</p>
               </div>
             </div>
-          ) : data.status === "in_transit" ? (
+          ) : data.status === "in_transit" || data.status === "dispatched" ? (
             <div className="flex items-center gap-4 rounded-[24px] bg-amber-500/10 p-5 border border-amber-500/20">
               <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-amber-500/20 text-amber-400">
                 <Bike className="size-6 animate-pulse" />
@@ -339,13 +294,13 @@ function OrderDetailPage() {
               </div>
             </div>
           ) : data.status === "arrived" || data.status === "delivered" ? (
-            <div className="space-y-4 rounded-[24px] bg-green-500/10 p-5 border border-green-500/20">
+            <div className="space-y-4 rounded-[24px] bg-emerald-500/10 p-5 border border-emerald-500/20">
               <div className="flex items-center gap-4">
-                <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-green-500/20 text-green-400">
-                  <CheckCircle2 className="size-6" />
+                <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-500/20 text-emerald-400">
+                  <MapPin className="size-6" />
                 </div>
                 <div>
-                  <p className="text-[17px] font-extrabold text-green-400">¡El repartidor ya llegó!</p>
+                  <p className="text-[17px] font-extrabold text-emerald-400">¡El repartidor ya llegó!</p>
                   <p className="text-[14px] font-bold text-foreground">
                     Vehículo: <span className="text-primary">{data.status_details || "Repartidor en punto"}</span>
                   </p>
@@ -393,67 +348,6 @@ function OrderDetailPage() {
             </div>
           ) : null}
         </section>
-
-        {/* Barra de Control de Señal (Admin y Pruebas) */}
-        {(user?.role === "admin" || user?.id === data.user_id) && (
-          <section className="rounded-[32px] border border-primary/30 bg-surface-2/70 p-5 shadow-lg backdrop-blur-md">
-            <div className="mb-3 flex items-center justify-between">
-              <span className="text-[13px] font-bold text-primary uppercase tracking-wider flex items-center gap-1.5">
-                <ShieldCheck className="size-4" /> Control de Señal
-              </span>
-              <button
-                type="button"
-                onClick={handleRunSimulation}
-                disabled={isSimulating}
-                className="flex items-center gap-1.5 rounded-full bg-primary/20 px-3 py-1 text-[11px] font-extrabold text-primary hover:bg-primary/30 transition-transform active:scale-95 disabled:opacity-50"
-              >
-                <Play className="size-3 fill-current" /> {isSimulating ? "Simulando..." : "Simular Señal"}
-              </button>
-            </div>
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
-              <button
-                type="button"
-                onClick={() => handleAdminStatusChange("accepted")}
-                disabled={isSimulating || data.status === "accepted" || data.status === "in_transit" || data.status === "arrived" || data.status === "delivered"}
-                className="flex items-center justify-center gap-1.5 h-11 rounded-2xl bg-blue-500/20 text-blue-400 font-bold text-xs transition-transform active:scale-95 disabled:opacity-30"
-              >
-                <Store className="size-3.5" /> Tienda Acepta
-              </button>
-              <button
-                type="button"
-                onClick={() => handleAdminStatusChange("in_transit")}
-                disabled={isSimulating || data.status === "in_transit" || data.status === "arrived" || data.status === "delivered"}
-                className="flex items-center justify-center gap-1.5 h-11 rounded-2xl bg-amber-500/20 text-amber-400 font-bold text-xs transition-transform active:scale-95 disabled:opacity-30"
-              >
-                <Bike className="size-3.5" /> Repartidor
-              </button>
-              <button
-                type="button"
-                onClick={() => handleAdminStatusChange("arrived")}
-                disabled={isSimulating || data.status === "arrived" || data.status === "delivered"}
-                className="flex items-center justify-center gap-1.5 h-11 rounded-2xl bg-green-500/20 text-green-400 font-bold text-xs transition-transform active:scale-95 disabled:opacity-30"
-              >
-                <CheckCircle2 className="size-3.5" /> Ya Llegó
-              </button>
-              <button
-                type="button"
-                onClick={() => handleAdminStatusChange("delivered")}
-                disabled={isSimulating || data.status === "delivered"}
-                className="flex items-center justify-center gap-1.5 h-11 rounded-2xl bg-emerald-500 text-black font-bold text-xs transition-transform active:scale-95 disabled:opacity-30"
-              >
-                <Check className="size-3.5" /> Entregado
-              </button>
-              <button
-                type="button"
-                onClick={() => handleAdminStatusChange("pending")}
-                disabled={isSimulating || data.status === "pending"}
-                className="flex items-center justify-center gap-1.5 h-11 rounded-2xl bg-surface text-muted-foreground font-bold text-xs transition-transform active:scale-95 disabled:opacity-30 col-span-2 sm:col-span-1"
-              >
-                <RotateCcw className="size-3.5" /> Reiniciar
-              </button>
-            </div>
-          </section>
-        )}
 
         {/* Delivery Address */}
         {data.delivery_address && (
