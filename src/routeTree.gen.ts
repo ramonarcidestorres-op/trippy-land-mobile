@@ -16,8 +16,8 @@ import { Route as CatalogoRouteImport } from './routes/catalogo'
 import { Route as AuthenticatedCarritoRouteImport } from './routes/_authenticated/carrito'
 import { Route as AuthenticatedCheckoutRouteImport } from './routes/_authenticated/checkout'
 import { Route as AuthenticatedPedidosRouteImport } from './routes/_authenticated/pedidos'
-import { Route as AuthenticatedAdminPedidosRouteImport } from './routes/_authenticated/admin.pedidos'
 import { Route as ProductoIdRouteImport } from './routes/producto.$id'
+import { Route as AuthenticatedAdminPedidosRouteImport } from './routes/_authenticated/admin.pedidos'
 import { Route as AuthenticatedPedidoIdRouteImport } from './routes/_authenticated/pedido.$id'
 
 const IndexRoute = IndexRouteImport.update({
@@ -54,16 +54,17 @@ const AuthenticatedPedidosRoute = AuthenticatedPedidosRouteImport.update({
   path: '/pedidos',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedAdminPedidosRoute = AuthenticatedAdminPedidosRouteImport.update({
-  id: '/admin/pedidos',
-  path: '/admin/pedidos',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
 const ProductoIdRoute = ProductoIdRouteImport.update({
   id: '/producto/$id',
   path: '/producto/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedAdminPedidosRoute =
+  AuthenticatedAdminPedidosRouteImport.update({
+    id: '/admin/pedidos',
+    path: '/admin/pedidos',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedPedidoIdRoute = AuthenticatedPedidoIdRouteImport.update({
   id: '/pedido/$id',
   path: '/pedido/$id',
@@ -77,8 +78,8 @@ export interface FileRoutesByFullPath {
   '/carrito': typeof AuthenticatedCarritoRoute
   '/checkout': typeof AuthenticatedCheckoutRoute
   '/pedidos': typeof AuthenticatedPedidosRoute
-  '/admin/pedidos': typeof AuthenticatedAdminPedidosRoute
   '/producto/$id': typeof ProductoIdRoute
+  '/admin/pedidos': typeof AuthenticatedAdminPedidosRoute
   '/pedido/$id': typeof AuthenticatedPedidoIdRoute
 }
 export interface FileRoutesByTo {
@@ -88,8 +89,8 @@ export interface FileRoutesByTo {
   '/carrito': typeof AuthenticatedCarritoRoute
   '/checkout': typeof AuthenticatedCheckoutRoute
   '/pedidos': typeof AuthenticatedPedidosRoute
-  '/admin/pedidos': typeof AuthenticatedAdminPedidosRoute
   '/producto/$id': typeof ProductoIdRoute
+  '/admin/pedidos': typeof AuthenticatedAdminPedidosRoute
   '/pedido/$id': typeof AuthenticatedPedidoIdRoute
 }
 export interface FileRoutesById {
@@ -101,8 +102,8 @@ export interface FileRoutesById {
   '/_authenticated/carrito': typeof AuthenticatedCarritoRoute
   '/_authenticated/checkout': typeof AuthenticatedCheckoutRoute
   '/_authenticated/pedidos': typeof AuthenticatedPedidosRoute
-  '/_authenticated/admin/pedidos': typeof AuthenticatedAdminPedidosRoute
   '/producto/$id': typeof ProductoIdRoute
+  '/_authenticated/admin/pedidos': typeof AuthenticatedAdminPedidosRoute
   '/_authenticated/pedido/$id': typeof AuthenticatedPedidoIdRoute
 }
 export interface FileRouteTypes {
@@ -114,8 +115,8 @@ export interface FileRouteTypes {
     | '/carrito'
     | '/checkout'
     | '/pedidos'
-    | '/admin/pedidos'
     | '/producto/$id'
+    | '/admin/pedidos'
     | '/pedido/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -125,8 +126,8 @@ export interface FileRouteTypes {
     | '/carrito'
     | '/checkout'
     | '/pedidos'
-    | '/admin/pedidos'
     | '/producto/$id'
+    | '/admin/pedidos'
     | '/pedido/$id'
   id:
     | '__root__'
@@ -137,8 +138,8 @@ export interface FileRouteTypes {
     | '/_authenticated/carrito'
     | '/_authenticated/checkout'
     | '/_authenticated/pedidos'
-    | '/_authenticated/admin/pedidos'
     | '/producto/$id'
+    | '/_authenticated/admin/pedidos'
     | '/_authenticated/pedido/$id'
   fileRoutesById: FileRoutesById
 }
@@ -201,19 +202,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPedidosRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/admin/pedidos': {
-      id: '/_authenticated/admin/pedidos'
-      path: '/admin/pedidos'
-      fullPath: '/admin/pedidos'
-      preLoaderRoute: typeof AuthenticatedAdminPedidosRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/producto/$id': {
       id: '/producto/$id'
       path: '/producto/$id'
       fullPath: '/producto/$id'
       preLoaderRoute: typeof ProductoIdRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/admin/pedidos': {
+      id: '/_authenticated/admin/pedidos'
+      path: '/admin/pedidos'
+      fullPath: '/admin/pedidos'
+      preLoaderRoute: typeof AuthenticatedAdminPedidosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/pedido/$id': {
       id: '/_authenticated/pedido/$id'

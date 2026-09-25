@@ -115,7 +115,7 @@ export function OrderNotificationPromptModal({ orderId, targetUserId }: OrderNot
       if (!open) handleClose();
       else setIsOpen(true);
     }}>
-      <DialogContent className="max-w-md rounded-[32px] bg-surface-2/95 border-border/60 p-6 shadow-2xl backdrop-blur-xl">
+      <DialogContent className="p-5 sm:p-6 border-border/60">
         {/* Caso A: iPhone en Safari regular (Instrucciones visuales para PWA) */}
         {needsIOSInstall && (
           <div className="space-y-4">
@@ -186,30 +186,30 @@ export function OrderNotificationPromptModal({ orderId, targetUserId }: OrderNot
           <div className="space-y-4">
             {!isSubscribed ? (
               <>
-                <DialogHeader className="text-center sm:text-left">
-                  <div className="mx-auto sm:mx-0 flex size-16 items-center justify-center rounded-3xl bg-surface-2 p-3 shadow-inner ring-1 ring-border/50">
-                    <LogoEye className="w-12 h-auto text-primary filter drop-shadow-[0_0_12px_rgba(255,252,235,0.25)]" />
+                <DialogHeader className="text-center items-center">
+                  <div className="flex size-14 items-center justify-center rounded-2xl bg-surface p-3 shadow-inner ring-1 ring-border/50">
+                    <LogoEye className="w-10 h-auto text-primary filter drop-shadow-[0_0_10px_rgba(255,252,235,0.25)]" />
                   </div>
-                  <DialogTitle className="text-[22px] font-extrabold text-foreground pt-3 leading-snug">
+                  <DialogTitle className="text-[20px] font-extrabold text-foreground pt-2 leading-snug">
                     ¿Deseas recibir avisos de tu pedido en tiempo real?
                   </DialogTitle>
-                  <DialogDescription className="text-[13px] text-muted-foreground pt-1.5 leading-relaxed">
+                  <DialogDescription className="text-[13px] text-muted-foreground pt-1 leading-relaxed">
                     Te notificaremos y <span className="font-bold text-foreground">haremos vibrar tu celular</span> al instante cuando la tienda acepte tu orden, vaya en camino o el repartidor llegue afuera, incluso si tienes el celular bloqueado.
                   </DialogDescription>
                 </DialogHeader>
 
-                <div className="flex flex-col gap-2.5 pt-2">
+                <div className="flex flex-col gap-2 pt-2">
                   <button
                     type="button"
                     onClick={handleActivate}
                     disabled={loading}
-                    className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-primary font-extrabold text-primary-foreground shadow-lg shadow-primary/25 transition-transform active:scale-95 disabled:opacity-50"
+                    className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-white font-extrabold text-black text-[15px] shadow-lg transition-transform active:scale-95 disabled:opacity-50 hover:bg-[#F2F2F7]"
                   >
                     {loading ? (
-                      <Loader2 className="size-5 animate-spin" />
+                      <Loader2 className="size-5 animate-spin text-black" />
                     ) : (
                       <>
-                        <LogoEye className="size-5 inline-block" />
+                        <LogoEye className="size-4.5 inline-block text-black" />
                         <span>Activar avisos ahora</span>
                       </>
                     )}
@@ -218,7 +218,7 @@ export function OrderNotificationPromptModal({ orderId, targetUserId }: OrderNot
                   <button
                     type="button"
                     onClick={handleClose}
-                    className="h-10 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors"
+                    className="h-9 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors"
                   >
                     Quizás más tarde
                   </button>

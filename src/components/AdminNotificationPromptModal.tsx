@@ -104,7 +104,7 @@ export function AdminNotificationPromptModal() {
       if (!open) handleClose();
       else setIsOpen(true);
     }}>
-      <DialogContent className="max-w-md rounded-[32px] bg-surface-2/95 border-border/60 p-6 shadow-2xl backdrop-blur-xl">
+      <DialogContent className="p-5 sm:p-6 border-border/60">
         {/* Caso A: iPhone Safari regular (PWA) */}
         {needsIOSInstall && (
           <div className="space-y-4">
