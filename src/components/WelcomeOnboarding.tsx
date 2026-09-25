@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Logo } from "@/components/Logo";
+import { Logo, LogoEye } from "@/components/Logo";
 import { cn } from "@/lib/utils";
 
 export function WelcomeOnboarding() {
@@ -102,11 +102,11 @@ export function WelcomeOnboarding() {
             </button>
           </div>
 
-          {/* Mitad Superior: Logo SVG flotante con iluminación */}
+          {/* Mitad Superior: Ícono Ojo flotante con iluminación (sin texto repetido) */}
           <div className="flex flex-1 items-center justify-center py-6">
             <div className="relative flex items-center justify-center">
-              <div className="absolute size-40 rounded-full bg-white/10 blur-2xl" />
-              <Logo className="relative w-48 sm:w-56 h-auto drop-shadow-[0_12px_30px_rgba(255,252,235,0.22)]" />
+              <div className="absolute size-44 rounded-full bg-white/10 blur-2xl" />
+              <LogoEye className="relative w-44 sm:w-52 h-auto drop-shadow-[0_12px_35px_rgba(255,252,235,0.3)]" />
             </div>
           </div>
 
@@ -124,9 +124,9 @@ export function WelcomeOnboarding() {
               Trippy Land Store.
             </h1>
 
-            {/* Texto Pequeño Informativo */}
-            <p className="text-[13px] leading-relaxed text-[#8E8E93]">
-              Toda la información que manejamos aquí es totalmente privada y confidencial. No almacenamos datos personales innecesarios. Plataforma exclusiva por invitación de referido.
+            {/* Texto Pequeño Informativo en Mayúsculas */}
+            <p className="text-[12px] leading-relaxed text-[#8E8E93] font-medium uppercase tracking-wide">
+              TODA LA INFORMACIÓN QUE MANEJAMOS AQUÍ ES TOTALMENTE PRIVADA Y CONFIDENCIAL. NO ALMACENAMOS DATOS PERSONALES INNECESARIOS. PLATAFORMA EXCLUSIVA POR INVITACIÓN DE REFERIDO.
             </p>
 
             {/* Botón Blanco Pill */}
