@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Check, MapPin, Clock, ChevronLeft, Bike, ShoppingBag, PackageCheck, Receipt, XCircle } from "lucide-react";
+import { Check, MapPin, Clock, ChevronLeft, Bike, ShoppingBag, PackageCheck, Receipt, XCircle, Home } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { AppShell } from "@/components/AppShell";
 import { PushNotificationButton } from "@/components/PushNotificationButton";
@@ -237,8 +237,28 @@ function OrderDetailPage() {
       {/* Modal automático de activación de avisos y guía de iOS */}
       <OrderNotificationPromptModal orderId={data.id} targetUserId={data.user_id || undefined} />
 
+      {/* Barra de navegación superior con botón explícito para volver al Inicio */}
+      <div className="flex items-center justify-between gap-3 pt-2 pb-2">
+        <Link
+          to="/"
+          className="inline-flex items-center gap-1.5 rounded-full bg-surface-2 px-4 py-2 text-xs font-extrabold text-foreground hover:bg-surface border border-border/50 transition-transform active:scale-95 shadow-sm"
+          aria-label="Volver a la tienda"
+        >
+          <ChevronLeft className="size-4 text-primary" />
+          <span>Volver al inicio</span>
+        </Link>
+
+        <Link
+          to="/pedidos"
+          className="inline-flex items-center gap-1.5 rounded-full bg-surface-2 px-3.5 py-2 text-xs font-bold text-foreground hover:bg-surface border border-border/40 transition-all active:scale-95 shrink-0"
+        >
+          <Receipt className="size-3.5 text-primary" />
+          <span>Mis pedidos</span>
+        </Link>
+      </div>
+
       {/* Logo Trippy Land grande y prominente */}
-      <div className="flex flex-col items-center justify-center pt-3 pb-6 text-center">
+      <div className="flex flex-col items-center justify-center pt-2 pb-6 text-center">
         <Logo className="w-56 sm:w-72 max-w-[85vw] h-auto object-contain filter drop-shadow-[0_12px_32px_rgba(0,0,0,0.65)]" />
       </div>
 
@@ -256,7 +276,7 @@ function OrderDetailPage() {
         </div>
       )}
 
-      {/* Cabecera con ID y botón rápido a Mis pedidos */}
+      {/* Cabecera con ID */}
       <div className="mb-6 flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <Link
@@ -273,14 +293,6 @@ function OrderDetailPage() {
             <p className="text-[12px] font-medium text-muted-foreground">{formatDate(data.created_at)}</p>
           </div>
         </div>
-
-        <Link
-          to="/pedidos"
-          className="inline-flex items-center gap-1.5 rounded-full bg-surface-2/80 px-3.5 py-1.5 text-xs font-bold text-foreground hover:bg-surface-2 border border-border/40 transition-all active:scale-95 shrink-0"
-        >
-          <Receipt className="size-3.5 text-primary" />
-          <span>Mis pedidos</span>
-        </Link>
       </div>
 
       <div className="space-y-4 pb-20">
@@ -495,14 +507,24 @@ function OrderDetailPage() {
           </div>
         </section>
 
-        {/* Botón Permanente a Mis Pedidos */}
-        <Link
-          to="/pedidos"
-          className="flex h-14 w-full items-center justify-center gap-2 rounded-full bg-surface-2/90 border border-border/40 text-[15px] font-bold text-foreground transition-transform active:scale-95 hover:bg-surface-2"
-        >
-          <Receipt className="size-4 text-primary" />
-          <span>Ver todos mis pedidos</span>
-        </Link>
+        {/* Botones de Navegación Finales */}
+        <div className="space-y-2.5 pt-2">
+          <Link
+            to="/"
+            className="flex h-14 w-full items-center justify-center gap-2 rounded-full bg-primary text-[15px] font-extrabold text-primary-foreground transition-transform active:scale-95 shadow-lg hover:bg-primary/90"
+          >
+            <Home className="size-4" />
+            <span>Seguir comprando (Ir al inicio)</span>
+          </Link>
+
+          <Link
+            to="/pedidos"
+            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-surface-2 border border-border/40 text-[14px] font-bold text-foreground transition-transform active:scale-95 hover:bg-surface"
+          >
+            <Receipt className="size-4 text-primary" />
+            <span>Ver todos mis pedidos</span>
+          </Link>
+        </div>
       </div>
     </AppShell>
   );
