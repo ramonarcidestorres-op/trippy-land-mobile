@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -60,6 +60,7 @@ function OrderDetailPage() {
   const { id } = Route.useParams();
   const { nuevo } = Route.useSearch();
   const { user } = useAuth();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { data, isLoading, error, refetch } = useQuery(orderQuery(id));
   const { data: history } = useQuery(orderHistoryQuery(data?.id));
@@ -67,6 +68,15 @@ function OrderDetailPage() {
   const [waText, setWaText] = useState("");
   const [waSending, setWaSending] = useState(false);
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
+
+  // Asegurar que retroceder en el navegador/celular lleve siempre al Inicio (Home)
+  useEffect(() => {
+    const handlePopState = () => {
+      navigate({ to: "/" });
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, [navigate]);
 
   // Guardar en localStorage para acceso seguro en "Mis pedidos"
   useEffect(() => {

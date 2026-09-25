@@ -84,19 +84,26 @@ export function syncReferralManifest(refCode: string | null) {
   }
 }
 
+let cachedReferral: string | null | undefined = undefined;
+
 export function getStoredReferral(): string | null {
   if (typeof window === "undefined") return null;
+
+  if (cachedReferral !== undefined) {
+    return cachedReferral;
+  }
 
   // 1. Revisar si la URL actual trae un código de referido explícito (?ref=CODIGO)
   const urlRef = new URLSearchParams(window.location.search).get("ref");
   if (urlRef && urlRef.trim() !== "") {
     const clean = urlRef.trim().toUpperCase();
+    cachedReferral = clean;
     saveReferralEverywhere(clean);
     return clean;
   }
 
   // 2. Si la URL NO tiene ?ref=, significa que el usuario entró por el link original directo.
-  // Limpiamos cualquier rastro previo para mostrar siempre los precios base oficiales sin comisión.
+  cachedReferral = null;
   clearReferralEverywhere();
   return null;
 }
@@ -107,7 +114,6 @@ function clearReferralEverywhere() {
     localStorage.removeItem(STORAGE_KEY);
     sessionStorage.removeItem(STORAGE_KEY);
     removeCookie(STORAGE_KEY);
-    syncReferralManifest(null);
   } catch {
     // ignore
   }
@@ -121,7 +127,6 @@ function saveReferralEverywhere(code: string | null) {
       localStorage.setItem(STORAGE_KEY, clean);
       sessionStorage.setItem(STORAGE_KEY, clean);
       setCookie(STORAGE_KEY, clean);
-      syncReferralManifest(clean);
     } catch {
       // ignore
     }

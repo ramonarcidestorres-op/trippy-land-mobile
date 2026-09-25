@@ -114,9 +114,9 @@ export function WelcomeOnboarding() {
               Trippy Land Store.
             </h1>
 
-            {/* Texto Pequeño Informativo en Mayúsculas (más pequeño y proporcionado) */}
-            <p className="text-[10.5px] leading-relaxed text-[#8E8E93]/85 font-medium uppercase tracking-[0.03em]">
-              TODA LA INFORMACIÓN QUE MANEJAMOS AQUÍ ES TOTALMENTE PRIVADA Y CONFIDENCIAL. NO ALMACENAMOS DATOS PERSONALES INNECESARIOS. PLATAFORMA EXCLUSIVA POR INVITACIÓN DE REFERIDO.
+            {/* Texto Pequeño Informativo en Minúsculas Normales */}
+            <p className="text-[12px] leading-relaxed text-[#8E8E93] font-normal">
+              Toda la información que manejamos aquí es totalmente privada y confidencial. No almacenamos datos personales innecesarios. Plataforma exclusiva por invitación de referido.
             </p>
 
             {/* Botón Blanco Pill (único botón de entrar) */}
