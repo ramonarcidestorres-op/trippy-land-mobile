@@ -30,7 +30,7 @@ export function LogoEye({ className, alt = "Trippy Land Ojo" }: { className?: st
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      viewBox="200 360 220 135"
+      viewBox="110 355 375 145"
       className={cn("object-contain", className)}
       role="img"
       aria-label={alt}

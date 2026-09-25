@@ -92,26 +92,16 @@ export function WelcomeOnboarding() {
       {/* FASE 2: ONBOARDING (Inspirado exactamente en la referencia del diseño) */}
       {phase !== "splash" && (
         <div className="relative z-10 flex flex-1 flex-col justify-between px-6 sm:px-8 max-w-sm mx-auto w-full animate-in fade-in duration-700">
-          {/* Barra superior con botón discreto */}
-          <div className="flex items-center justify-end pt-1">
-            <button
-              onClick={handleEnter}
-              className="text-xs font-semibold text-[#8E8E93] hover:text-white transition-colors px-2 py-1"
-            >
-              Entrar
-            </button>
-          </div>
-
-          {/* Mitad Superior: Ícono Ojo flotante con iluminación (sin texto repetido) */}
+          {/* Mitad Superior: Ícono Ojo completo flotante con iluminación */}
           <div className="flex flex-1 items-center justify-center py-6">
             <div className="relative flex items-center justify-center">
               <div className="absolute size-44 rounded-full bg-white/10 blur-2xl" />
-              <LogoEye className="relative w-44 sm:w-52 h-auto drop-shadow-[0_12px_35px_rgba(255,252,235,0.3)]" />
+              <LogoEye className="relative w-48 sm:w-56 h-auto drop-shadow-[0_12px_35px_rgba(255,252,235,0.28)]" />
             </div>
           </div>
 
           {/* Mitad Inferior: Textos y Botón estilo exacto de la referencia */}
-          <div className="space-y-4 pb-2">
+          <div className="space-y-3.5 pb-2">
             {/* Pill Badge */}
             <div>
               <span className="inline-block rounded-lg border border-white/15 bg-white/[0.06] px-3 py-1 text-[11px] font-medium tracking-wide text-[#E5E5EA] backdrop-blur-md">
@@ -124,13 +114,13 @@ export function WelcomeOnboarding() {
               Trippy Land Store.
             </h1>
 
-            {/* Texto Pequeño Informativo en Mayúsculas */}
-            <p className="text-[12px] leading-relaxed text-[#8E8E93] font-medium uppercase tracking-wide">
+            {/* Texto Pequeño Informativo en Mayúsculas (más pequeño y proporcionado) */}
+            <p className="text-[10.5px] leading-relaxed text-[#8E8E93]/85 font-medium uppercase tracking-[0.03em]">
               TODA LA INFORMACIÓN QUE MANEJAMOS AQUÍ ES TOTALMENTE PRIVADA Y CONFIDENCIAL. NO ALMACENAMOS DATOS PERSONALES INNECESARIOS. PLATAFORMA EXCLUSIVA POR INVITACIÓN DE REFERIDO.
             </p>
 
-            {/* Botón Blanco Pill */}
-            <div className="pt-3">
+            {/* Botón Blanco Pill (único botón de entrar) */}
+            <div className="pt-2.5">
               <button
                 onClick={handleEnter}
                 className="flex h-13 w-full items-center justify-center rounded-full bg-white text-black font-extrabold text-[15px] shadow-[0_10px_30px_rgba(255,255,255,0.2)] transition-transform duration-200 hover:bg-[#F2F2F7] active:scale-[0.98]"
