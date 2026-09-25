@@ -22,6 +22,7 @@ function unwrap<T>(res: { data: T | null; error: { message: string } | null }): 
 export const categoriesQuery = () =>
   queryOptions({
     queryKey: ["categories"],
+    staleTime: 1000 * 60 * 10,
     queryFn: async () => {
       const cats = unwrap<Category[]>(await supabase.from("categories").select("*").order("name"));
       
@@ -45,6 +46,7 @@ export const categoriesQuery = () =>
 export const productsQuery = (opts: { search?: string | undefined; categoryId?: string | null | undefined } = {}) =>
   queryOptions({
     queryKey: ["products", opts.search ?? "", opts.categoryId ?? ""],
+    staleTime: 1000 * 60 * 5,
     queryFn: async () => {
       let q = supabase.from("products").select("*").order("created_at", { ascending: false });
       if (opts.categoryId) q = q.eq("category_id", opts.categoryId);
@@ -56,6 +58,7 @@ export const productsQuery = (opts: { search?: string | undefined; categoryId?: 
 export const productQuery = (id: string) =>
   queryOptions({
     queryKey: ["product", id],
+    staleTime: 1000 * 60 * 5,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("products")
@@ -71,6 +74,7 @@ export const cartQuery = (userId: string | undefined) =>
   queryOptions({
     queryKey: ["cart", userId],
     enabled: Boolean(userId),
+    staleTime: 1000 * 60,
     queryFn: async () =>
       unwrap<CartRow[]>(
         await supabase
@@ -84,6 +88,7 @@ export const cartQuery = (userId: string | undefined) =>
 export const ordersQuery = (userId: string | undefined) =>
   queryOptions({
     queryKey: ["orders", userId],
+    staleTime: 1000 * 30,
     queryFn: async (): Promise<(Order & { order_items?: OrderItem[] })[]> => {
       let localIds: string[] = [];
       try {
@@ -115,7 +120,7 @@ export const ordersQuery = (userId: string | undefined) =>
 export const orderQuery = (id: string) =>
   queryOptions({
     queryKey: ["order", id],
-    refetchInterval: 3000,
+    staleTime: 1000 * 10,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("orders")

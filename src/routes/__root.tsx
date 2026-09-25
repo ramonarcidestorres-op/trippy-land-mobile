@@ -150,22 +150,16 @@ function RootComponent() {
   }, []);
 
   useEffect(() => {
-    const removeDevTools = () => {
-      const selectors = [
-        ".tsrd-toggle-btn",
-        "#lovable-badge-wrap",
-        "#lovable-badge",
-        "[data-tanstack-router-devtools]",
-        '[class*="TanStackRouterDevtools"]',
-      ];
-      selectors.forEach((sel) => {
-        document.querySelectorAll(sel).forEach((el) => el.remove());
-      });
-    };
-
-    removeDevTools();
-    const interval = setInterval(removeDevTools, 1500);
-    return () => clearInterval(interval);
+    const selectors = [
+      ".tsrd-toggle-btn",
+      "#lovable-badge-wrap",
+      "#lovable-badge",
+      "[data-tanstack-router-devtools]",
+      '[class*="TanStackRouterDevtools"]',
+    ];
+    selectors.forEach((sel) => {
+      document.querySelectorAll(sel).forEach((el) => el.remove());
+    });
   }, []);
 
   return (

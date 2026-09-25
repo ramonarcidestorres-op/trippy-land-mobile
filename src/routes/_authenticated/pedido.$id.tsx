@@ -249,13 +249,13 @@ function OrderDetailPage() {
       {/* Cabecera con ID y botón rápido a Mis pedidos */}
       <div className="mb-6 flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <button
-            onClick={() => window.history.back()}
+          <Link
+            to="/"
             className="flex size-10 shrink-0 items-center justify-center rounded-full bg-surface-2/80 transition-transform active:scale-90 border border-border/30"
-            aria-label="Volver"
+            aria-label="Ir al inicio"
           >
             <ChevronLeft className="size-5 text-foreground" />
-          </button>
+          </Link>
           <div>
             <h1 className="text-[24px] font-extrabold leading-tight tracking-tight text-foreground">
               #{data.id.slice(0, 8).toUpperCase()}
