@@ -212,8 +212,15 @@ export function ProductDetailPage() {
 
   const handleAddToCart = () => {
     if (!product || product.is_available === false) return;
-    addToCart(product, qty);
-    toast.success(`✓ "${product.name}" agregado al carrito (${qty})`);
+    if (isAlreadyInCart) {
+      setQuantity(id, qty);
+      toast.success(`✓ "${product.name}" actualizado (${qty})`);
+    } else {
+      addToCart(product, qty);
+      toast.success(`✓ "${product.name}" agregado al carrito (${qty})`);
+    }
+    // Cerrar suavemente la ficha para volver a Home/Catálogo
+    handleClose(false);
   };
 
   const cartTotalCount = cart.reduce((sum, item) => sum + item.quantity, 0);
@@ -530,34 +537,23 @@ export function ProductDetailPage() {
 
             {/* BOTÓN PRINCIPAL EN PILL NEGRO REDONDEADO */}
             <div className="pt-2">
-              {isAlreadyInCart ? (
-                <Link
-                  to="/carrito"
-                  className="w-full h-14 rounded-full bg-black text-white font-bold text-base flex items-center justify-center gap-2 shadow-xl hover:bg-neutral-900 active:scale-[0.98] transition-all"
-                >
-                  <Check className="size-5 stroke-[3]" />
-                  <span>Ir al Carrito • {formatPrice(totalPrice)}</span>
-                  <ArrowRight className="size-4 ml-1" />
-                </Link>
-              ) : (
-                <button
-                  type="button"
-                  disabled={!available}
-                  onClick={handleAddToCart}
-                  className={cn(
-                    "w-full h-14 rounded-full font-bold text-base flex items-center justify-center gap-2 shadow-xl transition-all active:scale-[0.98]",
-                    available
-                      ? "bg-black text-white hover:bg-neutral-900"
-                      : "bg-neutral-200 text-neutral-400 cursor-not-allowed"
-                  )}
-                >
-                  {available ? (
-                    <span>Buy for {formatPrice(totalPrice)}</span>
-                  ) : (
-                    <span>Agotado</span>
-                  )}
-                </button>
-              )}
+              <button
+                type="button"
+                disabled={!available}
+                onClick={handleAddToCart}
+                className={cn(
+                  "w-full h-14 rounded-full font-bold text-base flex items-center justify-center gap-2 shadow-xl transition-all active:scale-[0.98]",
+                  available
+                    ? "bg-black text-white hover:bg-neutral-900"
+                    : "bg-neutral-200 text-neutral-400 cursor-not-allowed"
+                )}
+              >
+                {available ? (
+                  <span>{isAlreadyInCart ? "Actualizar Carrito" : "Agregar al Carrito"} • {formatPrice(totalPrice)}</span>
+                ) : (
+                  <span>Agotado</span>
+                )}
+              </button>
             </div>
           </div>
 

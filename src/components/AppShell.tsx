@@ -1,10 +1,12 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Home, LayoutGrid, ShoppingCart, User, Receipt, ShieldAlert, Store, ExternalLink, LogOut, ArrowLeft } from "lucide-react";
+import { Home, LayoutGrid, ShoppingCart, User, Receipt, ShieldAlert, Store, ExternalLink, LogOut, ArrowLeft, ArrowRight } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { Logo } from "@/components/Logo";
 import { useAuth } from "@/hooks/useAuth";
 import { useCart } from "@/hooks/useCart";
+import { useReferral } from "@/hooks/useReferral";
 import { useStoreStatus } from "@/hooks/useStoreStatus";
+import { formatPrice } from "@/lib/format";
 import { addressStore, type SavedAddress } from "@/lib/address";
 import { AddressManager } from "@/components/AddressManager";
 import { AppNotificationPrompt } from "@/components/AppNotificationPrompt";
@@ -41,11 +43,15 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const address = useSelectedAddress();
   const { cart } = useCart();
+  const { getAdjustedPrice } = useReferral();
   const { isOpen, toggleStoreStatus } = useStoreStatus();
   const count = cart.reduce((s, r) => s + r.quantity, 0);
+  const cartSubtotal = cart.reduce((sum, r) => sum + getAdjustedPrice(r.products?.price ?? 0) * r.quantity, 0);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   const isAdminRoute = pathname.startsWith("/admin");
+  const isHomeOrCatalog = pathname === "/" || pathname === "/catalogo";
+  const showFloatingCartPill = isHomeOrCatalog && count > 0;
   const hideBottomNav =
     pathname.startsWith("/checkout") ||
     pathname.startsWith("/producto") ||
@@ -220,6 +226,32 @@ export function AppShell({ children }: { children: ReactNode }) {
       </header>
 
       <main className="mx-auto max-w-5xl px-4 pb-32 pt-4 md:pb-12">{children}</main>
+
+      {/* PÍLDORA FLOTANTE "IR AL CARRITO" (Solo en Home y Catálogo cuando hay productos) */}
+      {showFloatingCartPill && (
+        <div className="fixed bottom-[max(env(safe-area-inset-bottom),76px)] inset-x-4 max-w-sm mx-auto z-40 animate-in slide-in-from-bottom-5 fade-in duration-300">
+          <Link
+            to="/carrito"
+            className="w-full h-12.5 px-4.5 py-2.5 rounded-full bg-black text-white shadow-[0_12px_32px_rgba(0,0,0,0.6)] border border-white/20 flex items-center justify-between transition-transform active:scale-95 hover:bg-neutral-900"
+          >
+            <div className="flex items-center gap-2.5">
+              <span className="flex size-6 items-center justify-center rounded-full bg-white text-black text-[11px] font-black ring-1 ring-black">
+                {count}
+              </span>
+              <span className="text-[13.5px] font-bold text-white tracking-tight">
+                Ir al Carrito
+              </span>
+            </div>
+
+            <div className="flex items-center gap-1.5">
+              <span className="text-[13.5px] font-black text-white">
+                {formatPrice(cartSubtotal)}
+              </span>
+              <ArrowRight className="size-4 text-white" />
+            </div>
+          </Link>
+        </div>
+      )}
 
       {!hideBottomNav && (
         <nav className="fixed inset-x-0 bottom-0 z-30 md:hidden bg-background/85 backdrop-blur-2xl border-t border-border/40 pb-[env(safe-area-inset-bottom)]">
