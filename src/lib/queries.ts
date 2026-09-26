@@ -229,3 +229,30 @@ export async function addToCart(userId: string, productId: string, quantity: num
     .insert({ user_id: userId, product_id: productId, quantity });
   if (error) throw new Error(error.message);
 }
+
+export type Referral = {
+  id: string;
+  code: string;
+  name: string;
+  commission_percentage: number;
+  phone: string | null;
+  is_active: boolean;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export const referralsQuery = () =>
+  queryOptions({
+    queryKey: ["referrals"],
+    staleTime: 1000 * 30,
+    queryFn: async (): Promise<Referral[]> => {
+      const { data, error } = await supabase
+        .from("referrals")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (error) throw new Error(error.message);
+      return (data || []) as Referral[];
+    },
+  });
+
