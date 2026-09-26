@@ -37,7 +37,13 @@ function AuthPage() {
   const { redirect } = Route.useSearch();
 
   useEffect(() => {
-    if (!loading && user) navigate({ to: (redirect ?? "/") as "/" });
+    if (!loading && user) {
+      if (user.role === "admin" && !redirect) {
+        navigate({ to: "/admin/pedidos" as any, replace: true });
+      } else {
+        navigate({ to: (redirect ?? "/") as any, replace: true });
+      }
+    }
   }, [user, loading, navigate, redirect]);
 
   return (
@@ -66,6 +72,8 @@ function AuthPage() {
 }
 
 function LoginForm() {
+  const navigate = useNavigate();
+  const { redirect } = Route.useSearch();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
@@ -78,12 +86,26 @@ function LoginForm() {
       return;
     }
     setBusy(true);
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email: email.trim(),
       password,
     });
     setBusy(false);
-    if (error) toast.error("No pudimos entrar: " + error.message);
+    if (error) {
+      toast.error("No pudimos entrar: " + error.message);
+      return;
+    }
+
+    const cleanEmail = email.trim().toLowerCase();
+    const isAdmin =
+      cleanEmail === "ramon.arcidestorres@gmail.com" ||
+      cleanEmail === "bookingjerianmoreno@gmail.com";
+
+    if (isAdmin && !redirect) {
+      navigate({ to: "/admin/pedidos" as any, replace: true });
+    } else {
+      navigate({ to: (redirect ?? "/") as any, replace: true });
+    }
   }
 
   async function resetPassword() {

@@ -31,10 +31,11 @@ export function useStoreStatus() {
     },
   });
 
-  // Listen to realtime changes on app_config
+  // Listen to realtime changes on app_config with a unique channel ID per component instance
   useEffect(() => {
+    const channelId = `store-status-${Math.random().toString(36).substring(2, 9)}`;
     const channel = supabase
-      .channel("store-status-realtime")
+      .channel(channelId)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "app_config" },
@@ -44,11 +45,16 @@ export function useStoreStatus() {
             queryClient.invalidateQueries({ queryKey: ["store_status"] });
           }
         }
-      )
-      .subscribe();
+      );
+
+    channel.subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      try {
+        supabase.removeChannel(channel);
+      } catch {
+        // ignore cleanup error
+      }
     };
   }, [queryClient]);
 

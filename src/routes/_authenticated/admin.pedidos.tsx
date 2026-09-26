@@ -170,8 +170,9 @@ export function AdminPedidosPage() {
 
   // Escucha en tiempo real de nuevos pedidos
   useEffect(() => {
+    const channelId = `admin-orders-${Math.random().toString(36).substring(2, 9)}`;
     const channel = supabase
-      .channel("admin-orders-realtime")
+      .channel(channelId)
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "orders" },
@@ -189,11 +190,16 @@ export function AdminPedidosPage() {
         () => {
           queryClient.invalidateQueries({ queryKey: ["admin_orders"] });
         }
-      )
-      .subscribe();
+      );
+
+    channel.subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      try {
+        supabase.removeChannel(channel);
+      } catch {
+        // ignore
+      }
     };
   }, [queryClient]);
 
