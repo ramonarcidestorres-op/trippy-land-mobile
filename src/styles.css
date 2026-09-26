@@ -116,7 +116,25 @@
   }
 
   /* Prevenir zoom automático molesto de iOS en inputs */
-  input, textarea, select {
+  input, 
+  textarea, 
+  select,
+  input.text-xs,
+  input.text-sm,
+  textarea.text-xs,
+  textarea.text-sm,
+  select.text-xs,
+  select.text-sm {
+    font-size: 16px !important;
+  }
+}
+
+/* Regla global anti-zoom para cualquier formulario en pantalla táctil */
+@media screen and (max-width: 800px) {
+  input,
+  textarea,
+  select,
+  [contenteditable] {
     font-size: 16px !important;
   }
 }

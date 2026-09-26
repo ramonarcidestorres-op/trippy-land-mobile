@@ -338,11 +338,11 @@ export function ProductDetailPage() {
       {/* ============================================================ */}
       <div 
         ref={sheetRef}
-        className="relative z-10 w-full max-w-lg mx-auto bg-[#F2F2F5] rounded-t-[36px] shadow-2xl flex flex-col h-[92dvh] max-h-[92dvh] overflow-hidden animate-in slide-in-from-bottom duration-300 ease-out select-none border-t border-neutral-200/40"
+        className="relative z-10 w-full max-w-lg mx-auto bg-white rounded-t-[36px] shadow-2xl flex flex-col h-[92dvh] max-h-[92dvh] overflow-hidden animate-in slide-in-from-bottom duration-300 ease-out select-none border-t border-neutral-200/40"
       >
         {/* SECCIÓN SUPERIOR DE ARRASTRE (HANDLE + CABECERA + HERO) */}
         <div
-          className="flex flex-col flex-1 touch-none cursor-grab active:cursor-grabbing min-h-0"
+          className="flex flex-col flex-1 touch-none cursor-grab active:cursor-grabbing min-h-0 bg-[#F2F2F5]"
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}

@@ -1979,7 +1979,7 @@ export function AdminPedidosPage() {
       {/* MODAL CREAR / EDITAR PRODUCTO CON SUBIDA DE IMAGEN DIRECTA */}
       {/* ============================================================ */}
       <Dialog open={prodDialogOpen} onOpenChange={setProdDialogOpen}>
-        <DialogContent className="w-[94%] max-w-md max-h-[88vh] overflow-y-auto rounded-[28px] p-5 bg-surface-2 border-border/60">
+        <DialogContent className="w-[94vw] max-w-md max-h-[88dvh] overflow-y-auto rounded-[28px] p-5 bg-surface-2 border-border/60 box-border min-w-0">
           <DialogHeader>
             <DialogTitle className="text-lg font-bold">
               {editingProduct ? "Editar Producto" : "Nuevo Producto"}
@@ -1989,8 +1989,8 @@ export function AdminPedidosPage() {
             </DialogDescription>
           </DialogHeader>
 
-          <form onSubmit={handleSaveProduct} className="space-y-3 pt-2">
-            <div>
+          <form onSubmit={handleSaveProduct} className="space-y-3 pt-2 min-w-0 w-full">
+            <div className="min-w-0">
               <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">
                 Nombre del producto *
               </label>
@@ -1998,20 +1998,20 @@ export function AdminPedidosPage() {
                 value={prodName}
                 onChange={(e) => setProdName(e.target.value)}
                 placeholder="Ej. Cali (Californiana) x 3gr"
-                className="h-10 rounded-xl bg-surface border-border/60 text-xs"
+                className="h-10 rounded-xl bg-surface border-border/60 text-sm w-full min-w-0"
                 required
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-2.5">
-              <div>
+            <div className="grid grid-cols-2 gap-2.5 min-w-0">
+              <div className="min-w-0">
                 <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">
                   Categoría
                 </label>
                 <select
                   value={prodCategoryId}
                   onChange={(e) => setProdCategoryId(e.target.value)}
-                  className="w-full h-10 rounded-xl bg-surface border border-border/60 px-2.5 text-xs font-semibold text-foreground outline-none"
+                  className="w-full h-10 rounded-xl bg-surface border border-border/60 px-2.5 text-sm font-semibold text-foreground outline-none min-w-0"
                 >
                   <option value="">Sin categoría</option>
                   {categories.map((c) => (
@@ -2022,7 +2022,7 @@ export function AdminPedidosPage() {
                 </select>
               </div>
 
-              <div>
+              <div className="min-w-0">
                 <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">
                   Precio (COP) *
                 </label>
@@ -2031,14 +2031,14 @@ export function AdminPedidosPage() {
                   value={prodPrice}
                   onChange={(e) => setProdPrice(e.target.value)}
                   placeholder="Ej. 170000"
-                  className="h-10 rounded-xl bg-surface border-border/60 text-xs"
+                  className="h-10 rounded-xl bg-surface border-border/60 text-sm w-full min-w-0"
                   required
                 />
               </div>
             </div>
 
             {/* SECCIÓN DE IMAGEN CON SUBIDA DIRECTA A SUPABASE + URL FALLBACK */}
-            <div className="space-y-1.5">
+            <div className="space-y-1.5 min-w-0">
               <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground block">
                 Foto del producto
               </label>
@@ -2060,7 +2060,7 @@ export function AdminPedidosPage() {
                 variant="outline"
                 disabled={uploadingProdImg}
                 onClick={() => prodFileInputRef.current?.click()}
-                className="rounded-xl h-11 text-xs font-bold w-full border-dashed border-primary/50 bg-primary/10 text-primary hover:bg-primary/20 flex items-center justify-center gap-2 shadow-sm active:scale-[0.98]"
+                className="rounded-xl h-11 text-xs font-bold w-full border-dashed border-primary/50 bg-primary/10 text-primary hover:bg-primary/20 flex items-center justify-center gap-2 shadow-sm active:scale-[0.98] min-w-0"
               >
                 {uploadingProdImg ? (
                   <>
@@ -2075,17 +2075,17 @@ export function AdminPedidosPage() {
                 )}
               </Button>
 
-              <div className="relative">
+              <div className="relative min-w-0">
                 <Input
                   value={prodImageUrl}
                   onChange={(e) => setProdImageUrl(e.target.value)}
                   placeholder="O pega aquí el enlace de la imagen (https://...)"
-                  className="h-9 rounded-xl bg-surface border-border/60 text-[11px]"
+                  className="h-9 rounded-xl bg-surface border-border/60 text-xs w-full min-w-0"
                 />
               </div>
 
               {prodImageUrl && (
-                <div className="flex items-center gap-2.5 rounded-xl bg-surface p-2 border border-border/40">
+                <div className="flex items-center gap-2.5 rounded-xl bg-surface p-2 border border-border/40 min-w-0 overflow-hidden">
                   <img
                     src={prodImageUrl}
                     alt="Preview"
@@ -2094,16 +2094,16 @@ export function AdminPedidosPage() {
                       (e.target as HTMLElement).style.display = "none";
                     }}
                   />
-                  <div className="flex-1 min-w-0">
+                  <div className="flex-1 min-w-0 overflow-hidden">
                     <span className="text-[11px] font-bold text-emerald-400 flex items-center gap-1">
-                      <Check className="size-3" /> Foto asignada
+                      <Check className="size-3 shrink-0" /> Foto asignada
                     </span>
                     <p className="text-[10px] text-muted-foreground truncate">{prodImageUrl}</p>
                   </div>
                   <button
                     type="button"
                     onClick={() => setProdImageUrl("")}
-                    className="p-1.5 text-muted-foreground hover:text-red-400 rounded-lg hover:bg-red-500/10 transition-colors"
+                    className="p-1.5 text-muted-foreground hover:text-red-400 rounded-lg hover:bg-red-500/10 transition-colors shrink-0"
                     title="Quitar foto"
                   >
                     <XCircle className="size-4.5" />
@@ -2113,8 +2113,8 @@ export function AdminPedidosPage() {
             </div>
 
             {/* ATRIBUTOS Y EFECTOS DEL PRODUCTO */}
-            <div className="grid grid-cols-2 gap-2.5 pt-1">
-              <div>
+            <div className="grid grid-cols-2 gap-2.5 pt-1 min-w-0">
+              <div className="min-w-0">
                 <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">
                   Tipo / Familia
                 </label>
@@ -2122,11 +2122,11 @@ export function AdminPedidosPage() {
                   value={prodStrainType}
                   onChange={(e) => setProdStrainType(e.target.value)}
                   placeholder="Ej. Flores / Premium"
-                  className="h-10 rounded-xl bg-surface border-border/60 text-xs"
+                  className="h-10 rounded-xl bg-surface border-border/60 text-sm w-full min-w-0"
                 />
               </div>
 
-              <div>
+              <div className="min-w-0">
                 <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">
                   Contenido (Gramos)
                 </label>
@@ -2136,13 +2136,13 @@ export function AdminPedidosPage() {
                   value={prodWeightG}
                   onChange={(e) => setProdWeightG(e.target.value)}
                   placeholder="Ej. 3"
-                  className="h-10 rounded-xl bg-surface border-border/60 text-xs"
+                  className="h-10 rounded-xl bg-surface border-border/60 text-sm w-full min-w-0"
                 />
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-2.5">
-              <div>
+            <div className="grid grid-cols-2 gap-2.5 min-w-0">
+              <div className="min-w-0">
                 <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">
                   Nivel THC (%)
                 </label>
@@ -2151,11 +2151,11 @@ export function AdminPedidosPage() {
                   value={prodThc}
                   onChange={(e) => setProdThc(e.target.value)}
                   placeholder="Ej. 80"
-                  className="h-10 rounded-xl bg-surface border-border/60 text-xs"
+                  className="h-10 rounded-xl bg-surface border-border/60 text-sm w-full min-w-0"
                 />
               </div>
 
-              <div>
+              <div className="min-w-0">
                 <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">
                   Nivel CBD (%)
                 </label>
@@ -2164,12 +2164,12 @@ export function AdminPedidosPage() {
                   value={prodCbd}
                   onChange={(e) => setProdCbd(e.target.value)}
                   placeholder="Ej. 20"
-                  className="h-10 rounded-xl bg-surface border-border/60 text-xs"
+                  className="h-10 rounded-xl bg-surface border-border/60 text-sm w-full min-w-0"
                 />
               </div>
             </div>
 
-            <div>
+            <div className="min-w-0">
               <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">
                 Efectos Destacados
               </label>
@@ -2177,11 +2177,11 @@ export function AdminPedidosPage() {
                 value={prodEffects}
                 onChange={(e) => setProdEffects(e.target.value)}
                 placeholder="Ej. Relajación profunda, creatividad, euforia..."
-                className="h-10 rounded-xl bg-surface border-border/60 text-xs"
+                className="h-10 rounded-xl bg-surface border-border/60 text-sm w-full min-w-0"
               />
             </div>
 
-            <div>
+            <div className="min-w-0">
               <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">
                 Descripción Completa
               </label>
@@ -2189,20 +2189,20 @@ export function AdminPedidosPage() {
                 value={prodDescription}
                 onChange={(e) => setProdDescription(e.target.value)}
                 placeholder="Detalles del producto..."
-                className="rounded-xl bg-surface border-border/60 min-h-[60px] text-xs"
+                className="rounded-xl bg-surface border-border/60 min-h-[60px] text-sm w-full min-w-0"
               />
             </div>
 
-            <div className="flex items-center justify-between rounded-xl bg-surface p-2.5 border border-border/40">
-              <div>
-                <span className="text-xs font-bold text-foreground block">Disponibilidad Inmediata</span>
-                <span className="text-[10px] text-muted-foreground">¿Disponible para agregar al carrito?</span>
+            <div className="flex items-center justify-between rounded-xl bg-surface p-2.5 border border-border/40 min-w-0">
+              <div className="min-w-0 pr-2">
+                <span className="text-xs font-bold text-foreground block truncate">Disponibilidad Inmediata</span>
+                <span className="text-[10px] text-muted-foreground block truncate">¿Disponible para agregar al carrito?</span>
               </div>
               <button
                 type="button"
                 onClick={() => setProdIsAvailable(!prodIsAvailable)}
                 className={cn(
-                  "px-2.5 py-1 rounded-lg text-xs font-bold transition-all",
+                  "px-2.5 py-1 rounded-lg text-xs font-bold transition-all shrink-0",
                   prodIsAvailable
                     ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
                     : "bg-red-500/20 text-red-400 border border-red-500/30"
@@ -2237,7 +2237,7 @@ export function AdminPedidosPage() {
       {/* MODAL CREAR / EDITAR CATEGORÍA CON SUBIDA DE ÍCONO DIRECTA */}
       {/* ============================================================ */}
       <Dialog open={catDialogOpen} onOpenChange={setCatDialogOpen}>
-        <DialogContent className="w-[94%] max-w-md max-h-[88vh] overflow-y-auto rounded-[28px] p-5 bg-surface-2 border-border/60">
+        <DialogContent className="w-[94vw] max-w-md max-h-[88dvh] overflow-y-auto rounded-[28px] p-5 bg-surface-2 border-border/60 box-border min-w-0">
           <DialogHeader>
             <DialogTitle className="text-lg font-bold">
               {editingCategory ? "Editar Categoría" : "Nueva Categoría"}
@@ -2247,8 +2247,8 @@ export function AdminPedidosPage() {
             </DialogDescription>
           </DialogHeader>
 
-          <form onSubmit={handleSaveCategory} className="space-y-3 pt-2">
-            <div>
+          <form onSubmit={handleSaveCategory} className="space-y-3 pt-2 min-w-0 w-full">
+            <div className="min-w-0">
               <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">
                 Nombre de la categoría *
               </label>
@@ -2261,12 +2261,12 @@ export function AdminPedidosPage() {
                   }
                 }}
                 placeholder="Ej. Sintéticos, Weed, Bebidas..."
-                className="h-10 rounded-xl bg-surface border-border/60 text-xs"
+                className="h-10 rounded-xl bg-surface border-border/60 text-sm w-full min-w-0"
                 required
               />
             </div>
 
-            <div>
+            <div className="min-w-0">
               <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">
                 Slug (identificador URL)
               </label>
@@ -2274,12 +2274,12 @@ export function AdminPedidosPage() {
                 value={catSlug}
                 onChange={(e) => setCatSlug(e.target.value)}
                 placeholder="ej. sinteticos"
-                className="h-10 rounded-xl bg-surface border-border/60 text-xs font-mono"
+                className="h-10 rounded-xl bg-surface border-border/60 text-sm font-mono w-full min-w-0"
               />
             </div>
 
             {/* SECCIÓN DE SUBIDA DE ÍCONO A SUPABASE + URL FALLBACK */}
-            <div className="space-y-1.5">
+            <div className="space-y-1.5 min-w-0">
               <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground block">
                 Ícono / Imagen de Categoría
               </label>
@@ -2300,7 +2300,7 @@ export function AdminPedidosPage() {
                 variant="outline"
                 disabled={uploadingCatImg}
                 onClick={() => catFileInputRef.current?.click()}
-                className="rounded-xl h-11 text-xs font-bold w-full border-dashed border-primary/50 bg-primary/10 text-primary hover:bg-primary/20 flex items-center justify-center gap-2 shadow-sm active:scale-[0.98]"
+                className="rounded-xl h-11 text-xs font-bold w-full border-dashed border-primary/50 bg-primary/10 text-primary hover:bg-primary/20 flex items-center justify-center gap-2 shadow-sm active:scale-[0.98] min-w-0"
               >
                 {uploadingCatImg ? (
                   <>
@@ -2315,17 +2315,17 @@ export function AdminPedidosPage() {
                 )}
               </Button>
 
-              <div className="relative">
+              <div className="relative min-w-0">
                 <Input
                   value={catIconUrl}
                   onChange={(e) => setCatIconUrl(e.target.value)}
                   placeholder="O pega aquí el enlace del ícono (https://...)"
-                  className="h-9 rounded-xl bg-surface border-border/60 text-[11px]"
+                  className="h-9 rounded-xl bg-surface border-border/60 text-xs w-full min-w-0"
                 />
               </div>
 
               {catIconUrl && (
-                <div className="flex items-center gap-2.5 rounded-xl bg-surface p-2 border border-border/40">
+                <div className="flex items-center gap-2.5 rounded-xl bg-surface p-2 border border-border/40 min-w-0 overflow-hidden">
                   <img
                     src={catIconUrl}
                     alt="Icon preview"
@@ -2334,16 +2334,16 @@ export function AdminPedidosPage() {
                       (e.target as HTMLElement).style.display = "none";
                     }}
                   />
-                  <div className="flex-1 min-w-0">
+                  <div className="flex-1 min-w-0 overflow-hidden">
                     <span className="text-[11px] font-bold text-emerald-400 flex items-center gap-1">
-                      <Check className="size-3" /> Ícono cargado
+                      <Check className="size-3 shrink-0" /> Ícono cargado
                     </span>
                     <p className="text-[10px] text-muted-foreground truncate">{catIconUrl}</p>
                   </div>
                   <button
                     type="button"
                     onClick={() => setCatIconUrl("")}
-                    className="p-1.5 text-muted-foreground hover:text-red-400 rounded-lg hover:bg-red-500/10 transition-colors"
+                    className="p-1.5 text-muted-foreground hover:text-red-400 rounded-lg hover:bg-red-500/10 transition-colors shrink-0"
                     title="Quitar ícono"
                   >
                     <XCircle className="size-4.5" />
@@ -2351,7 +2351,6 @@ export function AdminPedidosPage() {
                 </div>
               )}
             </div>
-
 
             <DialogFooter className="pt-2 flex flex-row gap-2 justify-end">
               <Button
@@ -2378,7 +2377,7 @@ export function AdminPedidosPage() {
       {/* MODAL DE CONFIRMACIÓN DE ELIMINACIÓN DE PRODUCTO (100% MOBILE) */}
       {/* ============================================================ */}
       <Dialog open={Boolean(deleteProductTarget)} onOpenChange={(open) => !open && setDeleteProductTarget(null)}>
-        <DialogContent className="w-[94%] max-w-sm rounded-[28px] p-5 bg-surface-2 border-border/60">
+        <DialogContent className="w-[92vw] max-w-sm rounded-[28px] p-5 bg-surface-2 border-border/60 box-border min-w-0">
           <DialogHeader>
             <div className="mx-auto size-12 rounded-full bg-red-500/20 text-red-400 grid place-items-center mb-2">
               <Trash2 className="size-6" />
@@ -2425,7 +2424,7 @@ export function AdminPedidosPage() {
       {/* MODAL DE CONFIRMACIÓN DE ELIMINACIÓN DE CATEGORÍA (100% MOBILE) */}
       {/* ============================================================ */}
       <Dialog open={Boolean(deleteCategoryTarget)} onOpenChange={(open) => !open && setDeleteCategoryTarget(null)}>
-        <DialogContent className="w-[94%] max-w-sm rounded-[28px] p-5 bg-surface-2 border-border/60">
+        <DialogContent className="w-[92vw] max-w-sm rounded-[28px] p-5 bg-surface-2 border-border/60 box-border min-w-0">
           <DialogHeader>
             <div className="mx-auto size-12 rounded-full bg-red-500/20 text-red-400 grid place-items-center mb-2">
               <Trash2 className="size-6" />
@@ -2472,7 +2471,7 @@ export function AdminPedidosPage() {
       {/* MODAL CREAR / EDITAR REFERIDO / COMISIONISTA */}
       {/* ============================================================ */}
       <Dialog open={refDialogOpen} onOpenChange={setRefDialogOpen}>
-        <DialogContent className="w-[94%] max-w-md max-h-[88vh] overflow-y-auto rounded-[28px] p-5 bg-surface-2 border-border/60">
+        <DialogContent className="w-[94vw] max-w-md max-h-[88dvh] overflow-y-auto rounded-[28px] p-5 bg-surface-2 border-border/60 box-border min-w-0">
           <DialogHeader>
             <DialogTitle className="text-lg font-bold">
               {editingReferral ? "Editar Referido" : "Nuevo Referido"}
@@ -2482,8 +2481,8 @@ export function AdminPedidosPage() {
             </DialogDescription>
           </DialogHeader>
 
-          <form onSubmit={handleSaveReferral} className="space-y-3.5 pt-2">
-            <div>
+          <form onSubmit={handleSaveReferral} className="space-y-3.5 pt-2 min-w-0 w-full">
+            <div className="min-w-0">
               <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">
                 Nombre o Alias del Referido *
               </label>
@@ -2496,16 +2495,16 @@ export function AdminPedidosPage() {
                   }
                 }}
                 placeholder="Ej. Juan Pérez, VIP Poblado, Socio 01"
-                className="h-10 rounded-xl bg-surface border-border/60 text-xs"
+                className="h-10 rounded-xl bg-surface border-border/60 text-sm w-full min-w-0"
                 required
               />
             </div>
 
-            <div>
+            <div className="min-w-0">
               <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">
                 Código de Referido (Tag URL) *
               </label>
-              <div className="relative">
+              <div className="relative min-w-0">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 font-mono text-xs text-muted-foreground">
                   ?ref=
                 </span>
@@ -2513,23 +2512,23 @@ export function AdminPedidosPage() {
                   value={refCode}
                   onChange={(e) => setRefCode(sanitizeRefCode(e.target.value))}
                   placeholder="JUAN20"
-                  className="h-10 rounded-xl bg-surface border-border/60 pl-14 text-xs font-mono font-bold uppercase tracking-wider"
+                  className="h-10 rounded-xl bg-surface border-border/60 pl-14 text-sm font-mono font-bold uppercase tracking-wider w-full min-w-0"
                   required
                 />
               </div>
-              <p className="text-[10px] text-muted-foreground mt-1">
+              <p className="text-[10px] text-muted-foreground mt-1 truncate">
                 Se usará en el link compartido: <span className="font-mono text-foreground">https://.../?ref={refCode || "CODIGO"}</span>
               </p>
             </div>
 
             {/* Selector de Porcentaje de Comisión */}
-            <div className="rounded-xl bg-surface p-3 border border-border/40 space-y-2.5">
-              <div className="flex items-center justify-between">
-                <div>
-                  <span className="text-xs font-bold text-foreground block">Porcentaje de Ganancia</span>
-                  <span className="text-[10px] text-muted-foreground">Recargo en la tienda para este link</span>
+            <div className="rounded-xl bg-surface p-3 border border-border/40 space-y-2.5 min-w-0">
+              <div className="flex items-center justify-between min-w-0">
+                <div className="min-w-0 pr-2">
+                  <span className="text-xs font-bold text-foreground block truncate">Porcentaje de Ganancia</span>
+                  <span className="text-[10px] text-muted-foreground block truncate">Recargo en la tienda para este link</span>
                 </div>
-                <div className="flex items-center gap-1 bg-surface-2 px-2.5 py-1 rounded-lg border border-border/50">
+                <div className="flex items-center gap-1 bg-surface-2 px-2.5 py-1 rounded-lg border border-border/50 shrink-0">
                   <span className="text-sm font-extrabold text-candy-lime">{refCommissionPct}%</span>
                 </div>
               </div>
@@ -2553,7 +2552,7 @@ export function AdminPedidosPage() {
                 ))}
               </div>
 
-              <div className="pt-1">
+              <div className="pt-1 min-w-0">
                 <Input
                   type="number"
                   min="0"
@@ -2562,7 +2561,7 @@ export function AdminPedidosPage() {
                   value={refCommissionPct}
                   onChange={(e) => setRefCommissionPct(e.target.value)}
                   placeholder="Porcentaje personalizado (ej. 20)"
-                  className="h-9 rounded-xl bg-surface-2 border-border/60 text-xs"
+                  className="h-9 rounded-xl bg-surface-2 border-border/60 text-sm w-full min-w-0"
                 />
               </div>
 
@@ -2571,8 +2570,8 @@ export function AdminPedidosPage() {
               </p>
             </div>
 
-            <div className="grid grid-cols-2 gap-2.5">
-              <div>
+            <div className="grid grid-cols-2 gap-2.5 min-w-0">
+              <div className="min-w-0">
                 <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">
                   WhatsApp / Teléfono
                 </label>
@@ -2580,11 +2579,11 @@ export function AdminPedidosPage() {
                   value={refPhone}
                   onChange={(e) => setRefPhone(e.target.value)}
                   placeholder="Ej. 3001234567"
-                  className="h-10 rounded-xl bg-surface border-border/60 text-xs"
+                  className="h-10 rounded-xl bg-surface border-border/60 text-sm w-full min-w-0"
                 />
               </div>
 
-              <div>
+              <div className="min-w-0">
                 <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">
                   Estado
                 </label>
@@ -2592,7 +2591,7 @@ export function AdminPedidosPage() {
                   type="button"
                   onClick={() => setRefIsActive(!refIsActive)}
                   className={cn(
-                    "w-full h-10 rounded-xl text-xs font-bold border transition-all flex items-center justify-center gap-1.5",
+                    "w-full h-10 rounded-xl text-xs font-bold border transition-all flex items-center justify-center gap-1.5 min-w-0",
                     refIsActive
                       ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30"
                       : "bg-zinc-800 text-zinc-400 border-border/40"
@@ -2603,7 +2602,7 @@ export function AdminPedidosPage() {
               </div>
             </div>
 
-            <div>
+            <div className="min-w-0">
               <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">
                 Notas / Observaciones
               </label>
@@ -2611,7 +2610,7 @@ export function AdminPedidosPage() {
                 value={refNotes}
                 onChange={(e) => setRefNotes(e.target.value)}
                 placeholder="Detalles sobre acuerdos de pago, contacto, etc."
-                className="rounded-xl bg-surface border-border/60 min-h-[50px] text-xs"
+                className="rounded-xl bg-surface border-border/60 min-h-[50px] text-sm w-full min-w-0"
               />
             </div>
 
