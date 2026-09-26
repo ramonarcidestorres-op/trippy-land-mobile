@@ -1829,12 +1829,20 @@ export function AdminPedidosPage() {
                     const isCopied = copiedRefCode === ref.code;
                     
                     // Estadísticas del referido individual
-                    const myOrders = allOrdersList.filter(
+                    const myAllOrders = allOrdersList.filter(
                       (o) => (o.referral_code || "").toUpperCase() === ref.code.toUpperCase() && o.status !== "cancelled"
                     );
-                    const mySales = myOrders.reduce((sum, o) => sum + Number(o.total || 0), 0);
+                    const myCompletedOrders = myAllOrders.filter((o) => o.status === "delivered");
+                    const myPendingOrders = myAllOrders.filter((o) => o.status !== "delivered");
+
+                    const completedSales = myCompletedOrders.reduce((sum, o) => sum + Number(o.total || 0), 0);
+                    const pendingSales = myPendingOrders.reduce((sum, o) => sum + Number(o.total || 0), 0);
+                    const totalSales = completedSales + pendingSales;
+
                     const pct = Number(ref.commission_percentage || 20);
-                    const myEarnings = mySales * (pct / (100 + pct));
+                    const completedEarnings = completedSales * (pct / (100 + pct));
+                    const pendingEarnings = pendingSales * (pct / (100 + pct));
+                    const totalEarnings = completedEarnings + pendingEarnings;
 
                     return (
                       <div
@@ -1922,19 +1930,28 @@ export function AdminPedidosPage() {
                           </div>
                         </div>
 
-                        {/* Métricas del referido */}
-                        <div className="grid grid-cols-3 gap-1.5 bg-surface-2/60 p-2 rounded-xl border border-border/30 text-center">
+                        {/* Métricas del referido con desglose de Entregados y En Curso */}
+                        <div className="grid grid-cols-3 gap-1.5 bg-surface-2/60 p-2.5 rounded-xl border border-border/30 text-center">
                           <div>
                             <span className="text-[9px] uppercase tracking-wider text-muted-foreground block">Pedidos</span>
-                            <span className="text-xs font-black text-foreground">{myOrders.length}</span>
+                            <span className="text-xs font-black text-foreground">{myAllOrders.length}</span>
+                            <span className="text-[9px] text-muted-foreground block">
+                              ({myCompletedOrders.length} entregados)
+                            </span>
                           </div>
                           <div>
                             <span className="text-[9px] uppercase tracking-wider text-muted-foreground block">Ventas</span>
-                            <span className="text-xs font-black text-emerald-400 truncate block">{formatPrice(mySales)}</span>
+                            <span className="text-xs font-black text-emerald-400 truncate block">{formatPrice(completedSales)}</span>
+                            <span className="text-[9px] text-muted-foreground block">
+                              {myPendingOrders.length > 0 ? `+${formatPrice(pendingSales)} curso` : "Completadas"}
+                            </span>
                           </div>
                           <div>
-                            <span className="text-[9px] uppercase tracking-wider text-muted-foreground block">Comisión</span>
-                            <span className="text-xs font-black text-candy-lime truncate block">{formatPrice(myEarnings)}</span>
+                            <span className="text-[9px] uppercase tracking-wider text-muted-foreground block">Ganancia Lista</span>
+                            <span className="text-xs font-black text-candy-lime truncate block">{formatPrice(completedEarnings)}</span>
+                            <span className="text-[9px] text-candy-lime/80 font-bold block">
+                              {myPendingOrders.length > 0 ? `+${formatPrice(pendingEarnings)} pend.` : "Confirmada"}
+                            </span>
                           </div>
                         </div>
 
