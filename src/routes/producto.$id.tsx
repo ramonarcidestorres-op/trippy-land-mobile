@@ -121,7 +121,12 @@ export function ProductDetailPage() {
   if (isLoading) {
     return (
       <div className="fixed inset-0 z-50 flex flex-col justify-end bg-black/70 backdrop-blur-sm animate-in fade-in duration-200">
-        <div className="relative w-full max-w-lg mx-auto bg-background rounded-t-[32px] border-t border-x border-border/40 p-5 h-[80vh] flex flex-col justify-between animate-pulse">
+        <div 
+          className="flex-1 w-full" 
+          onClick={handleClose} 
+          aria-label="Cerrar modal"
+        />
+        <div className="relative w-full max-w-lg mx-auto bg-background rounded-t-[32px] border-t border-x border-border/40 p-5 h-[75vh] max-h-[78vh] flex flex-col justify-between animate-pulse shadow-2xl">
           <div className="w-12 h-1.5 rounded-full bg-white/20 mx-auto mb-4 shrink-0" />
           <div className="flex justify-between items-center">
             <div className="size-10 rounded-full bg-surface-2" />
@@ -132,7 +137,7 @@ export function ProductDetailPage() {
           </div>
           <div className="my-6 space-y-4">
             <div className="h-8 w-3/4 bg-surface-2 rounded-xl" />
-            <div className="h-48 w-full bg-surface-2 rounded-3xl" />
+            <div className="h-44 w-full bg-surface-2 rounded-3xl" />
             <div className="h-16 w-full bg-surface-2 rounded-2xl" />
           </div>
           <div className="h-14 w-full bg-surface-2 rounded-2xl mb-2" />
@@ -144,7 +149,12 @@ export function ProductDetailPage() {
   if (error || !product) {
     return (
       <div className="fixed inset-0 z-50 flex flex-col justify-end bg-black/70 backdrop-blur-sm">
-        <div className="relative w-full max-w-lg mx-auto bg-background rounded-t-[32px] border-t border-x border-border/40 p-6 max-h-[85vh]">
+        <div 
+          className="flex-1 w-full" 
+          onClick={handleClose} 
+          aria-label="Cerrar modal"
+        />
+        <div className="relative w-full max-w-lg mx-auto bg-background rounded-t-[32px] border-t border-x border-border/40 p-6 h-[50vh] max-h-[75vh] shadow-2xl">
           <div className="w-12 h-1.5 rounded-full bg-white/20 mx-auto mb-4 shrink-0" />
           <EmptyState
             icon={<Candy className="size-8 text-primary" />}
@@ -189,17 +199,17 @@ export function ProductDetailPage() {
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col justify-end bg-black/75 backdrop-blur-md animate-in fade-in duration-300">
-      {/* Zona de fondo clickeable para cerrar */}
+      {/* Zona de fondo clickeable para cerrar (deja ~25% de espacio visible arriba) */}
       <div 
-        className="flex-1 w-full" 
+        className="flex-1 w-full min-h-[20vh] cursor-pointer" 
         onClick={handleClose} 
         aria-label="Cerrar modal"
       />
 
       {/* ============================================================ */}
-      {/* CONTENEDOR TIPO HOJA DESLIZABLE (BOTTOM SHEET) */}
+      {/* CONTENEDOR TIPO HOJA DESLIZABLE (BOTTOM SHEET - 75% DE ALTURA) */}
       {/* ============================================================ */}
-      <div className="relative w-full max-w-lg mx-auto bg-background rounded-t-[32px] border-t border-x border-border/50 shadow-2xl flex flex-col max-h-[92vh] h-[92vh] overflow-hidden animate-in slide-in-from-bottom duration-300 ease-out">
+      <div className="relative w-full max-w-lg mx-auto bg-background rounded-t-[32px] border-t border-x border-border/50 shadow-2xl flex flex-col max-h-[76vh] h-[76vh] overflow-hidden animate-in slide-in-from-bottom duration-300 ease-out">
         
         {/* Barra superior de arrastre / Handle */}
         <div className="pt-2.5 pb-1 flex justify-center shrink-0 cursor-pointer" onClick={handleClose}>
