@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
-import { Banknote, MapPin, Navigation, ShoppingBag, Loader2 } from "lucide-react";
+import { Banknote, MapPin, Navigation, ShoppingBag, Loader2, ChevronLeft } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { EmptyState } from "@/components/States";
@@ -244,9 +244,25 @@ function CheckoutPage() {
 
   return (
     <AppShell>
-      <h1 className="mb-6 text-[34px] font-bold tracking-tight text-foreground">
-        Checkout
-      </h1>
+      <div className="mb-6 flex items-center gap-3">
+        <button
+          type="button"
+          onClick={() => {
+            if (window.history.length > 1) {
+              window.history.back();
+            } else {
+              navigate({ to: "/carrito" });
+            }
+          }}
+          className="flex size-11 shrink-0 items-center justify-center rounded-full bg-surface-2 text-foreground transition-transform active:scale-90 hover:bg-surface border border-border/40 shadow-sm cursor-pointer"
+          aria-label="Volver"
+        >
+          <ChevronLeft className="size-6 stroke-[2.5]" />
+        </button>
+        <h1 className="text-[28px] sm:text-[34px] font-bold tracking-tight text-foreground">
+          Checkout
+        </h1>
+      </div>
 
       <div className="space-y-4 pb-32">
         {/* Address Card */}

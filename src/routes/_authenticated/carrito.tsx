@@ -1,5 +1,5 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { Minus, Plus, ShoppingBag, Trash2, ShieldAlert } from "lucide-react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { ChevronLeft, Minus, Plus, ShoppingBag, Trash2, ShieldAlert } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { EmptyState } from "@/components/States";
 import { useCart } from "@/hooks/useCart";
@@ -19,16 +19,33 @@ export const Route = createFileRoute("/_authenticated/carrito")({
 });
 
 function CartPage() {
+  const navigate = useNavigate();
   const { cart: rows, setQuantity, removeItem, clearCart } = useCart();
   const { getAdjustedPrice } = useReferral();
   const { isOpen } = useStoreStatus();
   // Calculate subtotal with adjusted prices
   const subtotal = rows.reduce((sum, r) => sum + getAdjustedPrice(r.products?.price ?? 0) * r.quantity, 0);
 
+  const handleBack = () => {
+    if (window.history.length > 1) {
+      window.history.back();
+    } else {
+      navigate({ to: "/" });
+    }
+  };
+
   return (
     <AppShell>
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-[34px] font-bold tracking-tight text-foreground">
+      <div className="mb-6 flex items-center gap-3">
+        <button
+          type="button"
+          onClick={handleBack}
+          className="flex size-11 shrink-0 items-center justify-center rounded-full bg-surface-2 text-foreground transition-transform active:scale-90 hover:bg-surface border border-border/40 shadow-sm cursor-pointer"
+          aria-label="Volver"
+        >
+          <ChevronLeft className="size-6 stroke-[2.5]" />
+        </button>
+        <h1 className="text-[28px] sm:text-[34px] font-bold tracking-tight text-foreground">
           Carrito Trippy
         </h1>
       </div>
