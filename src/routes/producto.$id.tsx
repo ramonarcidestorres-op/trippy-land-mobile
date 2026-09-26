@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect, useRef } from "react";
 import { 
   ChevronLeft, 
@@ -13,7 +13,7 @@ import {
 import { toast } from "sonner";
 import { useCart } from "@/hooks/useCart";
 import { useReferral } from "@/hooks/useReferral";
-import { productQuery } from "@/lib/queries";
+import { productQuery, type Product } from "@/lib/queries";
 import { formatPrice } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { EmptyState } from "@/components/States";
@@ -32,10 +32,24 @@ export const Route = createFileRoute("/producto/$id")({
 export function ProductDetailPage() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { cart, addToCart, setQuantity } = useCart();
   const { getAdjustedPrice } = useReferral();
   
-  const { data: product, isLoading, error } = useQuery(productQuery(id));
+  // Carga instantánea usando caché previa de la lista de productos (sin parpadeos)
+  const { data: product, isLoading, error } = useQuery({
+    ...productQuery(id),
+    initialData: () => {
+      const allQueries = queryClient.getQueriesData<Product[]>({ queryKey: ["products"] });
+      for (const [_, list] of allQueries) {
+        if (Array.isArray(list)) {
+          const match = list.find((p) => p.id === id);
+          if (match) return match as (Product & { categories: { name: string; slug: string } | null });
+        }
+      }
+      return undefined;
+    },
+  });
 
   // Check if product is already in cart
   const cartItem = cart.find((i) => i.product_id === id);
@@ -224,20 +238,31 @@ export function ProductDetailPage() {
     return (
       <div className="fixed inset-0 z-50 flex flex-col justify-end bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
         <div 
-          className="flex-1 w-full min-h-[14vh] cursor-pointer" 
+          className="fixed inset-0 cursor-pointer" 
           onClick={() => handleClose(true)} 
           aria-label="Cerrar modal"
         />
-        <div className="relative w-full max-w-lg mx-auto bg-[#F2F2F5] rounded-t-[36px] p-6 h-[86vh] flex flex-col justify-between animate-pulse shadow-2xl">
-          <div className="flex justify-between items-center pt-2">
-            <div className="size-12 rounded-full bg-white shadow-sm" />
-            <div className="size-12 rounded-full bg-white shadow-sm" />
+        <div className="relative z-10 w-full max-w-lg mx-auto bg-[#F2F2F5] rounded-t-[36px] h-[92dvh] max-h-[92dvh] flex flex-col justify-between animate-pulse shadow-2xl overflow-hidden border-t border-neutral-200/40">
+          <div className="pt-2.5 pb-1 flex justify-center shrink-0">
+            <div className="w-12 h-1.5 rounded-full bg-neutral-300/60" />
           </div>
-          <div className="my-auto size-52 rounded-full bg-white/60 mx-auto" />
-          <div className="rounded-t-[32px] bg-white p-6 space-y-5">
-            <div className="h-7 w-2/3 bg-neutral-200 rounded-lg" />
-            <div className="h-4 w-full bg-neutral-200 rounded-lg" />
-            <div className="h-14 w-full bg-neutral-900 rounded-full" />
+          <div className="px-5 pt-2 flex justify-between items-center shrink-0">
+            <div className="size-12 rounded-full bg-white shadow-sm" />
+            <div className="flex gap-3">
+              <div className="size-12 rounded-full bg-white shadow-sm" />
+              <div className="size-12 rounded-full bg-white shadow-sm" />
+            </div>
+          </div>
+          <div className="my-auto size-48 rounded-3xl bg-neutral-200/50 mx-auto" />
+          <div className="rounded-t-[36px] bg-white p-6 pt-5 pb-[max(env(safe-area-inset-bottom),28px)] space-y-4 shadow-[0_-15px_40px_rgba(0,0,0,0.12)] shrink-0">
+            <div className="h-5 w-24 bg-neutral-200 rounded-full" />
+            <div className="h-7 w-2/3 bg-neutral-200 rounded-xl" />
+            <div className="h-4 w-full bg-neutral-100 rounded-lg" />
+            <div className="flex justify-between items-center pt-2">
+              <div className="h-8 w-28 bg-neutral-200 rounded-xl" />
+              <div className="h-8 w-24 bg-neutral-100 rounded-xl" />
+            </div>
+            <div className="h-14 w-full bg-neutral-950 rounded-full" />
           </div>
         </div>
       </div>
@@ -248,11 +273,11 @@ export function ProductDetailPage() {
     return (
       <div className="fixed inset-0 z-50 flex flex-col justify-end bg-black/60 backdrop-blur-sm">
         <div 
-          className="flex-1 w-full min-h-[14vh] cursor-pointer" 
+          className="fixed inset-0 cursor-pointer" 
           onClick={() => handleClose(true)} 
           aria-label="Cerrar modal"
         />
-        <div className="relative w-full max-w-lg mx-auto bg-white rounded-t-[36px] p-6 h-[50vh] shadow-2xl">
+        <div className="relative z-10 w-full max-w-lg mx-auto bg-white rounded-t-[36px] p-6 pb-[max(env(safe-area-inset-bottom),28px)] h-[50dvh] shadow-2xl">
           <EmptyState
             icon={<Candy className="size-8 text-black" />}
             title="Producto no disponible"
@@ -261,7 +286,7 @@ export function ProductDetailPage() {
               <button
                 type="button"
                 onClick={() => handleClose(true)}
-                className="mt-4 inline-flex h-11 items-center justify-center rounded-full bg-black px-6 text-sm font-bold text-white shadow-md transition-transform active:scale-95"
+                className="mt-4 inline-flex h-11 items-center justify-center rounded-full bg-black px-6 text-sm font-bold text-white shadow-md transition-transform active:scale-95 cursor-pointer"
               >
                 Cerrar
               </button>
@@ -303,21 +328,21 @@ export function ProductDetailPage() {
     >
       {/* Zona de fondo clickeable para cerrar */}
       <div 
-        className="flex-1 w-full min-h-[10vh] cursor-pointer" 
+        className="fixed inset-0 cursor-pointer" 
         onClick={() => handleClose(false)} 
         aria-label="Cerrar modal"
       />
 
       {/* ============================================================ */}
-      {/* TARJETA DE PRODUCTO: HERO CLARO SÓLIDO + CARD INFERIOR BLANCA */}
+      {/* TARJETA DE PRODUCTO: ANCLADA AL FONDO (bottom-0) SIN ESPACIO NEGRO */}
       {/* ============================================================ */}
       <div 
         ref={sheetRef}
-        className="relative w-full max-w-lg mx-auto bg-[#F2F2F5] rounded-t-[36px] shadow-2xl flex flex-col max-h-[88vh] h-[88vh] overflow-hidden animate-in slide-in-from-bottom duration-300 ease-out select-none touch-none border-t border-neutral-200/40"
+        className="relative z-10 w-full max-w-lg mx-auto bg-[#F2F2F5] rounded-t-[36px] shadow-2xl flex flex-col h-[92dvh] max-h-[92dvh] overflow-hidden animate-in slide-in-from-bottom duration-300 ease-out select-none border-t border-neutral-200/40"
       >
         {/* SECCIÓN SUPERIOR DE ARRASTRE (HANDLE + CABECERA + HERO) */}
         <div
-          className="flex flex-col flex-1 touch-none cursor-grab active:cursor-grabbing"
+          className="flex flex-col flex-1 touch-none cursor-grab active:cursor-grabbing min-h-0"
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
@@ -397,9 +422,9 @@ export function ProductDetailPage() {
         </div>
 
         {/* ============================================================ */}
-        {/* CARD INFERIOR EN BLANCO: CATEGORÍA EN ESQUINA, TÍTULO, ESPECIFICACIONES, PRECIO, SELECTOR Y BOTÓN */}
+        {/* CARD INFERIOR EN BLANCO: CUBRE COMPLETAMENTE HASTA EL FONDO */}
         {/* ============================================================ */}
-        <div className="bg-white rounded-t-[36px] p-6 pt-6 pb-[max(env(safe-area-inset-bottom),24px)] shadow-[0_-15px_40px_rgba(0,0,0,0.12)] space-y-4 shrink-0 overflow-y-auto max-h-[52vh]">
+        <div className="bg-white rounded-t-[36px] p-6 pt-5 pb-[max(env(safe-area-inset-bottom),28px)] shadow-[0_-15px_40px_rgba(0,0,0,0.12)] space-y-4 shrink-0 overflow-y-auto max-h-[55dvh]">
           
           {/* CATEGORÍA EN ESQUINA SUPERIOR + TÍTULO Y DESCRIPCIÓN */}
           <div className="space-y-1.5">
