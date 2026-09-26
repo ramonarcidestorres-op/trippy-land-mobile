@@ -30,19 +30,15 @@ function HomePage() {
 
   return (
     <AppShell>
-      {/* Saludo y banner */}
-      <div className="mb-8">
-        <h1 className="mb-6 text-[34px] font-bold tracking-tight text-foreground">
+      {/* Saludo / Título Principal */}
+      <div className="mb-5">
+        <h1 className="text-[34px] font-bold tracking-tight text-foreground">
           Trippy Land
         </h1>
-        {/* Aquí irá el banner que el usuario proveerá */}
-        <div className="w-full h-[120px] rounded-3xl bg-surface-2/60 flex items-center justify-center text-muted-foreground border border-border/50 border-dashed">
-          Espacio para el Banner
-        </div>
       </div>
 
       {/* Buscador minimalista HIG */}
-      <div className="relative mb-8 shadow-sm">
+      <div className="relative mb-6 shadow-sm">
         <Search className="absolute left-4 top-1/2 size-5 -translate-y-1/2 text-muted-foreground" />
         <Input
           value={search}
@@ -62,7 +58,7 @@ function HomePage() {
       </div>
 
       {/* Categorías Visuales inspiradas en la referencia */}
-      <section className="mb-10">
+      <section className="mb-8">
         {categories.isLoading ? (
           <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
             {[0, 1, 2, 3].map((i) => (
@@ -126,7 +122,7 @@ function HomePage() {
       </section>
 
       {/* Sección Destacados: Cartas Tipo Tinder */}
-      <section className="mb-10">
+      <section className="mb-8">
         <div className="mb-5 flex items-center justify-between">
           <h2 className="text-[22px] font-black tracking-tight text-foreground">
             Destacados
@@ -155,6 +151,13 @@ function HomePage() {
             description="Cuando el equipo publique productos en el panel, aparecerán aquí al instante."
           />
         )}
+      </section>
+
+      {/* Espacio para el Banner (Debajo de los Destacados) */}
+      <section className="mb-8">
+        <div className="w-full h-[120px] rounded-3xl bg-surface-2/60 flex items-center justify-center text-muted-foreground border border-border/50 border-dashed">
+          Espacio para el Banner
+        </div>
       </section>
     </AppShell>
   );
