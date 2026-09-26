@@ -309,12 +309,12 @@ export function FeaturedTinderStack({ products }: FeaturedTinderStackProps) {
               </div>
 
               {/* SECCIÓN CENTRAL: IMAGEN FLOTANTE DEL PRODUCTO */}
-              <div className="relative z-10 flex-1 flex items-center justify-center py-2 min-h-0 pointer-events-none">
-                <div className="relative size-44 sm:size-48 flex items-center justify-center">
+              <div className="relative z-10 flex-1 flex items-center justify-center py-1 min-h-0 pointer-events-none">
+                <div className="relative size-56 sm:size-64 flex items-center justify-center">
                   <img
                     src={img}
                     alt={product.name}
-                    className="max-h-full max-w-full object-contain filter drop-shadow-[0_12px_22px_rgba(0,0,0,0.22)]"
+                    className="max-h-full max-w-full w-auto h-auto object-contain scale-125 filter drop-shadow-[0_16px_28px_rgba(0,0,0,0.25)] transition-transform duration-300"
                   />
                   {!available && (
                     <div className="absolute inset-0 grid place-items-center rounded-3xl bg-black/85 text-[11px] font-black uppercase tracking-widest text-red-400 border border-red-500/30 backdrop-blur-sm">
