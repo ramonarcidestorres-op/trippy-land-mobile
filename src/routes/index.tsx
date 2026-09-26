@@ -128,18 +128,13 @@ function HomePage() {
       {/* Sección Destacados: Cartas Tipo Tinder */}
       <section className="mb-10">
         <div className="mb-5 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <h2 className="text-[22px] font-black tracking-tight text-foreground">
-              Destacados
-            </h2>
-            <span className="flex items-center gap-1 rounded-full bg-candy-lime/15 border border-candy-lime/30 px-2.5 py-0.5 text-[10.5px] font-black text-candy-lime uppercase tracking-wider">
-              <Sparkles className="size-3" /> Tinder Deck
-            </span>
-          </div>
+          <h2 className="text-[22px] font-black tracking-tight text-foreground">
+            Destacados
+          </h2>
           <Link 
             to="/catalogo" 
             search={selectedCategory ? { categoria: categories.data?.find(c => c.id === selectedCategory)?.slug } : {}} 
-            className="text-xs text-primary font-bold transition-opacity active:opacity-70"
+            className="text-xs text-primary font-bold transition-opacity active:opacity-70 ml-auto"
           >
             Ver catálogo completo →
           </Link>

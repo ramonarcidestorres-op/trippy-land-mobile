@@ -9,13 +9,13 @@ import { type Product } from "@/lib/queries";
 import { cn } from "@/lib/utils";
 
 const CARD_GRADIENTS = [
-  "from-[#DC2626] via-[#B91C1C] to-[#881337]", // Strawberry red
-  "from-[#EA580C] via-[#C2410C] to-[#9A3412]", // Orange / Citrus
-  "from-[#059669] via-[#047857] to-[#064E3B]", // Emerald / Forest
-  "from-[#7C3AED] via-[#6D28D9] to-[#4C1D95]", // Grape / Violet
-  "from-[#D97706] via-[#B45309] to-[#78350F]", // Amber / Gold
-  "from-[#0284C7] via-[#0369A1] to-[#075985]", // Ocean Blue
-  "from-[#DB2777] via-[#BE185D] to-[#831843]", // Berry Pink
+  "from-[#1e1f24] via-[#141518] to-[#0c0d0f]", // Dark Matte Charcoal
+  "from-[#2c1519] via-[#1c0c0e] to-[#100607]", // Dark Matte Crimson Wine
+  "from-[#132219] via-[#0c1811] to-[#070e0a]", // Dark Matte Forest Pine
+  "from-[#211628] via-[#150d1b] to-[#0b060e]", // Dark Matte Midnight Plum
+  "from-[#281b12] via-[#19100a] to-[#0e0804]", // Dark Matte Espresso Bronze
+  "from-[#131b28] via-[#0c121b] to-[#07090e]", // Dark Matte Deep Slate Navy
+  "from-[#1b2216] via-[#11170d] to-[#080c06]", // Dark Matte Olive Green
 ];
 
 interface FeaturedTinderStackProps {
@@ -222,12 +222,12 @@ export function FeaturedTinderStack({ products }: FeaturedTinderStackProps) {
                 }
               }}
               className={cn(
-                "absolute inset-x-0 mx-auto w-full max-w-[340px] sm:max-w-[360px] h-[380px] sm:h-[400px] rounded-[34px] p-6 flex flex-col justify-between shadow-2xl bg-gradient-to-b cursor-pointer overflow-hidden border border-white/20",
+                "absolute inset-x-0 mx-auto w-full max-w-[340px] sm:max-w-[360px] h-[380px] sm:h-[400px] rounded-[34px] p-6 flex flex-col justify-between shadow-[0_20px_50px_rgba(0,0,0,0.7)] bg-gradient-to-b cursor-pointer overflow-hidden border border-white/10",
                 gradient
               )}
             >
               {/* Iluminación sutil de fondo */}
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-48 rounded-full bg-white/15 blur-2xl pointer-events-none" />
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-48 rounded-full bg-white/[0.06] blur-2xl pointer-events-none" />
 
               {/* SECCIÓN SUPERIOR: NOMBRE DEL PRODUCTO + BOTÓN FAVORITO */}
               <div className="relative z-10 flex items-start justify-between gap-3">
