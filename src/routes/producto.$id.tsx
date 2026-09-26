@@ -123,16 +123,16 @@ export function ProductDetailPage() {
           onClick={handleClose} 
           aria-label="Cerrar modal"
         />
-        <div className="relative w-full max-w-lg mx-auto bg-[#F4F4F4] rounded-t-[36px] p-5 h-[83vh] flex flex-col justify-between animate-pulse shadow-2xl">
+        <div className="relative w-full max-w-lg mx-auto bg-[#0e0e0e] rounded-t-[36px] p-5 h-[86vh] flex flex-col justify-between animate-pulse shadow-2xl border-t border-x border-white/10">
           <div className="flex justify-between items-center pt-2">
-            <div className="size-11 rounded-full bg-white/80" />
-            <div className="size-11 rounded-full bg-white/80" />
+            <div className="size-11 rounded-full bg-white/10" />
+            <div className="size-11 rounded-full bg-white/10" />
           </div>
-          <div className="my-auto size-48 rounded-full bg-white/60 mx-auto" />
+          <div className="my-auto size-48 rounded-full bg-white/5 mx-auto" />
           <div className="rounded-t-[32px] bg-white p-6 space-y-4">
             <div className="h-6 w-2/3 bg-neutral-200 rounded-lg" />
             <div className="h-4 w-full bg-neutral-200 rounded-lg" />
-            <div className="h-12 w-full bg-neutral-200 rounded-2xl" />
+            <div className="h-12 w-full bg-neutral-900 rounded-2xl" />
           </div>
         </div>
       </div>
@@ -181,7 +181,7 @@ export function ProductDetailPage() {
   const img = product.image_url || fallbackImg;
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col justify-end bg-black/35 backdrop-blur-[2px] animate-in fade-in duration-300">
+    <div className="fixed inset-0 z-50 flex flex-col justify-end bg-black/40 backdrop-blur-[2px] animate-in fade-in duration-300">
       {/* Zona de fondo clickeable para cerrar */}
       <div 
         className="flex-1 w-full min-h-[12vh] cursor-pointer" 
@@ -190,45 +190,45 @@ export function ProductDetailPage() {
       />
 
       {/* ============================================================ */}
-      {/* TARJETA DE PRODUCTO SEGÚN NUEVA REFERENCIA (FONDO SUAVE + CARD BLANCA) */}
+      {/* TARJETA DE PRODUCTO: FONDO SUPERIOR NEGRO + CARD INFERIOR BLANCA */}
       {/* ============================================================ */}
-      <div className="relative w-full max-w-lg mx-auto bg-[#F4F4F4] rounded-t-[36px] shadow-2xl flex flex-col max-h-[85vh] h-[85vh] overflow-hidden animate-in slide-in-from-bottom duration-300 ease-out">
+      <div className="relative w-full max-w-lg mx-auto bg-[#0e0e0e] rounded-t-[36px] shadow-2xl flex flex-col max-h-[86vh] h-[86vh] overflow-hidden animate-in slide-in-from-bottom duration-300 ease-out border-t border-x border-white/10">
         
         {/* CABECERA SUPERIOR FLOTANTE (BOTÓN ATRÁS Y FAVORITO + CARRITO) */}
         <div className="px-5 pt-4 pb-2 flex items-center justify-between shrink-0 z-10">
-          {/* Botón Volver circular blanco */}
+          {/* Botón Volver circular */}
           <button
             type="button"
             onClick={handleClose}
-            className="flex size-11 items-center justify-center rounded-full bg-white text-neutral-800 shadow-md transition-transform active:scale-90"
+            className="flex size-11 items-center justify-center rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-white shadow-lg transition-transform active:scale-90 hover:bg-white/20"
             aria-label="Volver"
           >
             <ChevronLeft className="size-6 stroke-[2.5]" />
           </button>
 
           <div className="flex items-center gap-2.5">
-            {/* Botón Favorito circular blanco */}
+            {/* Botón Favorito */}
             <button
               type="button"
               onClick={toggleFavorite}
               className={cn(
-                "flex size-11 items-center justify-center rounded-full bg-white shadow-md transition-transform active:scale-90",
-                isFavorite ? "text-red-500" : "text-neutral-700 hover:text-black"
+                "flex size-11 items-center justify-center rounded-full bg-white/10 backdrop-blur-md border border-white/15 shadow-lg transition-transform active:scale-90 hover:bg-white/20",
+                isFavorite ? "text-red-400 border-red-500/30 bg-red-500/20" : "text-white/80 hover:text-white"
               )}
               aria-label="Favorito"
             >
               <Heart className={cn("size-5", isFavorite && "fill-current")} />
             </button>
 
-            {/* Botón Carrito circular blanco con badge */}
+            {/* Botón Carrito con badge */}
             <Link
               to="/carrito"
-              className="relative flex size-11 items-center justify-center rounded-full bg-white shadow-md transition-transform active:scale-90 text-neutral-800"
+              className="relative flex size-11 items-center justify-center rounded-full bg-white/10 backdrop-blur-md border border-white/15 shadow-lg transition-transform active:scale-90 text-white hover:bg-white/20"
               aria-label="Ver Carrito"
             >
               <ShoppingCart className="size-5" />
               {cartTotalCount > 0 && (
-                <span className="absolute -top-1 -right-1 flex size-5 items-center justify-center rounded-full bg-black text-[10px] font-black text-white ring-2 ring-white">
+                <span className="absolute -top-1 -right-1 flex size-5 items-center justify-center rounded-full bg-white text-[10px] font-black text-black ring-2 ring-black">
                   {cartTotalCount}
                 </span>
               )}
@@ -237,17 +237,17 @@ export function ProductDetailPage() {
         </div>
 
         {/* ============================================================ */}
-        {/* SECCIÓN HERO CENTRAL: IMAGEN DEL PRODUCTO */}
+        {/* SECCIÓN HERO CENTRAL: IMAGEN DEL PRODUCTO EN FONDO NEGRO */}
         {/* ============================================================ */}
         <div className="flex-1 flex items-center justify-center p-4 relative min-h-0">
-          <div className="relative aspect-square w-full max-w-[240px] drop-shadow-[0_20px_30px_rgba(0,0,0,0.15)] transition-transform duration-500 hover:scale-105">
+          <div className="relative aspect-square w-full max-w-[250px] drop-shadow-[0_25px_40px_rgba(0,0,0,0.8)] transition-transform duration-500 hover:scale-105">
             <img
               src={img}
               alt={product.name}
-              className="size-full object-contain filter drop-shadow-[0_12px_24px_rgba(0,0,0,0.12)]"
+              className="size-full object-contain filter drop-shadow-[0_15px_30px_rgba(0,0,0,0.6)]"
             />
             {!available && (
-              <div className="absolute inset-0 grid place-items-center rounded-3xl bg-black/75 text-[11px] font-black uppercase tracking-widest text-white backdrop-blur-sm">
+              <div className="absolute inset-0 grid place-items-center rounded-3xl bg-black/85 text-[11px] font-black uppercase tracking-widest text-red-400 border border-red-500/30 backdrop-blur-sm">
                 Agotado
               </div>
             )}
@@ -255,9 +255,9 @@ export function ProductDetailPage() {
         </div>
 
         {/* ============================================================ */}
-        {/* CARD INFERIOR EN BLANCO: TÍTULO, DESCRIPCIÓN, PRECIO, SELECTOR Y BOTÓN NEGRO */}
+        {/* CARD INFERIOR EN BLANCO: TÍTULO, DESCRIPCIÓN, PRECIO SUMATORIO Y BOTÓN NEGRO */}
         {/* ============================================================ */}
-        <div className="bg-white rounded-t-[36px] p-6 pb-[max(env(safe-area-inset-bottom),24px)] shadow-[0_-10px_30px_rgba(0,0,0,0.06)] space-y-5 shrink-0">
+        <div className="bg-white rounded-t-[36px] p-6 pb-[max(env(safe-area-inset-bottom),24px)] shadow-[0_-15px_35px_rgba(0,0,0,0.25)] space-y-5 shrink-0">
           
           {/* TÍTULO Y DESCRIPCIÓN */}
           <div className="space-y-1.5">
@@ -269,16 +269,21 @@ export function ProductDetailPage() {
             </p>
           </div>
 
-          {/* FILA DE PRECIO Y SELECTOR DE CANTIDAD */}
+          {/* FILA DE PRECIO (SUMA DINÁMICA) Y SELECTOR DE CANTIDAD */}
           <div className="flex items-center justify-between pt-1">
-            {/* Precio real */}
+            {/* Precio dinámico según cantidad seleccionada */}
             <div>
               <p className="text-2xl sm:text-[28px] font-black tracking-tight text-neutral-900 leading-none">
-                {formatPrice(singlePrice)}
+                {formatPrice(totalPrice)}
               </p>
+              {qty > 1 && (
+                <span className="text-[11px] font-semibold text-neutral-400 block mt-1">
+                  {formatPrice(singlePrice)} c/u
+                </span>
+              )}
             </div>
 
-            {/* Selector de Cantidad [-] 1 [+] en píldora gris clara */}
+            {/* Selector de Cantidad [-] 1 [+] */}
             <div className="flex items-center rounded-full bg-neutral-100 px-3.5 py-1.5 gap-3.5 border border-neutral-200/80 shadow-sm">
               <button
                 type="button"
@@ -306,7 +311,7 @@ export function ProductDetailPage() {
             </div>
           </div>
 
-          {/* BOTÓN PRINCIPAL EN NEGRO SÓLIDO */}
+          {/* BOTÓN PRINCIPAL EN NEGRO SÓLIDO (MUESTRA PRECIO TOTAL Y OPCIÓN DE IR AL CARRITO) */}
           <div>
             {isAlreadyInCart ? (
               <Link
@@ -314,7 +319,7 @@ export function ProductDetailPage() {
                 className="w-full h-14 rounded-2xl bg-black text-white font-black text-base flex items-center justify-center gap-2 shadow-xl hover:bg-neutral-900 active:scale-[0.98] transition-all"
               >
                 <Check className="size-5 stroke-[3]" />
-                <span>Ir al Carrito</span>
+                <span>Ir al Carrito • {formatPrice(totalPrice)}</span>
                 <ArrowRight className="size-4 ml-1" />
               </Link>
             ) : (
