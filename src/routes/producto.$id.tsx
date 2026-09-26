@@ -15,10 +15,12 @@ import {
 import { toast } from "sonner";
 import { useCart } from "@/hooks/useCart";
 import { useReferral } from "@/hooks/useReferral";
-import { productQuery } from "@/lib/queries";
+import { productQuery, productsQuery } from "@/lib/queries";
 import { formatPrice } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { EmptyState } from "@/components/States";
+import { AppShell } from "@/components/AppShell";
+import { ProductCard } from "@/components/ProductCard";
 
 export const Route = createFileRoute("/producto/$id")({
   ssr: false,
@@ -38,6 +40,7 @@ export function ProductDetailPage() {
   const { getAdjustedPrice } = useReferral();
   
   const { data: product, isLoading, error } = useQuery(productQuery(id));
+  const { data: bgProducts = [] } = useQuery(productsQuery());
 
   // Check if product is already in cart
   const cartItem = cart.find((i) => i.product_id === id);
@@ -46,10 +49,16 @@ export function ProductDetailPage() {
   const [qty, setQty] = useState(cartItem ? cartItem.quantity : 1);
   const [isFavorite, setIsFavorite] = useState(false);
 
-  // Swipe-down to close state
-  const [dragY, setDragY] = useState(0);
-  const [isDragging, setIsDragging] = useState(false);
+  // Swipe-down to close state & physics
+  const [isClosing, setIsClosing] = useState(false);
+  const [backdropOpacity, setBackdropOpacity] = useState(1);
+  const sheetRef = useRef<HTMLDivElement>(null);
   const startYRef = useRef(0);
+  const lastYRef = useRef(0);
+  const lastTimeRef = useRef(0);
+  const velocityRef = useRef(0);
+  const isDraggingRef = useRef(false);
+  const currentDragYRef = useRef(0);
 
   // Sync qty if cart updates
   useEffect(() => {
@@ -68,33 +77,99 @@ export function ProductDetailPage() {
     }
   }, [id]);
 
-  const handleClose = () => {
-    if (window.history.length > 1) {
-      window.history.back();
-    } else {
-      navigate({ to: "/catalogo" });
+  const handleClose = (instant = false) => {
+    if (isClosing) return;
+    if (instant) {
+      if (window.history.length > 1) {
+        window.history.back();
+      } else {
+        navigate({ to: "/catalogo" });
+      }
+      return;
     }
+
+    setIsClosing(true);
+    setBackdropOpacity(0);
+    if (sheetRef.current) {
+      sheetRef.current.style.transition = "transform 0.28s cubic-bezier(0.32, 0.72, 0, 1), opacity 0.25s ease-out";
+      sheetRef.current.style.transform = "translate3d(0, 100%, 0)";
+      sheetRef.current.style.opacity = "0.7";
+    }
+
+    setTimeout(() => {
+      if (window.history.length > 1) {
+        window.history.back();
+      } else {
+        navigate({ to: "/catalogo" });
+      }
+    }, 260);
   };
 
   const handleTouchStart = (e: React.TouchEvent) => {
-    startYRef.current = e.touches[0].clientY;
-    setIsDragging(true);
+    if (isClosing) return;
+    const touch = e.touches[0];
+    startYRef.current = touch.clientY;
+    lastYRef.current = touch.clientY;
+    lastTimeRef.current = Date.now();
+    velocityRef.current = 0;
+    isDraggingRef.current = true;
+    currentDragYRef.current = 0;
+
+    if (sheetRef.current) {
+      sheetRef.current.style.transition = "none";
+    }
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
-    const currentY = e.touches[0].clientY;
-    const diff = currentY - startYRef.current;
-    if (diff > 0) {
-      setDragY(diff);
+    if (!isDraggingRef.current || isClosing) return;
+    const touch = e.touches[0];
+    const currentY = touch.clientY;
+    const now = Date.now();
+    const dt = Math.max(1, now - lastTimeRef.current);
+    const dy = currentY - lastYRef.current;
+    
+    velocityRef.current = dy / dt;
+    lastYRef.current = currentY;
+    lastTimeRef.current = now;
+
+    const deltaY = currentY - startYRef.current;
+
+    let appliedY = 0;
+    if (deltaY > 0) {
+      // Desplazamiento natural hacia abajo
+      appliedY = deltaY;
+      const progress = Math.min(1, deltaY / 350);
+      setBackdropOpacity(Math.max(0.2, 1 - progress * 0.8));
+    } else {
+      // Resistencia elástica al arrastrar hacia arriba
+      appliedY = -Math.pow(Math.abs(deltaY), 0.72) * 1.2;
+    }
+
+    currentDragYRef.current = appliedY;
+
+    if (sheetRef.current) {
+      sheetRef.current.style.transform = `translate3d(0, ${appliedY}px, 0)`;
     }
   };
 
   const handleTouchEnd = () => {
-    setIsDragging(false);
-    if (dragY > 90) {
+    if (!isDraggingRef.current || isClosing) return;
+    isDraggingRef.current = false;
+
+    const finalY = currentDragYRef.current;
+    const velocity = velocityRef.current;
+
+    // Condición de cierre: arrastre suficiente o flick rápido
+    if (finalY > 75 || (finalY > 25 && velocity > 0.35)) {
       handleClose();
     } else {
-      setDragY(0);
+      // Retorno elástico suave a la posición inicial
+      setBackdropOpacity(1);
+      currentDragYRef.current = 0;
+      if (sheetRef.current) {
+        sheetRef.current.style.transition = "transform 0.32s cubic-bezier(0.2, 0.9, 0.3, 1)";
+        sheetRef.current.style.transform = "translate3d(0, 0, 0)";
+      }
     }
   };
 
@@ -143,24 +218,56 @@ export function ProductDetailPage() {
 
   const cartTotalCount = cart.reduce((sum, item) => sum + item.quantity, 0);
 
+  // Background store representation
+  const renderBackgroundStore = () => (
+    <div className="pointer-events-none select-none scale-[0.99] origin-top transition-all">
+      <AppShell>
+        <div className="space-y-6 pt-2 pb-24">
+          <div className="mb-2">
+            <h1 className="mb-4 text-[34px] font-bold tracking-tight text-foreground">
+              Catálogo
+            </h1>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            {bgProducts.length > 0 ? (
+              bgProducts.slice(0, 6).map((p) => (
+                <ProductCard key={p.id} product={p} />
+              ))
+            ) : (
+              <>
+                <div className="h-48 rounded-2xl bg-surface-2 animate-pulse" />
+                <div className="h-48 rounded-2xl bg-surface-2 animate-pulse" />
+                <div className="h-48 rounded-2xl bg-surface-2 animate-pulse" />
+                <div className="h-48 rounded-2xl bg-surface-2 animate-pulse" />
+              </>
+            )}
+          </div>
+        </div>
+      </AppShell>
+    </div>
+  );
+
   if (isLoading) {
     return (
-      <div className="fixed inset-0 z-50 flex flex-col justify-end bg-black/15 backdrop-blur-[1px] animate-in fade-in duration-200">
-        <div 
-          className="flex-1 w-full min-h-[14vh] cursor-pointer" 
-          onClick={handleClose} 
-          aria-label="Cerrar modal"
-        />
-        <div className="relative w-full max-w-lg mx-auto bg-[#0e0e0e] rounded-t-[36px] p-5 h-[86vh] flex flex-col justify-between animate-pulse shadow-2xl border-t border-x border-white/10">
-          <div className="flex justify-between items-center pt-2">
-            <div className="size-11 rounded-full bg-white/10" />
-            <div className="size-11 rounded-full bg-white/10" />
-          </div>
-          <div className="my-auto size-48 rounded-full bg-white/5 mx-auto" />
-          <div className="rounded-t-[32px] bg-white p-6 space-y-4">
-            <div className="h-6 w-2/3 bg-neutral-200 rounded-lg" />
-            <div className="h-4 w-full bg-neutral-200 rounded-lg" />
-            <div className="h-12 w-full bg-neutral-900 rounded-2xl" />
+      <div className="relative min-h-screen bg-background overflow-hidden">
+        {renderBackgroundStore()}
+        <div className="fixed inset-0 z-50 flex flex-col justify-end bg-black/35 backdrop-blur-[2px] animate-in fade-in duration-200">
+          <div 
+            className="flex-1 w-full min-h-[14vh] cursor-pointer" 
+            onClick={() => handleClose(true)} 
+            aria-label="Cerrar modal"
+          />
+          <div className="relative w-full max-w-lg mx-auto bg-black/45 backdrop-blur-2xl rounded-t-[36px] p-5 h-[86vh] flex flex-col justify-between animate-pulse shadow-2xl border-t border-x border-white/15">
+            <div className="flex justify-between items-center pt-2">
+              <div className="size-11 rounded-full bg-white/10" />
+              <div className="size-11 rounded-full bg-white/10" />
+            </div>
+            <div className="my-auto size-48 rounded-full bg-white/5 mx-auto" />
+            <div className="rounded-t-[32px] bg-white p-6 space-y-4">
+              <div className="h-6 w-2/3 bg-neutral-200 rounded-lg" />
+              <div className="h-4 w-full bg-neutral-200 rounded-lg" />
+              <div className="h-12 w-full bg-neutral-900 rounded-2xl" />
+            </div>
           </div>
         </div>
       </div>
@@ -169,27 +276,30 @@ export function ProductDetailPage() {
 
   if (error || !product) {
     return (
-      <div className="fixed inset-0 z-50 flex flex-col justify-end bg-black/15 backdrop-blur-[1px]">
-        <div 
-          className="flex-1 w-full min-h-[14vh] cursor-pointer" 
-          onClick={handleClose} 
-          aria-label="Cerrar modal"
-        />
-        <div className="relative w-full max-w-lg mx-auto bg-white rounded-t-[36px] p-6 h-[50vh] shadow-2xl">
-          <EmptyState
-            icon={<Candy className="size-8 text-black" />}
-            title="Producto no disponible"
-            description="Este producto no existe o fue retirado del catálogo."
-            action={
-              <button
-                type="button"
-                onClick={handleClose}
-                className="mt-4 inline-flex h-11 items-center justify-center rounded-full bg-black px-6 text-sm font-bold text-white shadow-md transition-transform active:scale-95"
-              >
-                Cerrar
-              </button>
-            }
+      <div className="relative min-h-screen bg-background overflow-hidden">
+        {renderBackgroundStore()}
+        <div className="fixed inset-0 z-50 flex flex-col justify-end bg-black/35 backdrop-blur-[2px]">
+          <div 
+            className="flex-1 w-full min-h-[14vh] cursor-pointer" 
+            onClick={() => handleClose(true)} 
+            aria-label="Cerrar modal"
           />
+          <div className="relative w-full max-w-lg mx-auto bg-white rounded-t-[36px] p-6 h-[50vh] shadow-2xl">
+            <EmptyState
+              icon={<Candy className="size-8 text-black" />}
+              title="Producto no disponible"
+              description="Este producto no existe o fue retirado del catálogo."
+              action={
+                <button
+                  type="button"
+                  onClick={() => handleClose(true)}
+                  className="mt-4 inline-flex h-11 items-center justify-center rounded-full bg-black px-6 text-sm font-bold text-white shadow-md transition-transform active:scale-95"
+                >
+                  Cerrar
+                </button>
+              }
+            />
+          </div>
         </div>
       </div>
     );
@@ -218,114 +328,115 @@ export function ProductDetailPage() {
   );
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col justify-end bg-black/15 backdrop-blur-[1px] animate-in fade-in duration-300">
-      {/* Zona de fondo clickeable para cerrar */}
-      <div 
-        className="flex-1 w-full min-h-[10vh] cursor-pointer" 
-        onClick={handleClose} 
-        aria-label="Cerrar modal"
-      />
+    <div className="relative min-h-screen bg-background overflow-hidden">
+      {/* VISTA DE LA TIENDA DE FONDO (Permite ver el catálogo y header real arriba del sheet) */}
+      {renderBackgroundStore()}
 
-      {/* ============================================================ */}
-      {/* TARJETA DE PRODUCTO: FONDO SUPERIOR NEGRO + CARD INFERIOR BLANCA */}
-      {/* GESTO DE DESLIZAR HACIA ABAJO PARA CERRAR */}
-      {/* ============================================================ */}
+      {/* MODAL BOTTOM SHEET OVERLAY */}
       <div 
-        className="relative w-full max-w-lg mx-auto bg-[#0e0e0e] rounded-t-[36px] shadow-2xl flex flex-col max-h-[88vh] h-[88vh] overflow-hidden animate-in slide-in-from-bottom duration-300 ease-out border-t border-x border-white/10 select-none"
-        style={{
-          transform: dragY > 0 ? `translateY(${dragY}px)` : undefined,
-          transition: isDragging ? "none" : "transform 0.25s cubic-bezier(0.16, 1, 0.3, 1)",
-        }}
+        className="fixed inset-0 z-50 flex flex-col justify-end bg-black/35 backdrop-blur-[2px] transition-opacity duration-200"
+        style={{ opacity: backdropOpacity }}
       >
-        
-        {/* BARRA SUPERIOR DE ARRASTRE (SWIPE HANDLE) */}
+        {/* Zona de fondo clickeable para cerrar */}
         <div 
-          className="pt-2.5 pb-1 flex justify-center shrink-0 cursor-grab active:cursor-grabbing z-20"
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
-        >
-          <div className="w-12 h-1.5 rounded-full bg-white/30 hover:bg-white/50 transition-colors" />
-        </div>
+          className="flex-1 w-full min-h-[10vh] cursor-pointer" 
+          onClick={() => handleClose(false)} 
+          aria-label="Cerrar modal"
+        />
 
-        {/* CABECERA SUPERIOR FLOTANTE (BOTÓN ATRÁS Y FAVORITO + CARRITO) */}
+        {/* ============================================================ */}
+        {/* TARJETA DE PRODUCTO: HERO TRANSLÚCIDO GLASS + CARD INFERIOR BLANCA */}
+        {/* GESTO DE DESLIZAR HACIA ABAJO PARA CERRAR */}
+        {/* ============================================================ */}
         <div 
-          className="px-5 pt-2 pb-2 flex items-center justify-between shrink-0 z-10"
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
+          ref={sheetRef}
+          className="relative w-full max-w-lg mx-auto bg-black/45 backdrop-blur-2xl rounded-t-[36px] shadow-2xl flex flex-col max-h-[88vh] h-[88vh] overflow-hidden animate-in slide-in-from-bottom duration-300 ease-out border-t border-x border-white/15 select-none touch-none"
         >
-          {/* Botón Volver circular */}
-          <button
-            type="button"
-            onClick={handleClose}
-            className="flex size-11 items-center justify-center rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-white shadow-lg transition-transform active:scale-90 hover:bg-white/20"
-            aria-label="Volver"
+          {/* SECCIÓN SUPERIOR DE ARRASTRE (HANDLE + CABECERA + HERO) */}
+          <div
+            className="flex flex-col flex-1 touch-none cursor-grab active:cursor-grabbing"
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
           >
-            <ChevronLeft className="size-6 stroke-[2.5]" />
-          </button>
+            {/* BARRA SUPERIOR DE ARRASTRE (SWIPE HANDLE) */}
+            <div className="pt-2.5 pb-1 flex justify-center shrink-0">
+              <div className="w-12 h-1.5 rounded-full bg-white/30 hover:bg-white/50 transition-colors" />
+            </div>
 
-          <div className="flex items-center gap-2.5">
-            {/* Botón Favorito */}
-            <button
-              type="button"
-              onClick={toggleFavorite}
-              className={cn(
-                "flex size-11 items-center justify-center rounded-full bg-white/10 backdrop-blur-md border border-white/15 shadow-lg transition-transform active:scale-90 hover:bg-white/20",
-                isFavorite ? "text-red-400 border-red-500/30 bg-red-500/20" : "text-white/80 hover:text-white"
-              )}
-              aria-label="Favorito"
-            >
-              <Heart className={cn("size-5", isFavorite && "fill-current")} />
-            </button>
+            {/* CABECERA SUPERIOR FLOTANTE (BOTÓN ATRÁS Y FAVORITO + CARRITO) */}
+            <div className="px-5 pt-2 pb-2 flex items-center justify-between shrink-0 z-20">
+              {/* Botón Volver circular */}
+              <button
+                type="button"
+                onClick={() => handleClose(false)}
+                onTouchStart={(e) => e.stopPropagation()}
+                onTouchEnd={(e) => e.stopPropagation()}
+                className="flex size-11 items-center justify-center rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-white shadow-lg transition-transform active:scale-90 hover:bg-white/20"
+                aria-label="Volver"
+              >
+                <ChevronLeft className="size-6 stroke-[2.5]" />
+              </button>
 
-            {/* Botón Carrito con badge */}
-            <Link
-              to="/carrito"
-              className="relative flex size-11 items-center justify-center rounded-full bg-white/10 backdrop-blur-md border border-white/15 shadow-lg transition-transform active:scale-90 text-white hover:bg-white/20"
-              aria-label="Ver Carrito"
-            >
-              <ShoppingCart className="size-5" />
-              {cartTotalCount > 0 && (
-                <span className="absolute -top-1 -right-1 flex size-5 items-center justify-center rounded-full bg-white text-[10px] font-black text-black ring-2 ring-black">
-                  {cartTotalCount}
-                </span>
-              )}
-            </Link>
-          </div>
-        </div>
+              <div 
+                className="flex items-center gap-2.5"
+                onTouchStart={(e) => e.stopPropagation()}
+                onTouchEnd={(e) => e.stopPropagation()}
+              >
+                {/* Botón Favorito */}
+                <button
+                  type="button"
+                  onClick={toggleFavorite}
+                  className={cn(
+                    "flex size-11 items-center justify-center rounded-full bg-white/10 backdrop-blur-md border border-white/15 shadow-lg transition-transform active:scale-90 hover:bg-white/20",
+                    isFavorite ? "text-red-400 border-red-500/30 bg-red-500/20" : "text-white/80 hover:text-white"
+                  )}
+                  aria-label="Favorito"
+                >
+                  <Heart className={cn("size-5", isFavorite && "fill-current")} />
+                </button>
 
-        {/* ============================================================ */}
-        {/* SECCIÓN HERO CENTRAL: IMAGEN CON ILUMINACIÓN / HALO SUAVE DETRÁS */}
-        {/* ============================================================ */}
-        <div 
-          className="flex-1 flex items-center justify-center p-4 relative min-h-0"
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
-        >
-          {/* Iluminación / Halo suave radial detrás del producto */}
-          <div className="absolute size-52 sm:size-64 rounded-full bg-[radial-gradient(circle,rgba(255,255,255,0.22)_0%,rgba(255,255,255,0.06)_45%,transparent_70%)] blur-xl pointer-events-none" />
-
-          {/* Imagen PNG del producto */}
-          <div className="relative aspect-square w-full max-w-[240px] drop-shadow-[0_25px_40px_rgba(0,0,0,0.85)] transition-transform duration-500 hover:scale-105 z-10">
-            <img
-              src={img}
-              alt={product.name}
-              className="size-full object-contain filter drop-shadow-[0_15px_30px_rgba(0,0,0,0.7)]"
-            />
-            {!available && (
-              <div className="absolute inset-0 grid place-items-center rounded-3xl bg-black/85 text-[11px] font-black uppercase tracking-widest text-red-400 border border-red-500/30 backdrop-blur-sm">
-                Agotado
+                {/* Botón Carrito con badge */}
+                <Link
+                  to="/carrito"
+                  className="relative flex size-11 items-center justify-center rounded-full bg-white/10 backdrop-blur-md border border-white/15 shadow-lg transition-transform active:scale-90 text-white hover:bg-white/20"
+                  aria-label="Ver Carrito"
+                >
+                  <ShoppingCart className="size-5" />
+                  {cartTotalCount > 0 && (
+                    <span className="absolute -top-1 -right-1 flex size-5 items-center justify-center rounded-full bg-white text-[10px] font-black text-black ring-2 ring-black">
+                      {cartTotalCount}
+                    </span>
+                  )}
+                </Link>
               </div>
-            )}
-          </div>
-        </div>
+            </div>
 
-        {/* ============================================================ */}
-        {/* CARD INFERIOR EN BLANCO: TÍTULO, ESPECIFICACIONES, PRECIO Y BOTÓN */}
-        {/* ============================================================ */}
-        <div className="bg-white rounded-t-[36px] p-6 pb-[max(env(safe-area-inset-bottom),22px)] shadow-[0_-15px_35px_rgba(0,0,0,0.3)] space-y-4 shrink-0 overflow-y-auto max-h-[50vh]">
+            {/* SECCIÓN HERO CENTRAL: IMAGEN CON ILUMINACIÓN / HALO SUAVE DETRÁS */}
+            <div className="flex-1 flex items-center justify-center p-4 relative min-h-0">
+              {/* Iluminación / Halo suave radial detrás del producto */}
+              <div className="absolute size-52 sm:size-64 rounded-full bg-[radial-gradient(circle,rgba(255,255,255,0.22)_0%,rgba(255,255,255,0.06)_45%,transparent_70%)] blur-xl pointer-events-none" />
+
+              {/* Imagen PNG del producto */}
+              <div className="relative aspect-square w-full max-w-[240px] drop-shadow-[0_25px_40px_rgba(0,0,0,0.85)] transition-transform duration-500 hover:scale-105 z-10 pointer-events-none">
+                <img
+                  src={img}
+                  alt={product.name}
+                  className="size-full object-contain filter drop-shadow-[0_15px_30px_rgba(0,0,0,0.7)]"
+                />
+                {!available && (
+                  <div className="absolute inset-0 grid place-items-center rounded-3xl bg-black/85 text-[11px] font-black uppercase tracking-widest text-red-400 border border-red-500/30 backdrop-blur-sm">
+                    Agotado
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* ============================================================ */}
+          {/* CARD INFERIOR EN BLANCO: TÍTULO, ESPECIFICACIONES, PRECIO Y BOTÓN */}
+          {/* ============================================================ */}
+          <div className="bg-white rounded-t-[36px] p-6 pb-[max(env(safe-area-inset-bottom),22px)] shadow-[0_-15px_35px_rgba(0,0,0,0.3)] space-y-4 shrink-0 overflow-y-auto max-h-[50vh] overscroll-contain">
           
           {/* TÍTULO Y DESCRIPCIÓN */}
           <div className="space-y-1">
