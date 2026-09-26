@@ -1,6 +1,7 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { openProductModal } from "@/hooks/useProductModal";
+import { CatalogPage } from "./catalogo";
 
 export const Route = createFileRoute("/producto/$id")({
   ssr: false,
@@ -15,15 +16,12 @@ export const Route = createFileRoute("/producto/$id")({
 
 export function ProductDetailPage() {
   const { id } = Route.useParams();
-  const navigate = useNavigate();
 
   useEffect(() => {
     if (id) {
       openProductModal(id);
-      // Navegar inmediatamente a /catalogo como fondo activo sin romper la historia
-      navigate({ to: "/catalogo", replace: true });
     }
-  }, [id, navigate]);
+  }, [id]);
 
-  return null;
+  return <CatalogPage />;
 }

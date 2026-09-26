@@ -71,6 +71,10 @@ export function FeaturedTinderStack({ products }: FeaturedTinderStackProps) {
   const lastPosRef = useRef({ x: 0, y: 0, time: 0 });
   const velocityRef = useRef(0);
 
+  // Intent-locking refs to prevent accidental drag during page scroll
+  const isIntentDeterminedRef = useRef(false);
+  const isSwipingCardRef = useRef(false);
+
   // Sync favorites
   useEffect(() => {
     try {
@@ -129,21 +133,42 @@ export function FeaturedTinderStack({ products }: FeaturedTinderStackProps) {
     setDragOffset({ x: 0, y: 0 });
   };
 
-  // Touch handlers
+  // Robust touch gesture handlers with scroll lock
   const handleTouchStart = (e: React.TouchEvent) => {
     if (isAnimatingOut) return;
     const touch = e.touches[0];
     startPosRef.current = { x: touch.clientX, y: touch.clientY, time: Date.now() };
     lastPosRef.current = { x: touch.clientX, y: touch.clientY, time: Date.now() };
     velocityRef.current = 0;
-    setIsDragging(true);
+    isIntentDeterminedRef.current = false;
+    isSwipingCardRef.current = false;
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
-    if (!isDragging || isAnimatingOut) return;
+    if (isAnimatingOut) return;
     const touch = e.touches[0];
     const dx = touch.clientX - startPosRef.current.x;
     const dy = touch.clientY - startPosRef.current.y;
+    const absDx = Math.abs(dx);
+    const absDy = Math.abs(dy);
+
+    // Si aún no hemos determinado si el usuario quiere deslizar la carta o hacer scroll vertical
+    if (!isIntentDeterminedRef.current) {
+      // Si el desplazamiento vertical es mayor, es scroll de la página: NO mover la carta
+      if (absDy > 8 && absDy >= absDx) {
+        isIntentDeterminedRef.current = true;
+        isSwipingCardRef.current = false;
+        return;
+      }
+      // Si el desplazamiento horizontal es claro y supera 16px, es swipe de carta
+      if (absDx > 16 && absDx > absDy * 1.3) {
+        isIntentDeterminedRef.current = true;
+        isSwipingCardRef.current = true;
+        setIsDragging(true);
+      }
+    }
+
+    if (!isSwipingCardRef.current) return;
 
     const now = Date.now();
     const dt = Math.max(1, now - lastPosRef.current.time);
@@ -151,23 +176,30 @@ export function FeaturedTinderStack({ products }: FeaturedTinderStackProps) {
     velocityRef.current = moveX / dt;
 
     lastPosRef.current = { x: touch.clientX, y: touch.clientY, time: now };
-    setDragOffset({ x: dx, y: dy * 0.4 });
+    setDragOffset({ x: dx, y: dy * 0.25 });
   };
 
   const handleTouchEnd = () => {
-    if (!isDragging || isAnimatingOut) return;
-    setIsDragging(false);
+    if (isAnimatingOut) return;
 
-    const threshold = 85;
-    const velocity = velocityRef.current;
+    if (isSwipingCardRef.current) {
+      const threshold = 95;
+      const velocity = velocityRef.current;
 
-    if (dragOffset.x > threshold || (dragOffset.x > 30 && velocity > 0.4)) {
-      handleSwipe("right");
-    } else if (dragOffset.x < -threshold || (dragOffset.x < -30 && velocity < -0.4)) {
-      handleSwipe("left");
+      if (dragOffset.x > threshold || (dragOffset.x > 45 && velocity > 0.45)) {
+        handleSwipe("right");
+      } else if (dragOffset.x < -threshold || (dragOffset.x < -45 && velocity < -0.45)) {
+        handleSwipe("left");
+      } else {
+        setDragOffset({ x: 0, y: 0 });
+      }
     } else {
       setDragOffset({ x: 0, y: 0 });
     }
+
+    setIsDragging(false);
+    isIntentDeterminedRef.current = false;
+    isSwipingCardRef.current = false;
   };
 
   // Visible stack items (up to 3 cards)

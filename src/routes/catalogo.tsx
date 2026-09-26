@@ -26,7 +26,7 @@ export const Route = createFileRoute("/catalogo")({
   component: CatalogPage,
 });
 
-function CatalogPage() {
+export function CatalogPage() {
   const { q, categoria } = Route.useSearch();
   const navigate = useNavigate({ from: "/catalogo" });
   const [term, setTerm] = useState(q ?? "");
