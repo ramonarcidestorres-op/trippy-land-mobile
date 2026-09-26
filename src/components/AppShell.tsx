@@ -12,6 +12,7 @@ import { AddressManager } from "@/components/AddressManager";
 import { AppNotificationPrompt } from "@/components/AppNotificationPrompt";
 import { WelcomeOnboarding } from "@/components/WelcomeOnboarding";
 import { cn } from "@/lib/utils";
+import { ProductDetailSheet } from "@/components/ProductDetailSheet";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -294,6 +295,9 @@ export function AppShell({ children }: { children: ReactNode }) {
           </nav>
         </div>
       )}
+
+      {/* DETALLE DE PRODUCTO FLOTANTE / MODAL SHEET NATIVO */}
+      <ProductDetailSheet />
     </div>
   );
 }

@@ -1,6 +1,6 @@
-import { Link } from "@tanstack/react-router";
 import { Plus, Loader2 } from "lucide-react";
 import { useCart } from "@/hooks/useCart";
+import { useProductModal } from "@/hooks/useProductModal";
 import { formatPrice } from "@/lib/format";
 import { type Product } from "@/lib/queries";
 import { useReferral } from "@/hooks/useReferral";
@@ -10,11 +10,13 @@ import { toast } from "sonner";
 export function ProductCard({ product }: { product: Product }) {
   const available = product.is_available !== false;
   const { addToCart } = useCart();
+  const { openProduct } = useProductModal();
   const { getAdjustedPrice } = useReferral();
   const [busy, setBusy] = useState(false);
 
   async function handleAdd(e: React.MouseEvent) {
     e.preventDefault();
+    e.stopPropagation();
     if (!available || busy) return;
     
     setBusy(true);
@@ -38,10 +40,11 @@ export function ProductCard({ product }: { product: Product }) {
   const img = product.image_url || fallbackImg;
 
   return (
-    <div className="group relative flex w-full flex-col overflow-hidden rounded-[26px] bg-surface-2/90 border border-border/40 pb-4 transition-all focus-within:ring-2 focus-within:ring-primary/30 active:scale-[0.98] shadow-sm">
-      <Link
-        to="/producto/$id"
-        params={{ id: product.id }}
+    <div 
+      onClick={() => openProduct(product)}
+      className="group relative flex w-full flex-col overflow-hidden rounded-[26px] bg-surface-2/90 border border-border/40 pb-4 transition-all focus-within:ring-2 focus-within:ring-primary/30 active:scale-[0.98] shadow-sm cursor-pointer"
+    >
+      <div
         className="relative z-10 mx-auto mt-5 block aspect-square w-32 drop-shadow-[0_8px_16px_rgba(0,0,0,0.4)] transition-transform duration-500"
       >
         <img
@@ -55,21 +58,17 @@ export function ProductCard({ product }: { product: Product }) {
             Agotado
           </div>
         )}
-      </Link>
+      </div>
       
       <div className="relative z-10 mt-4 flex flex-1 flex-col px-3.5">
-        <Link 
-          to="/producto/$id"
-          params={{ id: product.id }}
-          className="outline-none"
-        >
+        <div className="outline-none">
           <h3 className="line-clamp-1 text-[15px] font-bold text-foreground">
             {product.name}
           </h3>
           <p className="mt-0.5 line-clamp-2 text-[11px] text-muted-foreground leading-relaxed">
             {product.description || "Delicioso producto seleccionado especialmente para ti."}
           </p>
-        </Link>
+        </div>
         
         <div className="mt-3.5 flex items-center justify-between pt-1 border-t border-border/20">
           <p className="text-[15px] font-extrabold tracking-tight text-foreground">

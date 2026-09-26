@@ -4,6 +4,7 @@ import { Heart, ShoppingCart, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { useCart } from "@/hooks/useCart";
 import { useReferral } from "@/hooks/useReferral";
+import { useProductModal } from "@/hooks/useProductModal";
 import { formatPrice } from "@/lib/format";
 import { type Product } from "@/lib/queries";
 import { cn } from "@/lib/utils";
@@ -56,6 +57,7 @@ interface FeaturedTinderStackProps {
 export function FeaturedTinderStack({ products }: FeaturedTinderStackProps) {
   const navigate = useNavigate();
   const { addToCart } = useCart();
+  const { openProduct } = useProductModal();
   const { getAdjustedPrice } = useReferral();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [favorites, setFavorites] = useState<string[]>([]);
@@ -247,7 +249,7 @@ export function FeaturedTinderStack({ products }: FeaturedTinderStackProps) {
               }}
               onClick={() => {
                 if (!isDragging && Math.abs(dragOffset.x) < 5) {
-                  navigate({ to: "/producto/$id", params: { id: product.id } });
+                  openProduct(product);
                 }
               }}
               className={cn(
