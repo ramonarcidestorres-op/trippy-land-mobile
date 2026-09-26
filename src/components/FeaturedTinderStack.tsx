@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useMemo } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Heart, ShoppingCart, ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
+import { Heart, ShoppingCart, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { useCart } from "@/hooks/useCart";
 import { useReferral } from "@/hooks/useReferral";
@@ -8,15 +8,46 @@ import { formatPrice } from "@/lib/format";
 import { type Product } from "@/lib/queries";
 import { cn } from "@/lib/utils";
 
-const CARD_GRADIENTS = [
-  "from-[#1e1f24] via-[#141518] to-[#0c0d0f]", // Dark Matte Charcoal
-  "from-[#2c1519] via-[#1c0c0e] to-[#100607]", // Dark Matte Crimson Wine
-  "from-[#132219] via-[#0c1811] to-[#070e0a]", // Dark Matte Forest Pine
-  "from-[#211628] via-[#150d1b] to-[#0b060e]", // Dark Matte Midnight Plum
-  "from-[#281b12] via-[#19100a] to-[#0e0804]", // Dark Matte Espresso Bronze
-  "from-[#131b28] via-[#0c121b] to-[#07090e]", // Dark Matte Deep Slate Navy
-  "from-[#1b2216] via-[#11170d] to-[#080c06]", // Dark Matte Olive Green
+interface MatteCardTheme {
+  bg: string;
+  textColor: string;
+  favBtn: string;
+}
+
+const MATTE_PALETTE: MatteCardTheme[] = [
+  { bg: "bg-[#9EAB91]", textColor: "text-neutral-950", favBtn: "bg-black/10 text-neutral-950 hover:bg-black/15 border-black/10" }, // Verde mate (Weed / Pre-roll)
+  { bg: "bg-[#E58A8A]", textColor: "text-neutral-950", favBtn: "bg-black/10 text-neutral-950 hover:bg-black/15 border-black/10" }, // Rojo/Rosa suave mate (Sintéticos / Gomitas)
+  { bg: "bg-[#A7C7E7]", textColor: "text-neutral-950", favBtn: "bg-black/10 text-neutral-950 hover:bg-black/15 border-black/10" }, // Azul claro mate (Farmacia)
+  { bg: "bg-[#E59866]", textColor: "text-neutral-950", favBtn: "bg-black/10 text-neutral-950 hover:bg-black/15 border-black/10" }, // Naranja mate
+  { bg: "bg-[#BDB2FF]", textColor: "text-neutral-950", favBtn: "bg-black/10 text-neutral-950 hover:bg-black/15 border-black/10" }, // Lavanda mate
+  { bg: "bg-[#EAE8E1]", textColor: "text-neutral-950", favBtn: "bg-black/10 text-neutral-950 hover:bg-black/15 border-black/10" }, // Crema mate (Coca)
 ];
+
+function getMatteCardTheme(product: Product, index: number): MatteCardTheme {
+  const name = (product.name || "").toLowerCase();
+  const catName = ((product as any).categories?.name || "").toLowerCase();
+
+  if (catName.includes("pre-roll") || catName.includes("weed") || name.includes("flor") || name.includes("indoor") || name.includes("passion")) {
+    return MATTE_PALETTE[0]; // Verde mate
+  }
+  if (catName.includes("sint") || name.includes("gom") || name.includes("dulce") || name.includes("straw") || name.includes("fresa") || name.includes("candy")) {
+    return MATTE_PALETTE[1]; // Rojo/Rosa mate
+  }
+  if (catName.includes("farma") || name.includes("farma") || name.includes("syrup") || name.includes("jarabe")) {
+    return MATTE_PALETTE[2]; // Azul mate
+  }
+  if (name.includes("orange") || name.includes("vape") || name.includes("extract")) {
+    return MATTE_PALETTE[3]; // Naranja mate
+  }
+  if (catName.includes("psychedelics") || name.includes("hongo") || name.includes("shroom")) {
+    return MATTE_PALETTE[4]; // Lavanda mate
+  }
+  if (catName.includes("coca") || name.includes("coca") || name.includes("white")) {
+    return MATTE_PALETTE[5]; // Crema mate
+  }
+
+  return MATTE_PALETTE[index % MATTE_PALETTE.length];
+}
 
 interface FeaturedTinderStackProps {
   products: Product[];
@@ -79,8 +110,6 @@ export function FeaturedTinderStack({ products }: FeaturedTinderStackProps) {
 
   const total = products.length;
   if (total === 0) return null;
-
-  const currentProduct = products[currentIndex % total];
 
   const handleSwipe = (direction: "left" | "right") => {
     if (isAnimatingOut) return;
@@ -153,14 +182,14 @@ export function FeaturedTinderStack({ products }: FeaturedTinderStackProps) {
     <div className="relative w-full select-none">
       {/* Contenedor principal de la pila de cartas */}
       <div 
-        className="relative w-full h-[400px] sm:h-[430px] flex items-center justify-center touch-pan-y"
+        className="relative w-full h-[395px] sm:h-[420px] flex items-center justify-center touch-pan-y"
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >
-        {visibleCards.map(({ product, stackIndex, productIndex }, i) => {
+        {visibleCards.map(({ product, stackIndex, productIndex }) => {
           const isTop = stackIndex === 0;
-          const gradient = CARD_GRADIENTS[productIndex % CARD_GRADIENTS.length];
+          const theme = getMatteCardTheme(product, productIndex);
           const isFav = favorites.includes(product.id);
           const price = getAdjustedPrice(product.price);
           const available = product.is_available !== false;
@@ -197,14 +226,14 @@ export function FeaturedTinderStack({ products }: FeaturedTinderStackProps) {
             const translateY = 12 - dragProgress * 12;
             const rot = 2 - dragProgress * 2;
             transformStyle = `translate3d(0, ${translateY}px, 0) scale(${scale}) rotate(${rot}deg)`;
-            opacity = 0.9 + dragProgress * 0.1;
+            opacity = 0.95 + dragProgress * 0.05;
           } else {
             const dragProgress = Math.min(1, Math.abs(dragOffset.x) / 120);
             const scale = 0.88 + dragProgress * 0.06;
             const translateY = 24 - dragProgress * 12;
             const rot = -2 + dragProgress * 2;
             transformStyle = `translate3d(0, ${translateY}px, 0) scale(${scale}) rotate(${rot}deg)`;
-            opacity = 0.75 + dragProgress * 0.15;
+            opacity = 0.85 + dragProgress * 0.15;
           }
 
           return (
@@ -222,26 +251,26 @@ export function FeaturedTinderStack({ products }: FeaturedTinderStackProps) {
                 }
               }}
               className={cn(
-                "absolute inset-x-0 mx-auto w-full max-w-[340px] sm:max-w-[360px] h-[380px] sm:h-[400px] rounded-[34px] p-6 flex flex-col justify-between shadow-[0_20px_50px_rgba(0,0,0,0.7)] bg-gradient-to-b cursor-pointer overflow-hidden border border-white/10",
-                gradient
+                "absolute inset-x-0 mx-auto w-full max-w-[340px] sm:max-w-[360px] h-[380px] sm:h-[400px] rounded-[34px] p-6 flex flex-col justify-between shadow-[0_12px_32px_rgba(0,0,0,0.35)] cursor-pointer overflow-hidden border border-black/5",
+                theme.bg
               )}
             >
-              {/* Iluminación sutil de fondo */}
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-48 rounded-full bg-white/[0.06] blur-2xl pointer-events-none" />
-
               {/* SECCIÓN SUPERIOR: NOMBRE DEL PRODUCTO + BOTÓN FAVORITO */}
               <div className="relative z-10 flex items-start justify-between gap-3">
-                <h3 className="text-2xl sm:text-[28px] font-black tracking-tight text-white leading-tight drop-shadow-sm line-clamp-2">
+                <h3 className={cn("text-2xl sm:text-[28px] font-black tracking-tight leading-tight line-clamp-2", theme.textColor)}>
                   {product.name}
                 </h3>
 
                 <button
                   type="button"
                   onClick={(e) => toggleFavorite(product.id, e)}
-                  className="flex size-11 shrink-0 items-center justify-center rounded-full bg-white/20 backdrop-blur-md border border-white/25 text-white transition-transform active:scale-90 shadow-sm hover:bg-white/30 cursor-pointer"
+                  className={cn(
+                    "flex size-11 shrink-0 items-center justify-center rounded-full border transition-transform active:scale-90 shadow-sm cursor-pointer",
+                    theme.favBtn
+                  )}
                   aria-label="Favorito"
                 >
-                  <Heart className={cn("size-5", isFav && "fill-current text-white")} />
+                  <Heart className={cn("size-5", isFav && "fill-current text-red-500")} />
                 </button>
               </div>
 
@@ -251,7 +280,7 @@ export function FeaturedTinderStack({ products }: FeaturedTinderStackProps) {
                   <img
                     src={img}
                     alt={product.name}
-                    className="max-h-full max-w-full object-contain filter drop-shadow-[0_16px_28px_rgba(0,0,0,0.35)]"
+                    className="max-h-full max-w-full object-contain filter drop-shadow-[0_12px_22px_rgba(0,0,0,0.22)]"
                   />
                   {!available && (
                     <div className="absolute inset-0 grid place-items-center rounded-3xl bg-black/85 text-[11px] font-black uppercase tracking-widest text-red-400 border border-red-500/30 backdrop-blur-sm">
@@ -263,7 +292,7 @@ export function FeaturedTinderStack({ products }: FeaturedTinderStackProps) {
 
               {/* SECCIÓN INFERIOR: PÍLDORA BLANCA FLOTANTE CON PRECIO Y BOTÓN AGREGAR */}
               <div className="relative z-10">
-                <div className="w-full bg-white rounded-full p-1.5 pl-5 pr-1.5 flex items-center justify-between shadow-[0_10px_25px_rgba(0,0,0,0.25)] border border-white/50">
+                <div className="w-full bg-white rounded-full p-1.5 pl-5 pr-1.5 flex items-center justify-between shadow-[0_6px_20px_rgba(0,0,0,0.15)] border border-neutral-200/50">
                   {/* Precio */}
                   <span className="text-xl sm:text-[22px] font-black text-neutral-950 tracking-tight">
                     {formatPrice(price)}
@@ -275,7 +304,7 @@ export function FeaturedTinderStack({ products }: FeaturedTinderStackProps) {
                     disabled={!available}
                     onClick={(e) => handleAddToCart(product, e)}
                     className={cn(
-                      "h-10 px-4.5 rounded-full font-bold text-xs flex items-center gap-1.5 transition-transform active:scale-95 shadow-md cursor-pointer",
+                      "h-10 px-4.5 rounded-full font-bold text-xs flex items-center gap-1.5 transition-transform active:scale-95 shadow-sm cursor-pointer",
                       available
                         ? "bg-black text-white hover:bg-neutral-900"
                         : "bg-neutral-200 text-neutral-400 cursor-not-allowed"
@@ -296,7 +325,7 @@ export function FeaturedTinderStack({ products }: FeaturedTinderStackProps) {
         <button
           type="button"
           onClick={handlePrev}
-          className="flex size-9 items-center justify-center rounded-full bg-surface-2/80 hover:bg-surface-2 text-foreground border border-border/40 transition-transform active:scale-90"
+          className="flex size-9 items-center justify-center rounded-full bg-surface-2/80 hover:bg-surface-2 text-foreground border border-border/40 transition-transform active:scale-90 cursor-pointer"
           aria-label="Anterior"
         >
           <ChevronLeft className="size-5" />
@@ -321,7 +350,7 @@ export function FeaturedTinderStack({ products }: FeaturedTinderStackProps) {
         <button
           type="button"
           onClick={() => handleSwipe("right")}
-          className="flex size-9 items-center justify-center rounded-full bg-surface-2/80 hover:bg-surface-2 text-foreground border border-border/40 transition-transform active:scale-90"
+          className="flex size-9 items-center justify-center rounded-full bg-surface-2/80 hover:bg-surface-2 text-foreground border border-border/40 transition-transform active:scale-90 cursor-pointer"
           aria-label="Siguiente"
         >
           <ChevronRight className="size-5" />
