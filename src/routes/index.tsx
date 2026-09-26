@@ -48,7 +48,7 @@ function HomePage() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="¿Qué vas a pedir hoy?"
-          className="h-14 rounded-full bg-surface-2/60 border-none pl-12 pr-12 text-[15px] font-medium text-foreground placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-primary/50"
+          className="h-14 rounded-full bg-surface-2/70 border border-border/30 pl-12 pr-12 text-[16px] font-medium text-foreground placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-white/30 focus-visible:border-white/40"
         />
         {search.trim() && (
           <Link

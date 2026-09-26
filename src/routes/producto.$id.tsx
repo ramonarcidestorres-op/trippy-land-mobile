@@ -422,29 +422,33 @@ export function ProductDetailPage() {
 
           {/* ESPECIFICACIONES ADAPTATIVAS (SI EL PRODUCTO LAS TIENE) */}
           {hasSpecs && (
-            <div className="space-y-2 pt-1 border-t border-neutral-100">
-              <div className="flex flex-wrap items-center gap-1.5">
-                {product.weight_g != null && (
-                  <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold bg-neutral-100 text-neutral-800 border border-neutral-200/60">
-                    ⚖️ {product.weight_g} gramos
-                  </span>
-                )}
-                {product.thc_percentage != null && (
-                  <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold bg-neutral-100 text-neutral-800 border border-neutral-200/60">
-                    THC: {product.thc_percentage}%
-                  </span>
-                )}
-                {product.cbd_percentage != null && (
-                  <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold bg-neutral-100 text-neutral-800 border border-neutral-200/60">
-                    CBD: {product.cbd_percentage}%
-                  </span>
-                )}
-              </div>
+            <div className="space-y-2.5 pt-2 border-t border-neutral-100">
+              {(product.weight_g != null || product.thc_percentage != null || product.cbd_percentage != null) && (
+                <div className="flex flex-wrap items-center gap-1.5">
+                  {product.weight_g != null && (
+                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold bg-neutral-100 text-neutral-800 border border-neutral-200/60">
+                      ⚖️ {product.weight_g} gramos
+                    </span>
+                  )}
+                  {product.thc_percentage != null && (
+                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold bg-neutral-100 text-neutral-800 border border-neutral-200/60">
+                      THC: {product.thc_percentage}%
+                    </span>
+                  )}
+                  {product.cbd_percentage != null && (
+                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold bg-neutral-100 text-neutral-800 border border-neutral-200/60">
+                      CBD: {product.cbd_percentage}%
+                    </span>
+                  )}
+                </div>
+              )}
 
               {product.effects && (
-                <div className="flex items-center gap-1.5 text-[12px] font-bold text-neutral-800 bg-neutral-50 px-3 py-1.5 rounded-xl border border-neutral-200/50">
-                  <Sparkles className="size-3.5 text-neutral-600 shrink-0" />
-                  <span>{product.effects}</span>
+                <div className="flex items-start gap-2.5 text-[12px] font-medium text-neutral-700 bg-neutral-50 p-3 rounded-2xl border border-neutral-200/60 leading-relaxed">
+                  <Sparkles className="size-4 text-neutral-800 shrink-0 mt-0.5" />
+                  <div className="flex-1 min-w-0">
+                    <p className="whitespace-pre-line">{product.effects}</p>
+                  </div>
                 </div>
               )}
             </div>

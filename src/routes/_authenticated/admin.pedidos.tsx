@@ -907,9 +907,9 @@ export function AdminPedidosPage() {
         {/* ============================================================ */}
         {/* CONTROLES RÁPIDOS COMPACTOS (MOBILE FIRST) */}
         {/* ============================================================ */}
-        <div className="grid grid-cols-4 gap-2">
+        <div className="flex items-center gap-2">
           {/* Push notifications */}
-          <div className="col-span-2">
+          <div className="flex-1 min-w-0">
             <PushNotificationButton variant="admin" />
           </div>
 
@@ -918,7 +918,7 @@ export function AdminPedidosPage() {
             type="button"
             onClick={toggleSound}
             className={cn(
-              "flex items-center justify-center gap-1.5 h-10 rounded-2xl px-2 text-xs font-bold border transition-all active:scale-95",
+              "flex items-center justify-center gap-1.5 h-11 px-3 rounded-2xl text-xs font-bold border transition-all active:scale-95 shrink-0",
               soundEnabled
                 ? "border-primary/40 bg-primary/10 text-primary"
                 : "border-border/40 bg-surface-2 text-muted-foreground"
@@ -926,7 +926,7 @@ export function AdminPedidosPage() {
             title={soundEnabled ? "Sonido activado (clic para silenciar)" : "Silencio (clic para activar sonido)"}
           >
             {soundEnabled ? <Volume2 className="size-4 shrink-0" /> : <VolumeX className="size-4 shrink-0" />}
-            <span className="text-[11px]">{soundEnabled ? "Sonido" : "Mute"}</span>
+            <span className="text-[11px] font-bold">{soundEnabled ? "Sonido" : "Mute"}</span>
           </button>
 
           {/* Botón de Refrescar Datos */}
@@ -938,7 +938,7 @@ export function AdminPedidosPage() {
               queryClient.invalidateQueries({ queryKey: ["categories"] });
               toast.success("Datos actualizados");
             }}
-            className="flex items-center justify-center h-10 rounded-2xl border border-border/40 bg-surface-2 text-muted-foreground hover:text-foreground transition-all active:scale-95"
+            className="flex size-11 items-center justify-center rounded-2xl border border-border/40 bg-surface-2 text-muted-foreground hover:text-foreground transition-all active:scale-95 shrink-0"
             title="Actualizar datos"
           >
             <RotateCw className={cn("size-4", isFetching > 0 && "animate-spin text-primary")} />
@@ -946,24 +946,24 @@ export function AdminPedidosPage() {
         </div>
 
         {/* ============================================================ */}
-        {/* PESTAÑAS PRINCIPALES DEL PANEL (GRID MOBILE FIRST - 4 TABS) */}
+        {/* PESTAÑAS PRINCIPALES DEL PANEL (HORIZONTAL SCROLL MOBILE FIRST) */}
         {/* ============================================================ */}
-        <div className="grid grid-cols-4 gap-1 rounded-2xl bg-surface-2/80 p-1 border border-border/40">
+        <div className="flex gap-1.5 overflow-x-auto p-1 rounded-2xl bg-surface-2/80 border border-border/40 scrollbar-hide snap-x">
           <button
             type="button"
             onClick={() => setActiveTab("pedidos")}
             className={cn(
-              "flex items-center justify-center gap-1 h-10 rounded-xl text-[11px] font-bold transition-all active:scale-95 truncate px-1",
+              "flex items-center justify-center gap-1.5 h-10 px-3.5 rounded-xl text-xs font-bold transition-all active:scale-95 shrink-0 whitespace-nowrap snap-start",
               activeTab === "pedidos"
                 ? "bg-primary text-primary-foreground shadow-md"
                 : "text-muted-foreground hover:text-foreground"
             )}
           >
-            <Package className="size-3.5 shrink-0" />
-            <span className="truncate">Pedidos</span>
+            <Package className="size-4 shrink-0" />
+            <span>Pedidos</span>
             {pendingCount > 0 && (
               <span className={cn(
-                "size-4 rounded-full flex items-center justify-center text-[9px] font-black shrink-0",
+                "size-4 rounded-full flex items-center justify-center text-[10px] font-black shrink-0",
                 activeTab === "pedidos" ? "bg-black text-white" : "bg-primary text-primary-foreground"
               )}>
                 {pendingCount}
@@ -975,45 +975,45 @@ export function AdminPedidosPage() {
             type="button"
             onClick={() => setActiveTab("productos")}
             className={cn(
-              "flex items-center justify-center gap-1 h-10 rounded-xl text-[11px] font-bold transition-all active:scale-95 truncate px-1",
+              "flex items-center justify-center gap-1.5 h-10 px-3.5 rounded-xl text-xs font-bold transition-all active:scale-95 shrink-0 whitespace-nowrap snap-start",
               activeTab === "productos"
                 ? "bg-primary text-primary-foreground shadow-md"
                 : "text-muted-foreground hover:text-foreground"
             )}
           >
-            <ShoppingBag className="size-3.5 shrink-0" />
-            <span className="truncate">Productos</span>
+            <ShoppingBag className="size-4 shrink-0" />
+            <span>Productos</span>
           </button>
 
           <button
             type="button"
             onClick={() => setActiveTab("categorias")}
             className={cn(
-              "flex items-center justify-center gap-1 h-10 rounded-xl text-[11px] font-bold transition-all active:scale-95 truncate px-1",
+              "flex items-center justify-center gap-1.5 h-10 px-3.5 rounded-xl text-xs font-bold transition-all active:scale-95 shrink-0 whitespace-nowrap snap-start",
               activeTab === "categorias"
                 ? "bg-primary text-primary-foreground shadow-md"
                 : "text-muted-foreground hover:text-foreground"
             )}
           >
-            <Layers className="size-3.5 shrink-0" />
-            <span className="truncate">Categorías</span>
+            <Layers className="size-4 shrink-0" />
+            <span>Categorías</span>
           </button>
 
           <button
             type="button"
             onClick={() => setActiveTab("referidos")}
             className={cn(
-              "flex items-center justify-center gap-1 h-10 rounded-xl text-[11px] font-bold transition-all active:scale-95 truncate px-1",
+              "flex items-center justify-center gap-1.5 h-10 px-3.5 rounded-xl text-xs font-bold transition-all active:scale-95 shrink-0 whitespace-nowrap snap-start",
               activeTab === "referidos"
                 ? "bg-primary text-primary-foreground shadow-md"
                 : "text-muted-foreground hover:text-foreground"
             )}
           >
-            <Users className="size-3.5 shrink-0" />
-            <span className="truncate">Referidos</span>
+            <Users className="size-4 shrink-0" />
+            <span>Referidos</span>
             <span className={cn(
-              "text-[9px] font-semibold opacity-80 shrink-0",
-              activeTab === "referidos" ? "text-black font-black" : "text-muted-foreground"
+              "px-1.5 py-0.5 rounded-md text-[10px] font-black shrink-0",
+              activeTab === "referidos" ? "bg-black/20 text-black" : "bg-surface text-muted-foreground"
             )}>
               {referrals?.length ?? 0}
             </span>
@@ -1063,7 +1063,7 @@ export function AdminPedidosPage() {
                 value={orderSearch}
                 onChange={(e) => setOrderSearch(e.target.value)}
                 placeholder="Buscar por ID, cliente, dirección..."
-                className="h-11 rounded-2xl bg-surface-2/60 border-border/40 pl-10 text-[13px] text-foreground placeholder:text-muted-foreground"
+                className="h-11 rounded-2xl bg-surface-2/60 border-border/40 pl-10 text-[16px] md:text-sm text-foreground placeholder:text-muted-foreground"
               />
             </div>
 
@@ -1979,7 +1979,7 @@ export function AdminPedidosPage() {
       {/* MODAL CREAR / EDITAR PRODUCTO CON SUBIDA DE IMAGEN DIRECTA */}
       {/* ============================================================ */}
       <Dialog open={prodDialogOpen} onOpenChange={setProdDialogOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="w-[94%] max-w-md max-h-[88vh] overflow-y-auto rounded-[28px] p-5 bg-surface-2 border-border/60">
           <DialogHeader>
             <DialogTitle className="text-lg font-bold">
               {editingProduct ? "Editar Producto" : "Nuevo Producto"}
@@ -2237,7 +2237,7 @@ export function AdminPedidosPage() {
       {/* MODAL CREAR / EDITAR CATEGORÍA CON SUBIDA DE ÍCONO DIRECTA */}
       {/* ============================================================ */}
       <Dialog open={catDialogOpen} onOpenChange={setCatDialogOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="w-[94%] max-w-md max-h-[88vh] overflow-y-auto rounded-[28px] p-5 bg-surface-2 border-border/60">
           <DialogHeader>
             <DialogTitle className="text-lg font-bold">
               {editingCategory ? "Editar Categoría" : "Nueva Categoría"}
@@ -2378,7 +2378,7 @@ export function AdminPedidosPage() {
       {/* MODAL DE CONFIRMACIÓN DE ELIMINACIÓN DE PRODUCTO (100% MOBILE) */}
       {/* ============================================================ */}
       <Dialog open={Boolean(deleteProductTarget)} onOpenChange={(open) => !open && setDeleteProductTarget(null)}>
-        <DialogContent className="max-w-sm">
+        <DialogContent className="w-[94%] max-w-sm rounded-[28px] p-5 bg-surface-2 border-border/60">
           <DialogHeader>
             <div className="mx-auto size-12 rounded-full bg-red-500/20 text-red-400 grid place-items-center mb-2">
               <Trash2 className="size-6" />
@@ -2425,7 +2425,7 @@ export function AdminPedidosPage() {
       {/* MODAL DE CONFIRMACIÓN DE ELIMINACIÓN DE CATEGORÍA (100% MOBILE) */}
       {/* ============================================================ */}
       <Dialog open={Boolean(deleteCategoryTarget)} onOpenChange={(open) => !open && setDeleteCategoryTarget(null)}>
-        <DialogContent className="max-w-sm">
+        <DialogContent className="w-[94%] max-w-sm rounded-[28px] p-5 bg-surface-2 border-border/60">
           <DialogHeader>
             <div className="mx-auto size-12 rounded-full bg-red-500/20 text-red-400 grid place-items-center mb-2">
               <Trash2 className="size-6" />
@@ -2472,7 +2472,7 @@ export function AdminPedidosPage() {
       {/* MODAL CREAR / EDITAR REFERIDO / COMISIONISTA */}
       {/* ============================================================ */}
       <Dialog open={refDialogOpen} onOpenChange={setRefDialogOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="w-[94%] max-w-md max-h-[88vh] overflow-y-auto rounded-[28px] p-5 bg-surface-2 border-border/60">
           <DialogHeader>
             <DialogTitle className="text-lg font-bold">
               {editingReferral ? "Editar Referido" : "Nuevo Referido"}
@@ -2640,7 +2640,7 @@ export function AdminPedidosPage() {
       {/* MODAL DE CONFIRMACIÓN DE ELIMINACIÓN DE REFERIDO (100% MOBILE) */}
       {/* ============================================================ */}
       <Dialog open={Boolean(deleteReferralTarget)} onOpenChange={(open) => !open && setDeleteReferralTarget(null)}>
-        <DialogContent className="max-w-sm">
+        <DialogContent className="w-[94%] max-w-sm rounded-[28px] p-5 bg-surface-2 border-border/60">
           <DialogHeader>
             <div className="mx-auto size-12 rounded-full bg-red-500/20 text-red-400 grid place-items-center mb-2">
               <Trash2 className="size-6" />
@@ -2683,6 +2683,5 @@ export function AdminPedidosPage() {
         </DialogContent>
       </Dialog>
     </AppShell>
-
   );
 }

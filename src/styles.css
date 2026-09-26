@@ -80,7 +80,7 @@
 
   --border: oklch(0.28 0.01 285);
   --input: oklch(0.28 0.01 285);
-  --ring: oklch(0.72 0.21 349);
+  --ring: oklch(0.88 0.005 285 / 0.35); /* Blanco/gris suave sutil en lugar de rosado */
 
   --gradient-candy: linear-gradient(
     135deg,
@@ -103,12 +103,21 @@
 
   html {
     color-scheme: dark;
+    overflow-x: hidden;
+    touch-action: manipulation;
+    -webkit-text-size-adjust: 100%;
   }
 
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
+    overflow-x: hidden;
     -webkit-font-smoothing: antialiased;
+  }
+
+  /* Prevenir zoom automático molesto de iOS en inputs */
+  input, textarea, select {
+    font-size: 16px !important;
   }
 }
 
