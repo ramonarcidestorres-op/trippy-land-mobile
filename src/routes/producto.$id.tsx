@@ -562,5 +562,6 @@ export function ProductDetailPage() {
 
       </div>
     </div>
-  );
+  </div>
+);
 }
