@@ -1,9 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { Candy, Search, ChevronDown } from "lucide-react";
+import { Candy, Search, Sparkles } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
-import { ProductCard, ProductCardSkeleton } from "@/components/ProductCard";
+import { FeaturedTinderStack } from "@/components/FeaturedTinderStack";
 import { EmptyState } from "@/components/States";
 import { Input } from "@/components/ui/input";
 import { categoriesQuery, productsQuery } from "@/lib/queries";
@@ -75,27 +75,26 @@ function HomePage() {
           </div>
         ) : categories.data?.length ? (
           <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory">
-            {categories.data.map((c, index) => {
-              const s = c.slug?.toLowerCase() || "";
+            {categories.data.map((c) => {
               const n = c.name?.toLowerCase() || "";
               
               let imgUrl = c.icon_url || "https://images.unsplash.com/photo-1550258987-190a2d41a8ba?w=400&q=80";
               
               let activeColor = "bg-primary text-primary-foreground";
               if (n.includes("coca")) {
-                activeColor = "bg-[#F5F5F0] text-black"; // Blanco/Crema
+                activeColor = "bg-[#F5F5F0] text-black";
                 if (!c.icon_url) imgUrl = "/categorias/Coca.png";
               } else if (n.includes("pre-roll") || n.includes("pre roll")) {
-                activeColor = "bg-[#9EAB91] text-black"; // Verde mate
+                activeColor = "bg-[#9EAB91] text-black";
                 if (!c.icon_url) imgUrl = "/categorias/Pre-Rolls.png";
               } else if (n.includes("weed")) {
-                activeColor = "bg-[#9EAB91] text-black"; // Verde mate
+                activeColor = "bg-[#9EAB91] text-black";
                 if (!c.icon_url) imgUrl = "/categorias/Weed.png";
               } else if (n.includes("farma")) {
-                activeColor = "bg-[#A7C7E7] text-black"; // Azul claro
+                activeColor = "bg-[#A7C7E7] text-black";
                 if (!c.icon_url) imgUrl = "/categorias/farmacia.png";
               } else if (n.includes("sint")) {
-                activeColor = "bg-[#FCA5A5] text-black"; // Rojo suave/mate
+                activeColor = "bg-[#FCA5A5] text-black";
                 if (!c.icon_url) imgUrl = "/categorias/sintéticos.png";
               } else {
                 if (!c.icon_url) imgUrl = `/categorias/${c.name}.png`;
@@ -126,39 +125,34 @@ function HomePage() {
         ) : null}
       </section>
 
-      {/* Populares */}
-      <section className="mb-8">
+      {/* Sección Destacados: Cartas Tipo Tinder */}
+      <section className="mb-10">
         <div className="mb-5 flex items-center justify-between">
-          <div className="flex items-center gap-1.5 cursor-pointer">
-            <h2 className="text-[22px] font-bold tracking-tight text-foreground">
+          <div className="flex items-center gap-2">
+            <h2 className="text-[22px] font-black tracking-tight text-foreground">
               Destacados
             </h2>
-            <ChevronDown className="size-5 text-muted-foreground" />
+            <span className="flex items-center gap-1 rounded-full bg-candy-lime/15 border border-candy-lime/30 px-2.5 py-0.5 text-[10.5px] font-black text-candy-lime uppercase tracking-wider">
+              <Sparkles className="size-3" /> Tinder Deck
+            </span>
           </div>
           <Link 
             to="/catalogo" 
             search={selectedCategory ? { categoria: categories.data?.find(c => c.id === selectedCategory)?.slug } : {}} 
-            className="text-sm text-primary font-semibold transition-opacity active:opacity-70"
+            className="text-xs text-primary font-bold transition-opacity active:opacity-70"
           >
-            Ver todo
+            Ver catálogo completo →
           </Link>
         </div>
+
         {products.isLoading ? (
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-            {[0, 1, 2, 3].map((i) => (
-              <ProductCardSkeleton key={i} />
-            ))}
-          </div>
+          <div className="w-full max-w-[340px] sm:max-w-[360px] mx-auto h-[380px] rounded-[34px] bg-surface-2/60 animate-pulse border border-border/40" />
         ) : products.error ? (
           <div className="rounded-3xl bg-surface-2/40 p-8 text-center">
             <p className="text-sm text-muted-foreground">No se pudieron cargar los productos.</p>
           </div>
         ) : products.data?.length ? (
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-            {products.data.slice(0, 8).map((p) => (
-              <ProductCard key={p.id} product={p} />
-            ))}
-          </div>
+          <FeaturedTinderStack products={products.data} />
         ) : (
           <EmptyState
             icon={<Candy className="size-7" />}
