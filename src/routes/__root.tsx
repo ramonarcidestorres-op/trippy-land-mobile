@@ -13,6 +13,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { processUrlForReferral } from "../hooks/useReferral";
 import { AuthProvider } from "../hooks/useAuth";
+import { playWhatsAppChime } from "../lib/sound";
 
 function NotFoundComponent() {
   return (
@@ -126,8 +127,6 @@ function RootShell({ children }: { children: ReactNode }) {
     </html>
   );
 }
-
-import { playWhatsAppChime } from "../lib/sound";
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
