@@ -118,6 +118,11 @@ export function AdminPedidosPage() {
   const [prodPrice, setProdPrice] = useState("");
   const [prodDescription, setProdDescription] = useState("");
   const [prodImageUrl, setProdImageUrl] = useState("");
+  const [prodStrainType, setProdStrainType] = useState("");
+  const [prodWeightG, setProdWeightG] = useState("");
+  const [prodThc, setProdThc] = useState("");
+  const [prodCbd, setProdCbd] = useState("");
+  const [prodEffects, setProdEffects] = useState("");
   const [prodIsAvailable, setProdIsAvailable] = useState(true);
   const [prodSaving, setProdSaving] = useState(false);
   const [uploadingProdImg, setUploadingProdImg] = useState(false);
@@ -489,6 +494,11 @@ export function AdminPedidosPage() {
     setProdPrice("");
     setProdDescription("");
     setProdImageUrl("");
+    setProdStrainType("Flores");
+    setProdWeightG("3");
+    setProdThc("80");
+    setProdCbd("20");
+    setProdEffects("Relajación profunda y creatividad");
     setProdIsAvailable(true);
     setProdDialogOpen(true);
   }
@@ -500,6 +510,11 @@ export function AdminPedidosPage() {
     setProdPrice(String(prod.price || ""));
     setProdDescription(prod.description || "");
     setProdImageUrl(prod.image_url || "");
+    setProdStrainType(prod.strain_type || "");
+    setProdWeightG(prod.weight_g != null ? String(prod.weight_g) : "");
+    setProdThc(prod.thc_percentage != null ? String(prod.thc_percentage) : "");
+    setProdCbd(prod.cbd_percentage != null ? String(prod.cbd_percentage) : "");
+    setProdEffects(prod.effects || "");
     setProdIsAvailable(prod.is_available !== false);
     setProdDialogOpen(true);
   }
@@ -524,6 +539,11 @@ export function AdminPedidosPage() {
         price: numPrice,
         description: prodDescription.trim() || null,
         image_url: prodImageUrl.trim() || null,
+        strain_type: prodStrainType.trim() || null,
+        weight_g: prodWeightG ? Number(prodWeightG) : null,
+        thc_percentage: prodThc ? Number(prodThc) : null,
+        cbd_percentage: prodCbd ? Number(prodCbd) : null,
+        effects: prodEffects.trim() || null,
         is_available: prodIsAvailable,
         updated_at: new Date().toISOString(),
       };
@@ -1514,11 +1534,25 @@ export function AdminPedidosPage() {
                             {prod.name}
                           </h3>
 
-                          <p className="text-[11px] text-muted-foreground line-clamp-1">
-                            {prod.description || "Sin descripción"}
-                          </p>
+                          <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
+                            {prod.strain_type && (
+                              <span className="text-[10px] font-bold text-muted-foreground bg-surface px-1.5 py-0.5 rounded">
+                                {prod.strain_type}
+                              </span>
+                            )}
+                            {prod.weight_g != null && (
+                              <span className="text-[10px] font-bold text-candy-lime/90 bg-surface px-1.5 py-0.5 rounded">
+                                {prod.weight_g}g
+                              </span>
+                            )}
+                            {prod.effects && (
+                              <span className="text-[10px] text-muted-foreground truncate max-w-[150px]" title={prod.effects}>
+                                ✨ {prod.effects}
+                              </span>
+                            )}
+                          </div>
 
-                          <p className="text-[13px] font-black text-candy-lime mt-0.5">
+                          <p className="text-[13px] font-black text-candy-lime mt-1">
                             {formatPrice(prod.price)}
                           </p>
                         </div>
@@ -2078,9 +2112,78 @@ export function AdminPedidosPage() {
               )}
             </div>
 
+            {/* ATRIBUTOS Y EFECTOS DEL PRODUCTO */}
+            <div className="grid grid-cols-2 gap-2.5 pt-1">
+              <div>
+                <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">
+                  Tipo / Familia
+                </label>
+                <Input
+                  value={prodStrainType}
+                  onChange={(e) => setProdStrainType(e.target.value)}
+                  placeholder="Ej. Flores / Premium"
+                  className="h-10 rounded-xl bg-surface border-border/60 text-xs"
+                />
+              </div>
+
+              <div>
+                <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">
+                  Contenido (Gramos)
+                </label>
+                <Input
+                  type="number"
+                  step="any"
+                  value={prodWeightG}
+                  onChange={(e) => setProdWeightG(e.target.value)}
+                  placeholder="Ej. 3"
+                  className="h-10 rounded-xl bg-surface border-border/60 text-xs"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2.5">
+              <div>
+                <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">
+                  Nivel THC (%)
+                </label>
+                <Input
+                  type="number"
+                  value={prodThc}
+                  onChange={(e) => setProdThc(e.target.value)}
+                  placeholder="Ej. 80"
+                  className="h-10 rounded-xl bg-surface border-border/60 text-xs"
+                />
+              </div>
+
+              <div>
+                <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">
+                  Nivel CBD (%)
+                </label>
+                <Input
+                  type="number"
+                  value={prodCbd}
+                  onChange={(e) => setProdCbd(e.target.value)}
+                  placeholder="Ej. 20"
+                  className="h-10 rounded-xl bg-surface border-border/60 text-xs"
+                />
+              </div>
+            </div>
+
             <div>
               <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">
-                Descripción
+                Efectos Destacados
+              </label>
+              <Input
+                value={prodEffects}
+                onChange={(e) => setProdEffects(e.target.value)}
+                placeholder="Ej. Relajación profunda, creatividad, euforia..."
+                className="h-10 rounded-xl bg-surface border-border/60 text-xs"
+              />
+            </div>
+
+            <div>
+              <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">
+                Descripción Completa
               </label>
               <Textarea
                 value={prodDescription}

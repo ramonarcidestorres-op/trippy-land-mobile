@@ -262,11 +262,14 @@ export type Database = {
           cbd_percentage: number | null
           created_at: string
           description: string | null
+          effects: string | null
           id: string
           image_url: string | null
           is_available: boolean | null
           name: string
           price: number
+          rating: number | null
+          strain_type: string | null
           thc_percentage: number | null
           updated_at: string
           weight_g: number | null
@@ -276,11 +279,14 @@ export type Database = {
           cbd_percentage?: number | null
           created_at?: string
           description?: string | null
+          effects?: string | null
           id?: string
           image_url?: string | null
           is_available?: boolean | null
           name: string
           price: number
+          rating?: number | null
+          strain_type?: string | null
           thc_percentage?: number | null
           updated_at?: string
           weight_g?: number | null
@@ -290,11 +296,14 @@ export type Database = {
           cbd_percentage?: number | null
           created_at?: string
           description?: string | null
+          effects?: string | null
           id?: string
           image_url?: string | null
           is_available?: boolean | null
           name?: string
           price?: number
+          rating?: number | null
+          strain_type?: string | null
           thc_percentage?: number | null
           updated_at?: string
           weight_g?: number | null
