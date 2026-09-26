@@ -229,10 +229,10 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       {/* PÍLDORA FLOTANTE "IR AL CARRITO" (Solo en Home y Catálogo cuando hay productos) */}
       {showFloatingCartPill && (
-        <div className="fixed bottom-[80px] inset-x-0 flex justify-center z-40 px-4 pointer-events-none animate-in slide-in-from-bottom-3 fade-in duration-300">
+        <div className="fixed bottom-[82px] inset-x-0 flex justify-center z-40 px-4 pointer-events-none animate-in slide-in-from-bottom-3 fade-in duration-300">
           <Link
             to="/carrito"
-            className="pointer-events-auto h-11 px-4 rounded-full bg-[#18181b]/95 backdrop-blur-2xl text-white shadow-[0_10px_30px_rgba(0,0,0,0.6)] border border-white/15 flex items-center gap-3 transition-transform active:scale-95 hover:bg-neutral-900"
+            className="pointer-events-auto h-11 px-4 rounded-full bg-neutral-950/85 backdrop-blur-2xl text-white shadow-[0_10px_30px_rgba(0,0,0,0.6)] border border-white/15 flex items-center gap-3 transition-transform active:scale-95 hover:bg-neutral-900"
           >
             <div className="flex items-center gap-2">
               <span className="flex size-5.5 items-center justify-center rounded-full bg-white text-black text-[11px] font-black">
@@ -255,10 +255,10 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       )}
 
-      {/* BARRA DE NAVEGACIÓN INFERIOR: PÍLDORA FLOTANTE OSCURA CON SELECTOR BLANCO CREMA */}
+      {/* BARRA DE NAVEGACIÓN INFERIOR: PÍLDORA FLOTANTE GLASS, ANCHA Y LISA */}
       {!hideBottomNav && (
         <div className="fixed bottom-4 inset-x-0 z-30 md:hidden flex justify-center px-4 pointer-events-none">
-          <nav className="pointer-events-auto flex items-center gap-1.5 p-1.5 rounded-full bg-[#121214]/90 backdrop-blur-2xl border border-white/15 shadow-[0_12px_36px_rgba(0,0,0,0.65)]">
+          <nav className="pointer-events-auto w-[88%] max-w-[340px] h-14 px-3 flex items-center justify-around rounded-full bg-neutral-950/80 backdrop-blur-2xl border border-white/12 shadow-[0_15px_40px_rgba(0,0,0,0.6)]">
             {NAV.map(({ to, label, icon: Icon }) => {
               const active = to === "/" ? pathname === "/" : pathname.startsWith(to);
               return (
@@ -267,19 +267,26 @@ export function AppShell({ children }: { children: ReactNode }) {
                   to={to as any}
                   aria-label={label}
                   className={cn(
-                    "relative flex size-10.5 items-center justify-center rounded-full transition-all duration-200 active:scale-90",
+                    "relative flex flex-col items-center justify-center size-11 rounded-full transition-all duration-200 active:scale-90",
                     active
-                      ? "bg-[#F2F2F5] text-neutral-950 shadow-md"
-                      : "text-neutral-400 hover:text-white"
+                      ? "text-white"
+                      : "text-neutral-400/80 hover:text-neutral-200"
                   )}
                 >
                   <Icon
-                    strokeWidth={active ? 2.5 : 2}
-                    className="size-5"
+                    strokeWidth={active ? 2.5 : 1.8}
+                    className={cn(
+                      "size-5.5 transition-transform duration-200",
+                      active && "scale-105 drop-shadow-[0_0_8px_rgba(255,255,255,0.35)]"
+                    )}
                   />
+                  {/* Micro-indicador sutil de punto activo */}
+                  {active && (
+                    <span className="absolute bottom-1 size-1 rounded-full bg-white shadow-sm" />
+                  )}
                   {/* Badge para el carrito si no está activo pero tiene ítems */}
                   {to === "/carrito" && !active && count > 0 && (
-                    <span className="absolute top-1 right-1 flex size-2 rounded-full bg-candy-lime ring-2 ring-[#121214]" />
+                    <span className="absolute top-1.5 right-1.5 flex size-2 rounded-full bg-candy-lime ring-2 ring-neutral-950" />
                   )}
                 </Link>
               );
