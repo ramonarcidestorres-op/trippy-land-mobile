@@ -8,6 +8,7 @@ import { EmptyState } from "@/components/States";
 import { useCart } from "@/hooks/useCart";
 import { useReferral } from "@/hooks/useReferral";
 import { useAuth } from "@/hooks/useAuth";
+import { useStoreStatus } from "@/hooks/useStoreStatus";
 import { deliveryFeesQuery } from "@/lib/queries";
 import { supabase } from "@/integrations/supabase/client";
 import { formatPrice } from "@/lib/format";
@@ -31,6 +32,7 @@ function CheckoutPage() {
   const { user } = useAuth();
   const { cart: rows, clearCart } = useCart();
   const { referralCode, getAdjustedPrice } = useReferral();
+  const { isOpen } = useStoreStatus();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
@@ -100,6 +102,10 @@ function CheckoutPage() {
   }
 
   async function placeOrder() {
+    if (!isOpen) {
+      toast.error("La tienda se encuentra cerrada temporalmente. No es posible enviar pedidos en este momento.");
+      return;
+    }
     if (lock.current) return;
     if (rows.length === 0) return;
     if (unavailable.length > 0) {
@@ -504,10 +510,14 @@ function CheckoutPage() {
         <button
           className="flex h-[56px] w-full items-center justify-center rounded-full bg-primary px-6 shadow-2xl transition-transform active:scale-95 disabled:opacity-50 disabled:active:scale-100"
           onClick={placeOrder}
-          disabled={placing || unavailable.length > 0}
+          disabled={placing || unavailable.length > 0 || !isOpen}
         >
           <span className="text-[17px] font-bold text-primary-foreground">
-            {placing ? "Confirmando..." : `Confirmar pedido · ${formatPrice(total)}`}
+            {!isOpen
+              ? "Tienda Cerrada Temporalmente"
+              : placing
+              ? "Confirmando..."
+              : `Confirmar pedido · ${formatPrice(total)}`}
           </span>
         </button>
       </div>

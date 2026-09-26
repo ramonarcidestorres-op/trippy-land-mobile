@@ -1,9 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
+import { Minus, Plus, ShoppingBag, Trash2, ShieldAlert } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { EmptyState } from "@/components/States";
 import { useCart } from "@/hooks/useCart";
 import { useReferral } from "@/hooks/useReferral";
+import { useStoreStatus } from "@/hooks/useStoreStatus";
 import { formatPrice } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/carrito")({
@@ -20,6 +21,7 @@ export const Route = createFileRoute("/_authenticated/carrito")({
 function CartPage() {
   const { cart: rows, setQuantity, removeItem, clearCart } = useCart();
   const { getAdjustedPrice } = useReferral();
+  const { isOpen } = useStoreStatus();
   // Calculate subtotal with adjusted prices
   const subtotal = rows.reduce((sum, r) => sum + getAdjustedPrice(r.products?.price ?? 0) * r.quantity, 0);
 
@@ -148,14 +150,30 @@ function CartPage() {
               <span className="font-medium text-muted-foreground">Subtotal</span>
               <span className="text-[15px] font-bold text-foreground">{formatPrice(subtotal)}</span>
             </div>
+
+            {!isOpen && (
+              <div className="mt-4 flex items-center gap-2 rounded-2xl bg-red-500/10 border border-red-500/20 p-3 text-xs text-red-400">
+                <ShieldAlert className="size-4 shrink-0" />
+                <span>La tienda está cerrada temporalmente. Podrás pedir tan pronto abramos.</span>
+              </div>
+            )}
             
             <div className="mt-6">
-              <Link
-                to="/checkout"
-                className="flex h-[54px] w-full items-center justify-center rounded-full bg-primary text-[16px] font-bold text-primary-foreground shadow-sm transition-transform active:scale-95"
-              >
-                Proceder al pago
-              </Link>
+              {isOpen ? (
+                <Link
+                  to="/checkout"
+                  className="flex h-[54px] w-full items-center justify-center rounded-full bg-primary text-[16px] font-bold text-primary-foreground shadow-sm transition-transform active:scale-95"
+                >
+                  Proceder al pago
+                </Link>
+              ) : (
+                <button
+                  disabled
+                  className="flex h-[54px] w-full items-center justify-center rounded-full bg-surface-2 text-[15px] font-bold text-muted-foreground cursor-not-allowed opacity-60"
+                >
+                  Tienda Cerrada Temporalmente
+                </button>
+              )}
             </div>
           </div>
         </div>
