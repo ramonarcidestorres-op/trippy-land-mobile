@@ -229,33 +229,35 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       {/* PÍLDORA FLOTANTE "IR AL CARRITO" (Solo en Home y Catálogo cuando hay productos) */}
       {showFloatingCartPill && (
-        <div className="fixed bottom-[max(env(safe-area-inset-bottom),76px)] inset-x-4 max-w-sm mx-auto z-40 animate-in slide-in-from-bottom-5 fade-in duration-300">
+        <div className="fixed bottom-[68px] inset-x-0 flex justify-center z-40 px-4 pointer-events-none animate-in slide-in-from-bottom-4 fade-in duration-300">
           <Link
             to="/carrito"
-            className="w-full h-12.5 px-4.5 py-2.5 rounded-full bg-black text-white shadow-[0_12px_32px_rgba(0,0,0,0.6)] border border-white/20 flex items-center justify-between transition-transform active:scale-95 hover:bg-neutral-900"
+            className="pointer-events-auto h-11 px-4 rounded-full bg-background/90 backdrop-blur-2xl text-white shadow-[0_10px_30px_rgba(0,0,0,0.6)] border border-white/15 flex items-center gap-3 transition-transform active:scale-95 hover:bg-neutral-900"
           >
-            <div className="flex items-center gap-2.5">
-              <span className="flex size-6 items-center justify-center rounded-full bg-white text-black text-[11px] font-black ring-1 ring-black">
+            <div className="flex items-center gap-2">
+              <span className="flex size-5.5 items-center justify-center rounded-full bg-white text-black text-[11px] font-black">
                 {count}
               </span>
-              <span className="text-[13.5px] font-bold text-white tracking-tight">
+              <span className="text-xs font-bold text-white tracking-tight">
                 Ir al Carrito
               </span>
             </div>
 
+            <div className="h-3 w-px bg-white/20" />
+
             <div className="flex items-center gap-1.5">
-              <span className="text-[13.5px] font-black text-white">
+              <span className="text-xs font-extrabold text-white">
                 {formatPrice(cartSubtotal)}
               </span>
-              <ArrowRight className="size-4 text-white" />
+              <ArrowRight className="size-3.5 text-white/80" />
             </div>
           </Link>
         </div>
       )}
 
       {!hideBottomNav && (
-        <nav className="fixed inset-x-0 bottom-0 z-30 md:hidden bg-background/85 backdrop-blur-2xl border-t border-border/40 pb-[env(safe-area-inset-bottom)]">
-          <div className="flex h-16 items-center justify-around px-2">
+        <nav className="fixed inset-x-0 bottom-0 z-30 md:hidden bg-background/95 backdrop-blur-2xl border-t border-border/30">
+          <div className="flex h-13 items-center justify-around px-2">
             {NAV.map(({ to, label, icon: Icon }) => {
               const active = to === "/" ? pathname === "/" : pathname.startsWith(to);
               return (
@@ -263,7 +265,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                   key={to}
                   to={to as any}
                   className={cn(
-                    "relative flex flex-col items-center justify-center gap-1 w-16 h-full transition-colors",
+                    "relative flex flex-col items-center justify-center w-14 h-full transition-colors",
                     active ? "text-white" : "text-muted-foreground hover:text-foreground"
                   )}
                 >

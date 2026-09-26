@@ -507,19 +507,19 @@ export function ProductDetailPage() {
                 )}
               </div>
 
-              {/* Selector de Cantidad limpio (sin píldoras en - y +) */}
-              <div className="flex items-center rounded-full bg-neutral-100/90 px-4 py-2 gap-4 border border-neutral-200/50">
+              {/* Selector de Cantidad sin fondo de píldora, botones más grandes y elegantes */}
+              <div className="flex items-center gap-3 sm:gap-4">
                 <button
                   type="button"
                   onClick={handleQtyMinus}
                   disabled={!available || qty <= 1}
-                  className="flex items-center justify-center text-neutral-800 hover:text-black transition-transform active:scale-90 disabled:opacity-25"
+                  className="flex size-10 items-center justify-center text-neutral-800 hover:text-black transition-transform active:scale-80 disabled:opacity-20 cursor-pointer"
                   aria-label="Disminuir cantidad"
                 >
-                  <Minus className="size-4 stroke-[2.5]" />
+                  <Minus className="size-6 stroke-[2.5]" />
                 </button>
 
-                <span className="w-4 text-center text-sm font-bold text-neutral-950">
+                <span className="min-w-6 text-center text-lg sm:text-xl font-bold text-neutral-950">
                   {qty}
                 </span>
 
@@ -527,10 +527,10 @@ export function ProductDetailPage() {
                   type="button"
                   onClick={handleQtyPlus}
                   disabled={!available}
-                  className="flex items-center justify-center text-neutral-800 hover:text-black transition-transform active:scale-90 disabled:opacity-25"
+                  className="flex size-10 items-center justify-center text-neutral-800 hover:text-black transition-transform active:scale-80 disabled:opacity-20 cursor-pointer"
                   aria-label="Aumentar cantidad"
                 >
-                  <Plus className="size-4 stroke-[2.5]" />
+                  <Plus className="size-6 stroke-[2.5]" />
                 </button>
               </div>
             </div>
