@@ -76,28 +76,12 @@ export function AppShell({ children }: { children: ReactNode }) {
               </div>
 
               <div className="flex items-center gap-2">
-                {/* Botón rápido para alternar estado de la tienda */}
-                <button
-                  type="button"
-                  onClick={() => toggleStoreStatus()}
-                  className={cn(
-                    "flex items-center gap-1.5 h-8.5 rounded-full px-3 text-[11px] font-bold border transition-all active:scale-95 shadow-sm",
-                    isOpen
-                      ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20"
-                      : "bg-red-500/10 text-red-400 border-red-500/30 hover:bg-red-500/20 animate-pulse"
-                  )}
-                  title="Haz clic para abrir o cerrar la tienda"
-                >
-                  <span className={cn("size-2 rounded-full", isOpen ? "bg-emerald-400" : "bg-red-400")} />
-                  <span>{isOpen ? "Tienda Abierta" : "Tienda Cerrada"}</span>
-                </button>
-
                 {/* Enlace para ver la tienda como cliente */}
                 <Link
                   to="/"
-                  className="hidden sm:inline-flex items-center gap-1.5 h-8.5 rounded-full bg-surface-2 px-3 text-[11px] font-semibold text-muted-foreground hover:text-foreground border border-border/30 transition-all active:scale-95"
+                  className="inline-flex items-center gap-1.5 h-8.5 rounded-full bg-surface-2 px-3 text-[11px] font-semibold text-muted-foreground hover:text-foreground border border-border/30 transition-all active:scale-95"
                 >
-                  <ExternalLink className="size-3.5" />
+                  <Store className="size-3.5 text-primary" />
                   <span>Ver Tienda</span>
                 </Link>
 

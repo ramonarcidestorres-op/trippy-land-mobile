@@ -23,18 +23,12 @@ import {
   RotateCw,
   Navigation,
   User,
-  ArrowLeft,
   Package,
   Layers,
   Plus,
   Pencil,
   Trash2,
-  AlertTriangle,
-  Power,
-  Image as ImageIcon,
-  CheckCircle,
-  ToggleLeft,
-  ToggleRight
+  Power
 } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { PushNotificationButton } from "@/components/PushNotificationButton";
@@ -55,7 +49,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useStoreStatus } from "@/hooks/useStoreStatus";
 import { allOrdersQuery, categoriesQuery, productsQuery, type AdminOrder, type Product, type Category } from "@/lib/queries";
 import { supabase } from "@/integrations/supabase/client";
-import { formatDate, formatRelativeTime, formatPrice, STATUS_LABELS, ORDER_STATUSES } from "@/lib/format";
+import { formatDate, formatRelativeTime, formatPrice, formatCompactPrice, STATUS_LABELS, ORDER_STATUSES } from "@/lib/format";
 import { playWhatsAppChime } from "@/lib/sound";
 import { cn } from "@/lib/utils";
 
@@ -368,8 +362,8 @@ export function AdminPedidosPage() {
     } else {
       toast.success(
         nextVal
-          ? `🟢 "${product.name}" marcado como DISPONIBLE`
-          : `🔴 "${product.name}" marcado como AGOTADO`
+          ? `🟢 "${product.name}" disponible`
+          : `🔴 "${product.name}" agotado`
       );
       queryClient.invalidateQueries({ queryKey: ["products"] });
       queryClient.invalidateQueries({ queryKey: ["product", product.id] });
@@ -428,7 +422,7 @@ export function AdminPedidosPage() {
           .update(payload)
           .eq("id", editingProduct.id);
         if (error) throw error;
-        toast.success("Producto actualizado correctamente");
+        toast.success("Producto actualizado");
       } else {
         const { error } = await supabase
           .from("products")
@@ -459,7 +453,7 @@ export function AdminPedidosPage() {
       toast.success("Producto eliminado");
       queryClient.invalidateQueries({ queryKey: ["products"] });
     } catch (err: any) {
-      toast.error("No se pudo eliminar el producto: " + (err.message || ""));
+      toast.error("No se pudo eliminar: " + (err.message || ""));
     }
   }
 
@@ -547,101 +541,125 @@ export function AdminPedidosPage() {
       {/* Modal automático para activar avisos de nuevos pedidos y guía iOS */}
       <AdminNotificationPromptModal />
 
-      <div className="space-y-6 pb-24">
-        {/* BANNER SUPERIOR DE CONTROL: ESTADO DE LA TIENDA & CONTROLES */}
-        <div className="rounded-[28px] border border-border/50 bg-surface-2/80 p-4 sm:p-5 backdrop-blur-xl shadow-lg">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            {/* Control de Abrir / Cerrar Tienda */}
-            <div className="flex items-center gap-3">
-              <button
-                type="button"
-                onClick={() => toggleStoreStatus()}
-                className={cn(
-                  "flex items-center gap-2.5 h-12 rounded-2xl px-4 font-extrabold text-sm border shadow-md transition-all active:scale-95",
-                  isOpen
-                    ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/40 hover:bg-emerald-500/30 ring-1 ring-emerald-500/30"
-                    : "bg-red-500/20 text-red-300 border-red-500/40 hover:bg-red-500/30 ring-1 ring-red-500/30 animate-pulse"
-                )}
-              >
-                <Power className={cn("size-5", isOpen ? "text-emerald-400" : "text-red-400")} />
-                <div className="text-left">
-                  <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Control de Tienda</div>
-                  <div className="text-[13px]">{isOpen ? "TIENDA ABIERTA 🟢" : "TIENDA CERRADA 🔴"}</div>
+      <div className="space-y-4 pb-24 max-w-full overflow-hidden">
+        {/* ============================================================ */}
+        {/* INTERRUPTOR PRINCIPAL: ABRIR / CERRAR TIENDA (MOBILE FIRST) */}
+        {/* ============================================================ */}
+        <div className="rounded-[24px] border border-border/50 bg-surface-2/90 p-4 shadow-lg backdrop-blur-xl">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className={cn(
+                "size-11 rounded-2xl flex items-center justify-center shrink-0 transition-colors",
+                isOpen ? "bg-emerald-500/20 text-emerald-400" : "bg-red-500/20 text-red-400"
+              )}>
+                <Store className="size-5.5" />
+              </div>
+
+              <div className="min-w-0">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">
+                  Recepción de Pedidos
+                </span>
+                <div className={cn(
+                  "text-[15px] font-black flex items-center gap-1.5 truncate",
+                  isOpen ? "text-emerald-400" : "text-red-400"
+                )}>
+                  <span>{isOpen ? "TIENDA ABIERTA" : "TIENDA CERRADA"}</span>
+                  <span className={cn(
+                    "size-2 rounded-full shrink-0",
+                    isOpen ? "bg-emerald-400 animate-pulse" : "bg-red-400"
+                  )} />
                 </div>
-              </button>
-
-              <span className="text-xs text-muted-foreground max-w-[200px] hidden md:block">
-                {isOpen ? "Los clientes pueden realizar pedidos con normalidad." : "Se bloquea el checkout y se muestra el aviso de cierre."}
-              </span>
+              </div>
             </div>
 
-            {/* Acciones de administración secundarias */}
-            <div className="flex flex-wrap items-center gap-2">
-              <PushNotificationButton variant="admin" />
-
-              <button
-                type="button"
-                onClick={toggleSound}
+            {/* Switch táctil estilizado iOS */}
+            <button
+              type="button"
+              role="switch"
+              aria-checked={isOpen}
+              onClick={() => toggleStoreStatus()}
+              className={cn(
+                "relative inline-flex h-8 w-15 shrink-0 cursor-pointer rounded-full p-0.5 transition-colors duration-200 ease-in-out focus:outline-none shadow-inner active:scale-95",
+                isOpen ? "bg-emerald-500" : "bg-red-600"
+              )}
+              title={isOpen ? "Toca para Cerrar la tienda" : "Toca para Abrir la tienda"}
+            >
+              <span
                 className={cn(
-                  "flex items-center gap-1.5 h-9 rounded-2xl px-2.5 text-xs font-bold border transition-all active:scale-95",
-                  soundEnabled
-                    ? "border-primary/40 bg-primary/10 text-primary"
-                    : "border-border/40 bg-surface-2 text-muted-foreground"
+                  "pointer-events-none inline-block size-7 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out",
+                  isOpen ? "translate-x-7" : "translate-x-0"
                 )}
-                title={soundEnabled ? "Clic para desactivar sonido" : "Clic para activar sonido"}
-              >
-                {soundEnabled ? <Volume2 className="size-3.5" /> : <VolumeX className="size-3.5" />}
-                <span className="text-[11px]">{soundEnabled ? "Sonido ON" : "Silencio"}</span>
-                {soundEnabled && (
-                  <span
-                    role="button"
-                    onClick={testChime}
-                    className="ml-1 rounded-md bg-primary/20 px-1 py-0.5 text-[9px] font-extrabold uppercase text-primary hover:bg-primary/30"
-                    title="Probar timbre ahora"
-                  >
-                    Probar
-                  </span>
-                )}
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  refetchOrders();
-                  queryClient.invalidateQueries({ queryKey: ["products"] });
-                  queryClient.invalidateQueries({ queryKey: ["categories"] });
-                }}
-                className="flex size-9 items-center justify-center rounded-2xl border border-border/40 bg-surface-2 text-muted-foreground hover:text-foreground transition-all active:scale-95"
-                title="Actualizar datos"
-              >
-                <RotateCw className={cn("size-3.5", isFetching > 0 && "animate-spin text-primary")} />
-              </button>
-
-              <span className="flex items-center gap-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 px-3 py-1 text-[11px] font-bold text-emerald-400">
-                <span className="size-2 rounded-full bg-emerald-400 animate-ping" />
-                En vivo
-              </span>
-            </div>
+              />
+            </button>
           </div>
+
+          <p className="mt-2.5 text-[11px] text-muted-foreground border-t border-border/20 pt-2 leading-tight">
+            {isOpen 
+              ? "🟢 Clientes pueden agregar al carrito y enviar pedidos."
+              : "🔴 Tienda en pausa. Clientes ven aviso de cierre y checkout bloqueado."}
+          </p>
         </div>
 
-        {/* PESTAÑAS PRINCIPALES DEL PANEL */}
-        <div className="flex items-center gap-2 rounded-2xl bg-surface-2/60 p-1.5 border border-border/40">
+        {/* ============================================================ */}
+        {/* CONTROLES RÁPIDOS COMPACTOS (MOBILE FIRST) */}
+        {/* ============================================================ */}
+        <div className="grid grid-cols-4 gap-2">
+          {/* Push notifications */}
+          <div className="col-span-2">
+            <PushNotificationButton variant="admin" />
+          </div>
+
+          {/* Botón de Sonido */}
+          <button
+            type="button"
+            onClick={toggleSound}
+            className={cn(
+              "flex items-center justify-center gap-1.5 h-10 rounded-2xl px-2 text-xs font-bold border transition-all active:scale-95",
+              soundEnabled
+                ? "border-primary/40 bg-primary/10 text-primary"
+                : "border-border/40 bg-surface-2 text-muted-foreground"
+            )}
+            title={soundEnabled ? "Sonido activado (clic para silenciar)" : "Silencio (clic para activar sonido)"}
+          >
+            {soundEnabled ? <Volume2 className="size-4 shrink-0" /> : <VolumeX className="size-4 shrink-0" />}
+            <span className="text-[11px]">{soundEnabled ? "Sonido" : "Mute"}</span>
+          </button>
+
+          {/* Botón de Refrescar Datos */}
+          <button
+            type="button"
+            onClick={() => {
+              refetchOrders();
+              queryClient.invalidateQueries({ queryKey: ["products"] });
+              queryClient.invalidateQueries({ queryKey: ["categories"] });
+              toast.success("Datos actualizados");
+            }}
+            className="flex items-center justify-center h-10 rounded-2xl border border-border/40 bg-surface-2 text-muted-foreground hover:text-foreground transition-all active:scale-95"
+            title="Actualizar datos"
+          >
+            <RotateCw className={cn("size-4", isFetching > 0 && "animate-spin text-primary")} />
+          </button>
+        </div>
+
+        {/* ============================================================ */}
+        {/* PESTAÑAS PRINCIPALES DEL PANEL (GRID MOBILE FIRST) */}
+        {/* ============================================================ */}
+        <div className="grid grid-cols-3 gap-1.5 rounded-2xl bg-surface-2/80 p-1 border border-border/40">
           <button
             type="button"
             onClick={() => setActiveTab("pedidos")}
             className={cn(
-              "flex-1 flex items-center justify-center gap-2 h-11 rounded-xl text-xs sm:text-sm font-bold transition-all active:scale-98",
+              "flex items-center justify-center gap-1 h-10 rounded-xl text-xs font-bold transition-all active:scale-95 truncate px-1",
               activeTab === "pedidos"
                 ? "bg-primary text-primary-foreground shadow-md"
                 : "text-muted-foreground hover:text-foreground"
             )}
           >
-            <Package className="size-4" />
-            <span>Pedidos</span>
+            <Package className="size-3.5 shrink-0" />
+            <span className="truncate">Pedidos</span>
             {pendingCount > 0 && (
               <span className={cn(
-                "rounded-full px-1.5 py-0.2 text-[10px] font-extrabold",
+                "size-4 rounded-full flex items-center justify-center text-[10px] font-extrabold shrink-0",
                 activeTab === "pedidos" ? "bg-black text-white" : "bg-primary text-primary-foreground"
               )}>
                 {pendingCount}
@@ -653,17 +671,17 @@ export function AdminPedidosPage() {
             type="button"
             onClick={() => setActiveTab("productos")}
             className={cn(
-              "flex-1 flex items-center justify-center gap-2 h-11 rounded-xl text-xs sm:text-sm font-bold transition-all active:scale-98",
+              "flex items-center justify-center gap-1 h-10 rounded-xl text-xs font-bold transition-all active:scale-95 truncate px-1",
               activeTab === "productos"
                 ? "bg-primary text-primary-foreground shadow-md"
                 : "text-muted-foreground hover:text-foreground"
             )}
           >
-            <ShoppingBag className="size-4" />
-            <span>Productos</span>
+            <ShoppingBag className="size-3.5 shrink-0" />
+            <span className="truncate">Productos</span>
             <span className={cn(
-              "rounded-full px-1.5 py-0.2 text-[10px]",
-              activeTab === "productos" ? "bg-black/20 text-white" : "bg-surface text-muted-foreground"
+              "text-[10px] font-semibold opacity-75 shrink-0",
+              activeTab === "productos" ? "text-white" : "text-muted-foreground"
             )}>
               {products?.length ?? 0}
             </span>
@@ -673,17 +691,17 @@ export function AdminPedidosPage() {
             type="button"
             onClick={() => setActiveTab("categorias")}
             className={cn(
-              "flex-1 flex items-center justify-center gap-2 h-11 rounded-xl text-xs sm:text-sm font-bold transition-all active:scale-98",
+              "flex items-center justify-center gap-1 h-10 rounded-xl text-xs font-bold transition-all active:scale-95 truncate px-1",
               activeTab === "categorias"
                 ? "bg-primary text-primary-foreground shadow-md"
                 : "text-muted-foreground hover:text-foreground"
             )}
           >
-            <Layers className="size-4" />
-            <span>Categorías</span>
+            <Layers className="size-3.5 shrink-0" />
+            <span className="truncate">Categorías</span>
             <span className={cn(
-              "rounded-full px-1.5 py-0.2 text-[10px]",
-              activeTab === "categorias" ? "bg-black/20 text-white" : "bg-surface text-muted-foreground"
+              "text-[10px] font-semibold opacity-75 shrink-0",
+              activeTab === "categorias" ? "text-white" : "text-muted-foreground"
             )}>
               {categories?.length ?? 0}
             </span>
@@ -694,50 +712,50 @@ export function AdminPedidosPage() {
         {/* TAB 1: GESTIÓN DE PEDIDOS */}
         {/* ============================================================ */}
         {activeTab === "pedidos" && (
-          <div className="space-y-6">
-            {/* Tarjetas KPI de Resumen */}
-            <div className="grid grid-cols-3 gap-2.5 sm:gap-4">
-              <div className="rounded-2xl border border-border/40 bg-surface-2/60 p-3.5">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1">
-                  <Clock className="size-3 text-primary" /> Nuevos
+          <div className="space-y-4">
+            {/* Tarjetas KPI de Resumen (Mobile First) */}
+            <div className="grid grid-cols-3 gap-2">
+              <div className="rounded-2xl border border-border/40 bg-surface-2/60 p-3 flex flex-col justify-between">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1">
+                  <Clock className="size-3 text-primary shrink-0" /> Nuevos
                 </span>
-                <p className="mt-1 text-[22px] font-extrabold text-foreground">
+                <p className="mt-1 text-xl font-extrabold text-foreground">
                   {pendingCount}
                 </p>
               </div>
 
-              <div className="rounded-2xl border border-border/40 bg-surface-2/60 p-3.5">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1">
-                  <Bike className="size-3 text-amber-400" /> Activos
+              <div className="rounded-2xl border border-border/40 bg-surface-2/60 p-3 flex flex-col justify-between">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1">
+                  <Bike className="size-3 text-amber-400 shrink-0" /> Activos
                 </span>
-                <p className="mt-1 text-[22px] font-extrabold text-amber-400">
+                <p className="mt-1 text-xl font-extrabold text-amber-400">
                   {activeOrders}
                 </p>
               </div>
 
-              <div className="rounded-2xl border border-border/40 bg-surface-2/60 p-3.5">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1">
-                  <TrendingUp className="size-3 text-candy-lime" /> Ventas
+              <div className="rounded-2xl border border-border/40 bg-surface-2/60 p-3 flex flex-col justify-between">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1">
+                  <TrendingUp className="size-3 text-candy-lime shrink-0" /> Ventas
                 </span>
-                <p className="mt-1 text-[16px] sm:text-[18px] font-extrabold text-candy-lime truncate">
-                  {formatPrice(totalSales)}
+                <p className="mt-1 text-base sm:text-lg font-extrabold text-candy-lime truncate">
+                  {formatCompactPrice(totalSales)}
                 </p>
               </div>
             </div>
 
             {/* Buscador de pedidos */}
             <div className="relative">
-              <Search className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Search className="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 value={orderSearch}
                 onChange={(e) => setOrderSearch(e.target.value)}
-                placeholder="Buscar por ID, cliente, dirección o producto..."
-                className="h-12 rounded-2xl bg-surface-2/60 border-border/40 pl-11 text-[14px] text-foreground placeholder:text-muted-foreground"
+                placeholder="Buscar por ID, cliente, dirección..."
+                className="h-11 rounded-2xl bg-surface-2/60 border-border/40 pl-10 text-[13px] text-foreground placeholder:text-muted-foreground"
               />
             </div>
 
-            {/* Filtros por pestaña de estado */}
-            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+            {/* Filtros por pestaña de estado con scroll horizontal táctil */}
+            <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
               {[
                 { key: "all", label: "Todos", count: allOrdersList.length },
                 { key: "pending", label: "Recibidos", count: allOrdersList.filter((o) => o.status === "pending").length },
@@ -754,7 +772,7 @@ export function AdminPedidosPage() {
                     type="button"
                     onClick={() => setFilter(tab.key)}
                     className={cn(
-                      "flex items-center gap-1.5 whitespace-nowrap rounded-full px-3.5 py-1.5 text-xs font-bold transition-all active:scale-95",
+                      "flex items-center gap-1 whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-bold transition-all active:scale-95 shrink-0",
                       isSelected
                         ? "bg-primary text-primary-foreground shadow-sm"
                         : "bg-surface-2/60 text-muted-foreground hover:bg-surface-2 hover:text-foreground"
@@ -773,9 +791,9 @@ export function AdminPedidosPage() {
             </div>
 
             {/* Lista de Pedidos */}
-            <div className="space-y-4">
+            <div className="space-y-3">
               {ordersLoading ? (
-                <div className="space-y-4 pt-2">
+                <div className="space-y-3 pt-2">
                   <div className="h-28 animate-pulse rounded-3xl bg-surface-2/60" />
                   <div className="h-44 animate-pulse rounded-3xl bg-surface-2/60" />
                 </div>
@@ -788,7 +806,7 @@ export function AdminPedidosPage() {
                     title="No hay pedidos"
                     description={
                       orderSearch
-                        ? "No se encontraron pedidos que coincidan con la búsqueda."
+                        ? "No se encontraron pedidos con la búsqueda."
                         : "No hay pedidos con el estado seleccionado."
                     }
                   />
@@ -808,22 +826,22 @@ export function AdminPedidosPage() {
                   return (
                     <div
                       key={order.id}
-                      className="overflow-hidden rounded-[28px] border border-border/50 bg-surface-2/70 p-5 shadow-sm transition-all"
+                      className="overflow-hidden rounded-[24px] border border-border/50 bg-surface-2/70 p-4 shadow-sm transition-all"
                     >
                       {/* Encabezado del Pedido */}
-                      <div className="flex items-start justify-between gap-2 border-b border-border/30 pb-3">
+                      <div className="flex items-start justify-between gap-2 border-b border-border/30 pb-2.5">
                         <div>
                           <div className="flex items-center gap-2">
-                            <span className="text-[17px] font-extrabold text-foreground">
+                            <span className="text-[15px] font-extrabold text-foreground">
                               #{order.id.slice(0, 8).toUpperCase()}
                             </span>
                             {order.delivery_type === "fast" && (
-                              <span className="flex items-center gap-1 rounded-full bg-primary/20 px-2 py-0.5 text-[10px] font-bold text-primary">
-                                <Rocket className="size-3" /> Rápido
+                              <span className="flex items-center gap-1 rounded-full bg-primary/20 px-2 py-0.5 text-[9px] font-bold text-primary">
+                                <Rocket className="size-2.5" /> Rápido
                               </span>
                             )}
                           </div>
-                          <div className="mt-1 flex items-center gap-2 text-[12px] text-muted-foreground">
+                          <div className="mt-0.5 flex items-center gap-1.5 text-[11px] text-muted-foreground">
                             <span className="font-semibold text-primary/90">
                               {formatRelativeTime(order.created_at)}
                             </span>
@@ -831,7 +849,7 @@ export function AdminPedidosPage() {
                             <span>{formatDate(order.created_at)}</span>
                           </div>
                           {customerName && (
-                            <div className="mt-1 flex items-center gap-1 text-xs text-foreground/90 font-medium">
+                            <div className="mt-0.5 flex items-center gap-1 text-[11px] text-foreground/90 font-medium">
                               <User className="size-3 text-muted-foreground" />
                               <span>{customerName}</span>
                             </div>
@@ -839,13 +857,13 @@ export function AdminPedidosPage() {
                         </div>
 
                         <div className="text-right">
-                          <span className="text-[18px] font-extrabold text-candy-lime">
+                          <span className="text-[16px] font-extrabold text-candy-lime">
                             {formatPrice(order.total)}
                           </span>
                           <div>
                             <span
                               className={cn(
-                                "inline-block rounded-full px-2.5 py-0.5 text-[11px] font-bold mt-1",
+                                "inline-block rounded-full px-2 py-0.5 text-[10px] font-bold mt-0.5",
                                 isCancelled && "bg-destructive/20 text-destructive",
                                 isPending && "bg-primary/20 text-primary",
                                 isAccepted && "bg-sky-500/20 text-sky-400",
@@ -861,11 +879,11 @@ export function AdminPedidosPage() {
                       </div>
 
                       {/* Dirección de Entrega y Contacto */}
-                      <div className="my-3 space-y-2 rounded-2xl bg-surface/70 p-3.5 text-[13px]">
+                      <div className="my-2.5 space-y-1.5 rounded-2xl bg-surface/70 p-3 text-[12px]">
                         <div className="flex items-start justify-between gap-2">
-                          <div className="flex items-start gap-2">
-                            <MapPin className="mt-0.5 size-4 shrink-0 text-primary" />
-                            <span className="font-medium text-foreground leading-snug">
+                          <div className="flex items-start gap-1.5 min-w-0">
+                            <MapPin className="mt-0.5 size-3.5 shrink-0 text-primary" />
+                            <span className="font-medium text-foreground leading-snug break-words">
                               {order.delivery_address || "Sin dirección especificada"}
                             </span>
                           </div>
@@ -879,7 +897,7 @@ export function AdminPedidosPage() {
                                   className="p-1 text-muted-foreground hover:text-primary active:scale-90"
                                   title="Ver en Google Maps"
                                 >
-                                  <Navigation className="size-4" />
+                                  <Navigation className="size-3.5" />
                                 </a>
                                 <button
                                   type="button"
@@ -888,9 +906,9 @@ export function AdminPedidosPage() {
                                   title="Copiar dirección"
                                 >
                                   {copiedId === order.id ? (
-                                    <Check className="size-4 text-emerald-400" />
+                                    <Check className="size-3.5 text-emerald-400" />
                                   ) : (
-                                    <Copy className="size-4" />
+                                    <Copy className="size-3.5" />
                                   )}
                                 </button>
                               </>
@@ -900,8 +918,8 @@ export function AdminPedidosPage() {
 
                         {phone && (
                           <div className="flex items-center justify-between pt-1 border-t border-border/20">
-                            <span className="text-muted-foreground flex items-center gap-1.5 text-xs font-semibold">
-                              <MessageCircle className="size-3.5 text-emerald-400" /> Tel / WhatsApp: {phone}
+                            <span className="text-muted-foreground flex items-center gap-1 text-[11px] font-semibold">
+                              <MessageCircle className="size-3 text-emerald-400" /> WhatsApp: {phone}
                             </span>
                             <a
                               href={getWhatsAppUrl(phone, order.id)}
@@ -909,44 +927,44 @@ export function AdminPedidosPage() {
                               rel="noreferrer"
                               className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-400 hover:underline"
                             >
-                              Abrir WhatsApp
+                              Abrir Chat
                             </a>
                           </div>
                         )}
 
                         {order.status_details && (
-                          <div className="pt-1 text-xs text-muted-foreground flex items-center gap-1.5">
-                            <Bike className="size-3.5 text-amber-400" />
+                          <div className="pt-1 text-[11px] text-muted-foreground flex items-center gap-1">
+                            <Bike className="size-3 text-amber-400" />
                             <span>Vehículo:</span>
                             <span className="font-bold text-foreground">{order.status_details}</span>
                           </div>
                         )}
 
                         {order.cancel_reason && (
-                          <div className="pt-1 text-xs text-red-400 font-medium">
-                            Motivo cancelación: {order.cancel_reason}
+                          <div className="pt-1 text-[11px] text-red-400 font-medium">
+                            Motivo: {order.cancel_reason}
                           </div>
                         )}
                       </div>
 
                       {/* Lista de Productos Comprados */}
                       {items.length > 0 && (
-                        <div className="mb-4 space-y-2 border-t border-border/20 pt-3">
-                          <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                        <div className="mb-3 space-y-1.5 border-t border-border/20 pt-2.5">
+                          <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
                             Productos ({items.length})
                           </p>
-                          <div className="space-y-1.5 max-h-44 overflow-y-auto pr-1">
+                          <div className="space-y-1 max-h-36 overflow-y-auto pr-1">
                             {items.map((item) => (
                               <div
                                 key={item.id}
-                                className="flex items-center justify-between text-[13px] py-1 border-b border-border/10 last:border-none"
+                                className="flex items-center justify-between text-[12px] py-0.5 border-b border-border/10 last:border-none"
                               >
                                 <div className="flex items-center gap-2 min-w-0 pr-2">
                                   {item.products?.image_url && (
                                     <img
                                       src={item.products.image_url}
                                       alt=""
-                                      className="size-7 rounded-lg object-cover shrink-0 bg-surface"
+                                      className="size-6 rounded-md object-cover shrink-0 bg-surface"
                                     />
                                   )}
                                   <span className="truncate text-foreground font-medium">
@@ -954,7 +972,7 @@ export function AdminPedidosPage() {
                                     {item.products?.name ?? "Producto"}
                                   </span>
                                 </div>
-                                <span className="shrink-0 text-muted-foreground font-medium">
+                                <span className="shrink-0 text-muted-foreground font-medium text-[11px]">
                                   {formatPrice(Number(item.price_at_time) * item.quantity)}
                                 </span>
                               </div>
@@ -962,10 +980,10 @@ export function AdminPedidosPage() {
                           </div>
 
                           {/* Desglose de Totales */}
-                          <div className="pt-2 text-xs text-muted-foreground space-y-1 border-t border-border/10">
+                          <div className="pt-1.5 text-[11px] text-muted-foreground space-y-0.5 border-t border-border/10">
                             {order.delivery_fee !== null && (
                               <div className="flex justify-between">
-                                <span>Domicilio ({order.delivery_type === "fast" ? "Rápido 🚀" : "Normal"}):</span>
+                                <span>Domicilio ({order.delivery_type === "fast" ? "Rápido" : "Normal"}):</span>
                                 <span className="font-semibold text-foreground">{formatPrice(order.delivery_fee)}</span>
                               </div>
                             )}
@@ -977,7 +995,7 @@ export function AdminPedidosPage() {
                             </div>
                             {order.referral_code && (
                               <div className="flex justify-between">
-                                <span>Código de referido:</span>
+                                <span>Referido:</span>
                                 <span className="font-bold text-candy-lime">{order.referral_code}</span>
                               </div>
                             )}
@@ -986,21 +1004,21 @@ export function AdminPedidosPage() {
                       )}
 
                       {/* Botonera de Acciones de Estado */}
-                      <div className="space-y-2 pt-2 border-t border-border/30">
-                        <div className="flex flex-wrap gap-2">
+                      <div className="space-y-2 pt-1.5 border-t border-border/30">
+                        <div className="flex flex-wrap gap-1.5">
                           {isPending && (
                             <>
                               <Button
                                 size="sm"
-                                className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90 font-bold h-10 rounded-xl"
+                                className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90 font-bold h-9 rounded-xl text-xs"
                                 onClick={() => updateOrderStatus(order.id, "accepted")}
                               >
-                                <Store className="mr-1.5 size-4" /> Aceptar Pedido
+                                <Store className="mr-1 size-3.5" /> Aceptar
                               </Button>
                               <Button
                                 size="sm"
                                 variant="destructive"
-                                className="h-10 rounded-xl px-4"
+                                className="h-9 rounded-xl px-3"
                                 onClick={() => updateOrderStatus(order.id, "cancelled")}
                                 title="Cancelar pedido"
                               >
@@ -1013,15 +1031,15 @@ export function AdminPedidosPage() {
                             <>
                               <Button
                                 size="sm"
-                                className="flex-1 bg-amber-500 text-white hover:bg-amber-600 font-bold h-10 rounded-xl"
+                                className="flex-1 bg-amber-500 text-white hover:bg-amber-600 font-bold h-9 rounded-xl text-xs"
                                 onClick={() => updateOrderStatus(order.id, "in_transit")}
                               >
-                                <Bike className="mr-1.5 size-4" /> Despachar (En Camino)
+                                <Bike className="mr-1 size-3.5" /> Despachar (En Camino)
                               </Button>
                               <Button
                                 size="sm"
                                 variant="outline"
-                                className="h-10 rounded-xl border-destructive text-destructive hover:bg-destructive/10"
+                                className="h-9 rounded-xl border-destructive text-destructive hover:bg-destructive/10 text-xs px-2.5"
                                 onClick={() => updateOrderStatus(order.id, "cancelled")}
                               >
                                 Cancelar
@@ -1033,15 +1051,15 @@ export function AdminPedidosPage() {
                             <>
                               <Button
                                 size="sm"
-                                className="flex-1 bg-emerald-500 text-white hover:bg-emerald-600 font-bold h-10 rounded-xl"
+                                className="flex-1 bg-emerald-500 text-white hover:bg-emerald-600 font-bold h-9 rounded-xl text-xs"
                                 onClick={() => updateOrderStatus(order.id, "arrived")}
                               >
-                                <MapPin className="mr-1.5 size-4" /> Marcar Llegó
+                                <MapPin className="mr-1 size-3.5" /> Marcar Llegó
                               </Button>
                               <Button
                                 size="sm"
                                 variant="outline"
-                                className="h-10 rounded-xl border-destructive text-destructive hover:bg-destructive/10"
+                                className="h-9 rounded-xl border-destructive text-destructive hover:bg-destructive/10 text-xs px-2.5"
                                 onClick={() => updateOrderStatus(order.id, "cancelled")}
                               >
                                 Cancelar
@@ -1052,10 +1070,10 @@ export function AdminPedidosPage() {
                           {isArrived && (
                             <Button
                               size="sm"
-                              className="flex-1 bg-emerald-600 text-white hover:bg-emerald-700 font-bold h-10 rounded-xl"
+                              className="flex-1 bg-emerald-600 text-white hover:bg-emerald-700 font-bold h-9 rounded-xl text-xs"
                               onClick={() => updateOrderStatus(order.id, "delivered")}
                             >
-                              <CheckCircle2 className="mr-1.5 size-4" /> Marcar Entregado
+                              <CheckCircle2 className="mr-1 size-3.5" /> Marcar Entregado
                             </Button>
                           )}
 
@@ -1063,15 +1081,15 @@ export function AdminPedidosPage() {
                             to="/pedido/$id"
                             params={{ id: order.id }}
                             target="_blank"
-                            className="inline-flex h-10 items-center justify-center rounded-xl bg-surface px-3 text-xs font-semibold text-muted-foreground hover:text-foreground transition-all active:scale-95"
+                            className="inline-flex h-9 items-center justify-center rounded-xl bg-surface px-2.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-all active:scale-95"
                           >
-                            <ExternalLink className="size-4 mr-1" /> Tracking
+                            <ExternalLink className="size-3.5 mr-1" /> Tracking
                           </Link>
                         </div>
 
                         {/* Selector de escape manual para cualquier estado */}
-                        <div className="flex items-center justify-end gap-2 pt-1 text-[11px] text-muted-foreground">
-                          <span>Cambiar estado:</span>
+                        <div className="flex items-center justify-end gap-1.5 text-[11px] text-muted-foreground">
+                          <span>Estado:</span>
                           <select
                             value={order.status}
                             onChange={(e) => updateOrderStatus(order.id, e.target.value)}
@@ -1098,40 +1116,40 @@ export function AdminPedidosPage() {
         {/* TAB 2: GESTIÓN DE PRODUCTOS & STOCK */}
         {/* ============================================================ */}
         {activeTab === "productos" && (
-          <div className="space-y-6">
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+          <div className="space-y-4">
+            <div className="flex items-center justify-between gap-2">
               <div>
-                <h2 className="text-xl font-extrabold text-foreground">Catálogo de Productos</h2>
-                <p className="text-xs text-muted-foreground">
-                  Gestiona precios, descripciones, fotos y disponibilidad inmediata (Agotado / Disponible).
+                <h2 className="text-lg font-extrabold text-foreground">Catálogo de Productos</h2>
+                <p className="text-[11px] text-muted-foreground">
+                  Gestiona precios, descripciones y disponibilidad en 1 toque.
                 </p>
               </div>
 
               <Button
                 onClick={openCreateProductModal}
-                className="bg-primary text-primary-foreground hover:bg-primary/90 font-bold rounded-2xl h-11 px-5 shadow-md flex items-center gap-2"
+                className="bg-primary text-primary-foreground hover:bg-primary/90 font-bold rounded-2xl h-10 px-3.5 shadow-md flex items-center gap-1.5 shrink-0 text-xs"
               >
-                <Plus className="size-4" strokeWidth={3} />
-                <span>Nuevo Producto</span>
+                <Plus className="size-3.5" strokeWidth={3} />
+                <span>Nuevo</span>
               </Button>
             </div>
 
             {/* Buscador y filtro por categoría */}
-            <div className="flex flex-col sm:flex-row gap-3">
-              <div className="relative flex-1">
-                <Search className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+            <div className="flex flex-col gap-2">
+              <div className="relative">
+                <Search className="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   value={prodSearch}
                   onChange={(e) => setProdSearch(e.target.value)}
                   placeholder="Buscar producto por nombre..."
-                  className="h-12 rounded-2xl bg-surface-2/60 border-border/40 pl-11 text-[14px]"
+                  className="h-11 rounded-2xl bg-surface-2/60 border-border/40 pl-10 text-[13px]"
                 />
               </div>
 
               <select
                 value={prodCatFilter}
                 onChange={(e) => setProdCatFilter(e.target.value)}
-                className="h-12 rounded-2xl bg-surface-2/60 border border-border/40 px-4 text-xs font-semibold text-foreground outline-none"
+                className="h-10 rounded-2xl bg-surface-2/60 border border-border/40 px-3 text-xs font-semibold text-foreground outline-none"
               >
                 <option value="all">Todas las categorías ({products?.length ?? 0})</option>
                 {categories.map((c) => (
@@ -1144,9 +1162,9 @@ export function AdminPedidosPage() {
 
             {/* Listado de Productos */}
             {prodsLoading ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+              <div className="grid grid-cols-1 gap-2.5 pt-1">
                 {[0, 1, 2, 3].map((i) => (
-                  <div key={i} className="h-28 animate-pulse rounded-3xl bg-surface-2/60" />
+                  <div key={i} className="h-24 animate-pulse rounded-2xl bg-surface-2/60" />
                 ))}
               </div>
             ) : filteredProducts.length === 0 ? (
@@ -1158,7 +1176,7 @@ export function AdminPedidosPage() {
                 />
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 gap-2.5">
                 {filteredProducts.map((prod) => {
                   const isAvailable = prod.is_available !== false;
                   const cat = categories.find((c) => c.id === prod.category_id);
@@ -1168,16 +1186,16 @@ export function AdminPedidosPage() {
                     <div
                       key={prod.id}
                       className={cn(
-                        "flex flex-col justify-between rounded-[24px] border p-4 bg-surface-2/70 transition-all shadow-sm",
+                        "flex flex-col justify-between rounded-[22px] border p-3.5 bg-surface-2/70 transition-all shadow-sm",
                         isAvailable ? "border-border/50" : "border-red-500/30 bg-red-950/10"
                       )}
                     >
                       <div className="flex items-start gap-3">
-                        <div className="size-16 shrink-0 overflow-hidden rounded-2xl bg-surface p-1 border border-border/40 flex items-center justify-center">
+                        <div className="size-14 shrink-0 overflow-hidden rounded-xl bg-surface p-1 border border-border/40 flex items-center justify-center">
                           <img
                             src={img}
                             alt={prod.name}
-                            className="size-full object-cover rounded-xl"
+                            className="size-full object-cover rounded-lg"
                             onError={(e) => {
                               (e.target as HTMLElement).setAttribute("src", "/tripi-logo-app.png");
                             }}
@@ -1187,40 +1205,40 @@ export function AdminPedidosPage() {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1.5">
                             {cat && (
-                              <span className="rounded-md bg-surface px-1.5 py-0.5 text-[10px] font-bold text-muted-foreground uppercase">
+                              <span className="rounded bg-surface px-1.5 py-0.2 text-[9px] font-bold text-muted-foreground uppercase">
                                 {cat.name}
                               </span>
                             )}
                             <span className={cn(
-                              "rounded-md px-1.5 py-0.5 text-[10px] font-extrabold uppercase",
+                              "rounded px-1.5 py-0.2 text-[9px] font-extrabold uppercase",
                               isAvailable ? "bg-emerald-500/15 text-emerald-400" : "bg-red-500/15 text-red-400"
                             )}>
                               {isAvailable ? "Disponible" : "Agotado"}
                             </span>
                           </div>
 
-                          <h3 className="font-bold text-sm text-foreground truncate mt-1">
+                          <h3 className="font-bold text-[13px] text-foreground truncate mt-0.5">
                             {prod.name}
                           </h3>
 
-                          <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">
+                          <p className="text-[11px] text-muted-foreground line-clamp-1">
                             {prod.description || "Sin descripción"}
                           </p>
 
-                          <p className="text-sm font-black text-candy-lime mt-1">
+                          <p className="text-[13px] font-black text-candy-lime mt-0.5">
                             {formatPrice(prod.price)}
                           </p>
                         </div>
                       </div>
 
                       {/* Botones de control del producto */}
-                      <div className="mt-4 flex items-center justify-between gap-2 border-t border-border/30 pt-3">
+                      <div className="mt-2.5 flex items-center justify-between gap-2 border-t border-border/30 pt-2.5">
                         {/* Interruptor rápido de stock */}
                         <button
                           type="button"
                           onClick={() => toggleProductAvailability(prod)}
                           className={cn(
-                            "flex items-center gap-1.5 h-8.5 rounded-xl px-2.5 text-xs font-bold transition-all active:scale-95 border",
+                            "flex items-center gap-1.5 h-8 rounded-xl px-2.5 text-[11px] font-bold transition-all active:scale-95 border",
                             isAvailable
                               ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20"
                               : "bg-red-500/20 text-red-400 border-red-500/40 hover:bg-red-500/30"
@@ -1236,16 +1254,16 @@ export function AdminPedidosPage() {
                             size="sm"
                             variant="outline"
                             onClick={() => openEditProductModal(prod)}
-                            className="h-8.5 rounded-xl px-2.5 text-xs font-semibold"
+                            className="h-8 rounded-xl px-2.5 text-xs font-semibold"
                           >
-                            <Pencil className="size-3.5 mr-1" /> Editar
+                            <Pencil className="size-3 mr-1" /> Editar
                           </Button>
 
                           <Button
                             size="sm"
                             variant="destructive"
                             onClick={() => handleDeleteProduct(prod)}
-                            className="h-8.5 rounded-xl px-2.5 text-xs font-semibold"
+                            className="h-8 rounded-xl px-2 text-xs font-semibold"
                             title="Eliminar producto"
                           >
                             <Trash2 className="size-3.5" />
@@ -1264,28 +1282,28 @@ export function AdminPedidosPage() {
         {/* TAB 3: GESTIÓN DE CATEGORÍAS */}
         {/* ============================================================ */}
         {activeTab === "categorias" && (
-          <div className="space-y-6">
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+          <div className="space-y-4">
+            <div className="flex items-center justify-between gap-2">
               <div>
-                <h2 className="text-xl font-extrabold text-foreground">Categorías de la Tienda</h2>
-                <p className="text-xs text-muted-foreground">
-                  Organiza tu menú por secciones (Sintéticos, Weed, Pre-Rolls, Farmacia, Coca, etc.).
+                <h2 className="text-lg font-extrabold text-foreground">Categorías</h2>
+                <p className="text-[11px] text-muted-foreground">
+                  Organiza las secciones de la tienda (Sintéticos, Weed, Farmacia, etc.).
                 </p>
               </div>
 
               <Button
                 onClick={openCreateCategoryModal}
-                className="bg-primary text-primary-foreground hover:bg-primary/90 font-bold rounded-2xl h-11 px-5 shadow-md flex items-center gap-2"
+                className="bg-primary text-primary-foreground hover:bg-primary/90 font-bold rounded-2xl h-10 px-3.5 shadow-md flex items-center gap-1.5 shrink-0 text-xs"
               >
-                <Plus className="size-4" strokeWidth={3} />
-                <span>Nueva Categoría</span>
+                <Plus className="size-3.5" strokeWidth={3} />
+                <span>Nueva</span>
               </Button>
             </div>
 
             {catsLoading ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+              <div className="grid grid-cols-1 gap-2.5 pt-1">
                 {[0, 1, 2, 3].map((i) => (
-                  <div key={i} className="h-24 animate-pulse rounded-3xl bg-surface-2/60" />
+                  <div key={i} className="h-20 animate-pulse rounded-2xl bg-surface-2/60" />
                 ))}
               </div>
             ) : categories.length === 0 ? (
@@ -1297,7 +1315,7 @@ export function AdminPedidosPage() {
                 />
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 gap-2.5">
                 {categories.map((cat) => {
                   const prodCount = (products ?? []).filter((p) => p.category_id === cat.id).length;
                   const iconUrl = cat.icon_url || `/categorias/${cat.name}.png`;
@@ -1305,10 +1323,10 @@ export function AdminPedidosPage() {
                   return (
                     <div
                       key={cat.id}
-                      className="flex items-center justify-between rounded-[24px] border border-border/50 bg-surface-2/70 p-4 shadow-sm"
+                      className="flex items-center justify-between rounded-[22px] border border-border/50 bg-surface-2/70 p-3 shadow-sm"
                     >
                       <div className="flex items-center gap-3 min-w-0">
-                        <div className="size-12 shrink-0 overflow-hidden rounded-2xl bg-surface p-1 border border-border/40 flex items-center justify-center">
+                        <div className="size-11 shrink-0 overflow-hidden rounded-xl bg-surface p-1 border border-border/40 flex items-center justify-center">
                           <img
                             src={iconUrl}
                             alt={cat.name}
@@ -1320,29 +1338,29 @@ export function AdminPedidosPage() {
                         </div>
 
                         <div className="min-w-0">
-                          <h3 className="font-bold text-sm text-foreground truncate">{cat.name}</h3>
-                          <p className="text-[11px] text-muted-foreground font-mono">slug: {cat.slug}</p>
-                          <span className="inline-block mt-0.5 rounded-full bg-surface px-2 py-0.5 text-[10px] font-semibold text-primary">
+                          <h3 className="font-bold text-[13px] text-foreground truncate">{cat.name}</h3>
+                          <p className="text-[10px] text-muted-foreground font-mono truncate">slug: {cat.slug}</p>
+                          <span className="inline-block mt-0.5 rounded-full bg-surface px-1.5 py-0.2 text-[9px] font-semibold text-primary">
                             {prodCount} productos
                           </span>
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-1.5">
+                      <div className="flex items-center gap-1.5 shrink-0">
                         <Button
                           size="sm"
                           variant="outline"
                           onClick={() => openEditCategoryModal(cat)}
-                          className="h-9 rounded-xl px-3 text-xs font-semibold"
+                          className="h-8 rounded-xl px-2.5 text-xs font-semibold"
                         >
-                          <Pencil className="size-3.5 mr-1" /> Editar
+                          <Pencil className="size-3 mr-1" /> Editar
                         </Button>
 
                         <Button
                           size="sm"
                           variant="destructive"
                           onClick={() => handleDeleteCategory(cat)}
-                          className="h-9 rounded-xl px-3 text-xs font-semibold"
+                          className="h-8 rounded-xl px-2 text-xs font-semibold"
                           title="Eliminar categoría"
                         >
                           <Trash2 className="size-3.5" />
@@ -1363,7 +1381,7 @@ export function AdminPedidosPage() {
       <Dialog open={prodDialogOpen} onOpenChange={setProdDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-xl font-bold">
+            <DialogTitle className="text-lg font-bold">
               {editingProduct ? "Editar Producto" : "Nuevo Producto"}
             </DialogTitle>
             <DialogDescription className="text-xs text-muted-foreground">
@@ -1371,29 +1389,29 @@ export function AdminPedidosPage() {
             </DialogDescription>
           </DialogHeader>
 
-          <form onSubmit={handleSaveProduct} className="space-y-4 pt-2">
+          <form onSubmit={handleSaveProduct} className="space-y-3 pt-2">
             <div>
-              <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground block mb-1.5">
+              <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">
                 Nombre del producto *
               </label>
               <Input
                 value={prodName}
                 onChange={(e) => setProdName(e.target.value)}
                 placeholder="Ej. Cali (Californiana) x 3gr"
-                className="h-11 rounded-xl bg-surface border-border/60"
+                className="h-10 rounded-xl bg-surface border-border/60 text-xs"
                 required
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-2.5">
               <div>
-                <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground block mb-1.5">
+                <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">
                   Categoría
                 </label>
                 <select
                   value={prodCategoryId}
                   onChange={(e) => setProdCategoryId(e.target.value)}
-                  className="w-full h-11 rounded-xl bg-surface border border-border/60 px-3 text-xs font-semibold text-foreground outline-none"
+                  className="w-full h-10 rounded-xl bg-surface border border-border/60 px-2.5 text-xs font-semibold text-foreground outline-none"
                 >
                   <option value="">Sin categoría</option>
                   {categories.map((c) => (
@@ -1405,7 +1423,7 @@ export function AdminPedidosPage() {
               </div>
 
               <div>
-                <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground block mb-1.5">
+                <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">
                   Precio (COP) *
                 </label>
                 <Input
@@ -1413,29 +1431,29 @@ export function AdminPedidosPage() {
                   value={prodPrice}
                   onChange={(e) => setProdPrice(e.target.value)}
                   placeholder="Ej. 170000"
-                  className="h-11 rounded-xl bg-surface border-border/60"
+                  className="h-10 rounded-xl bg-surface border-border/60 text-xs"
                   required
                 />
               </div>
             </div>
 
             <div>
-              <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground block mb-1.5">
+              <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">
                 URL de Imagen
               </label>
               <Input
                 value={prodImageUrl}
                 onChange={(e) => setProdImageUrl(e.target.value)}
-                placeholder="https://... o ruta local"
-                className="h-11 rounded-xl bg-surface border-border/60 text-xs"
+                placeholder="https://... o /tripi-logo-app.png"
+                className="h-10 rounded-xl bg-surface border-border/60 text-xs"
               />
               {prodImageUrl && (
-                <div className="mt-2 flex items-center gap-2">
+                <div className="mt-1.5 flex items-center gap-2">
                   <span className="text-[10px] text-muted-foreground">Vista previa:</span>
                   <img
                     src={prodImageUrl}
                     alt="Preview"
-                    className="size-8 rounded-lg object-cover border border-border"
+                    className="size-7 rounded-lg object-cover border border-border"
                     onError={(e) => {
                       (e.target as HTMLElement).style.display = "none";
                     }}
@@ -1445,27 +1463,27 @@ export function AdminPedidosPage() {
             </div>
 
             <div>
-              <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground block mb-1.5">
+              <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">
                 Descripción
               </label>
               <Textarea
                 value={prodDescription}
                 onChange={(e) => setProdDescription(e.target.value)}
-                placeholder="Descripción o detalles del producto..."
-                className="rounded-xl bg-surface border-border/60 min-h-[70px] text-xs"
+                placeholder="Detalles del producto..."
+                className="rounded-xl bg-surface border-border/60 min-h-[60px] text-xs"
               />
             </div>
 
-            <div className="flex items-center justify-between rounded-xl bg-surface p-3 border border-border/40">
+            <div className="flex items-center justify-between rounded-xl bg-surface p-2.5 border border-border/40">
               <div>
                 <span className="text-xs font-bold text-foreground block">Disponibilidad Inmediata</span>
-                <span className="text-[11px] text-muted-foreground">¿Disponible para agregar al carrito?</span>
+                <span className="text-[10px] text-muted-foreground">¿Disponible para agregar al carrito?</span>
               </div>
               <button
                 type="button"
                 onClick={() => setProdIsAvailable(!prodIsAvailable)}
                 className={cn(
-                  "px-3 py-1.5 rounded-lg text-xs font-bold transition-all",
+                  "px-2.5 py-1 rounded-lg text-xs font-bold transition-all",
                   prodIsAvailable
                     ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
                     : "bg-red-500/20 text-red-400 border border-red-500/30"
@@ -1475,19 +1493,19 @@ export function AdminPedidosPage() {
               </button>
             </div>
 
-            <DialogFooter className="pt-2">
+            <DialogFooter className="pt-2 flex flex-row gap-2 justify-end">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => setProdDialogOpen(false)}
-                className="rounded-xl"
+                className="rounded-xl flex-1 text-xs h-9"
               >
                 Cancelar
               </Button>
               <Button
                 type="submit"
                 disabled={prodSaving}
-                className="bg-primary text-primary-foreground font-bold rounded-xl"
+                className="bg-primary text-primary-foreground font-bold rounded-xl flex-1 text-xs h-9"
               >
                 {prodSaving ? "Guardando..." : editingProduct ? "Actualizar" : "Crear Producto"}
               </Button>
@@ -1502,7 +1520,7 @@ export function AdminPedidosPage() {
       <Dialog open={catDialogOpen} onOpenChange={setCatDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-xl font-bold">
+            <DialogTitle className="text-lg font-bold">
               {editingCategory ? "Editar Categoría" : "Nueva Categoría"}
             </DialogTitle>
             <DialogDescription className="text-xs text-muted-foreground">
@@ -1510,9 +1528,9 @@ export function AdminPedidosPage() {
             </DialogDescription>
           </DialogHeader>
 
-          <form onSubmit={handleSaveCategory} className="space-y-4 pt-2">
+          <form onSubmit={handleSaveCategory} className="space-y-3 pt-2">
             <div>
-              <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground block mb-1.5">
+              <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">
                 Nombre de la categoría *
               </label>
               <Input
@@ -1524,48 +1542,48 @@ export function AdminPedidosPage() {
                   }
                 }}
                 placeholder="Ej. Sintéticos, Weed, Bebidas..."
-                className="h-11 rounded-xl bg-surface border-border/60"
+                className="h-10 rounded-xl bg-surface border-border/60 text-xs"
                 required
               />
             </div>
 
             <div>
-              <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground block mb-1.5">
+              <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">
                 Slug (identificador URL)
               </label>
               <Input
                 value={catSlug}
                 onChange={(e) => setCatSlug(e.target.value)}
                 placeholder="ej. sinteticos"
-                className="h-11 rounded-xl bg-surface border-border/60 text-xs font-mono"
+                className="h-10 rounded-xl bg-surface border-border/60 text-xs font-mono"
               />
             </div>
 
             <div>
-              <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground block mb-1.5">
+              <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">
                 URL de Icono / Imagen
               </label>
               <Input
                 value={catIconUrl}
                 onChange={(e) => setCatIconUrl(e.target.value)}
                 placeholder="/categorias/sintéticos.png o https://..."
-                className="h-11 rounded-xl bg-surface border-border/60 text-xs"
+                className="h-10 rounded-xl bg-surface border-border/60 text-xs"
               />
             </div>
 
-            <DialogFooter className="pt-2">
+            <DialogFooter className="pt-2 flex flex-row gap-2 justify-end">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => setCatDialogOpen(false)}
-                className="rounded-xl"
+                className="rounded-xl flex-1 text-xs h-9"
               >
                 Cancelar
               </Button>
               <Button
                 type="submit"
                 disabled={catSaving}
-                className="bg-primary text-primary-foreground font-bold rounded-xl"
+                className="bg-primary text-primary-foreground font-bold rounded-xl flex-1 text-xs h-9"
               >
                 {catSaving ? "Guardando..." : editingCategory ? "Actualizar" : "Crear Categoría"}
               </Button>

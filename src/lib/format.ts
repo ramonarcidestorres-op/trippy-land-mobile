@@ -7,6 +7,20 @@ export function formatPrice(value: number | string | null | undefined): string {
   }).format(Number.isFinite(n) ? n : 0);
 }
 
+export function formatCompactPrice(value: number | string | null | undefined): string {
+  const n = typeof value === "string" ? Number(value) : (value ?? 0);
+  if (!Number.isFinite(n) || n === 0) return "$0";
+  if (n >= 1000000) {
+    const m = (n / 1000000).toFixed(1).replace(/\.0$/, "");
+    return `$${m}M`;
+  }
+  if (n >= 10000) {
+    const k = Math.round(n / 1000);
+    return `$${k}k`;
+  }
+  return formatPrice(n);
+}
+
 export function formatDate(value: string): string {
   return new Intl.DateTimeFormat("es-CO", {
     dateStyle: "medium",
