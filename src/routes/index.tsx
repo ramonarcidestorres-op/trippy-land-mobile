@@ -153,10 +153,15 @@ function HomePage() {
         )}
       </section>
 
-      {/* Espacio para el Banner (Debajo de los Destacados) */}
-      <section className="mb-8">
-        <div className="w-full h-[120px] rounded-3xl bg-surface-2/60 flex items-center justify-center text-muted-foreground border border-border/50 border-dashed">
-          Espacio para el Banner
+      {/* Banner Tarjeta Trippy Credi */}
+      <section className="mb-10 flex justify-center">
+        <div className="w-full max-w-[340px] sm:max-w-[360px] aspect-[315/196] rounded-[22px] overflow-hidden shadow-[0_12px_32px_rgba(0,0,0,0.45)] border border-white/10 transition-transform active:scale-[0.98]">
+          <img
+            src="/credi-card.svg"
+            alt="Trippy Land Credi Card"
+            className="size-full object-cover select-none pointer-events-none"
+            loading="lazy"
+          />
         </div>
       </section>
     </AppShell>
