@@ -1,14 +1,15 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 export function useStoreStatus() {
   const queryClient = useQueryClient();
+  const [isToggling, setIsToggling] = useState(false);
 
   const { data: isOpen = true, isLoading } = useQuery({
     queryKey: ["store_status"],
-    staleTime: 1000 * 30, // 30 seconds
+    staleTime: 1000 * 15,
     queryFn: async (): Promise<boolean> => {
       try {
         const { data, error } = await supabase
@@ -19,7 +20,7 @@ export function useStoreStatus() {
 
         if (error) {
           console.warn("Could not fetch store status:", error.message);
-          return true; // Default to open if error
+          return true;
         }
 
         if (!data) return true;
@@ -31,7 +32,7 @@ export function useStoreStatus() {
     },
   });
 
-  // Listen to realtime changes on app_config with a unique channel ID per component instance
+  // Listen to realtime changes on app_config
   useEffect(() => {
     const channelId = `store-status-${Math.random().toString(36).substring(2, 9)}`;
     const channel = supabase
@@ -40,8 +41,11 @@ export function useStoreStatus() {
         "postgres_changes",
         { event: "*", schema: "public", table: "app_config" },
         (payload) => {
-          const row = (payload.new || payload.old) as { key?: string; value?: string } | undefined;
-          if (row?.key === "store_is_open" || !row?.key) {
+          const newRow = payload.new as { key?: string; value?: string } | undefined;
+          if (newRow?.key === "store_is_open") {
+            const newVal = newRow.value === "true" || (newRow.value as unknown) === true;
+            queryClient.setQueryData(["store_status"], newVal);
+          } else {
             queryClient.invalidateQueries({ queryKey: ["store_status"] });
           }
         }
@@ -59,8 +63,10 @@ export function useStoreStatus() {
   }, [queryClient]);
 
   const toggleStoreStatus = async (forcedValue?: boolean) => {
+    if (isToggling) return isOpen;
     const targetValue = forcedValue !== undefined ? forcedValue : !isOpen;
     
+    setIsToggling(true);
     // Optimistic update
     queryClient.setQueryData(["store_status"], targetValue);
 
@@ -80,19 +86,23 @@ export function useStoreStatus() {
           ? "🟢 Tienda ABIERTA — Ahora los clientes pueden pedir"
           : "🔴 Tienda CERRADA — Se mostrará el aviso a los clientes"
       );
-      queryClient.invalidateQueries({ queryKey: ["store_status"] });
+      queryClient.setQueryData(["store_status"], targetValue);
       return targetValue;
     } catch (err: any) {
       // Rollback
       queryClient.setQueryData(["store_status"], isOpen);
       toast.error("Error al actualizar estado de la tienda: " + (err?.message || "Intenta de nuevo"));
       return isOpen;
+    } finally {
+      setIsToggling(false);
     }
   };
 
   return {
     isOpen,
     isLoading,
+    isToggling,
     toggleStoreStatus,
   };
 }
+

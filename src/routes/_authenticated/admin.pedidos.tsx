@@ -28,7 +28,10 @@ import {
   Plus,
   Pencil,
   Trash2,
-  Power
+  AlertTriangle,
+  Loader2,
+  Upload,
+  Image as ImageIcon
 } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { PushNotificationButton } from "@/components/PushNotificationButton";
@@ -69,7 +72,7 @@ type AdminTab = "pedidos" | "productos" | "categorias";
 export function AdminPedidosPage() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const { isOpen, toggleStoreStatus } = useStoreStatus();
+  const { isOpen, isToggling, toggleStoreStatus } = useStoreStatus();
   const [activeTab, setActiveTab] = useState<AdminTab>("pedidos");
 
   // --- PEDIDOS STATE ---
@@ -95,6 +98,13 @@ export function AdminPedidosPage() {
   const [prodImageUrl, setProdImageUrl] = useState("");
   const [prodIsAvailable, setProdIsAvailable] = useState(true);
   const [prodSaving, setProdSaving] = useState(false);
+  const [uploadingProdImg, setUploadingProdImg] = useState(false);
+  const prodFileInputRef = useRef<HTMLInputElement>(null);
+
+  // Delete Confirmation state (Replaces native browser confirm for 100% mobile compatibility)
+  const [deleteProductTarget, setDeleteProductTarget] = useState<Product | null>(null);
+  const [deleteCategoryTarget, setDeleteCategoryTarget] = useState<Category | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   // Category Dialog state
   const [catDialogOpen, setCatDialogOpen] = useState(false);
@@ -103,6 +113,8 @@ export function AdminPedidosPage() {
   const [catSlug, setCatSlug] = useState("");
   const [catIconUrl, setCatIconUrl] = useState("");
   const [catSaving, setCatSaving] = useState(false);
+  const [uploadingCatImg, setUploadingCatImg] = useState(false);
+  const catFileInputRef = useRef<HTMLInputElement>(null);
 
   // Preferencia de sonido de campana
   const [soundEnabled, setSoundEnabled] = useState<boolean>(() => {
@@ -341,6 +353,57 @@ export function AdminPedidosPage() {
     return `https://wa.me/${waNumber}?text=${text}`;
   }
 
+  // --- SUBIDA DIRECTA DE IMÁGENES A SUPABASE STORAGE ---
+  async function handleFileUpload(file: File, type: "product" | "category") {
+    if (!file) return;
+    if (file.size > 25 * 1024 * 1024) {
+      toast.error("La imagen no puede pesar más de 25MB");
+      return;
+    }
+
+    if (type === "product") setUploadingProdImg(true);
+    else setUploadingCatImg(true);
+
+    try {
+      const fileExt = file.name.split(".").pop()?.toLowerCase() || "png";
+      const cleanFileName = `${type}s/${Date.now()}_${Math.random().toString(36).slice(2, 7)}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("product-images")
+        .upload(cleanFileName, file, {
+          contentType: file.type || `image/${fileExt === "jpg" ? "jpeg" : fileExt}`,
+          cacheControl: "3600",
+          upsert: true,
+        });
+
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage
+        .from("product-images")
+        .getPublicUrl(cleanFileName);
+
+      if (type === "product") {
+        setProdImageUrl(data.publicUrl);
+        toast.success("✅ Foto del producto subida a Supabase con éxito");
+      } else {
+        setCatIconUrl(data.publicUrl);
+        toast.success("✅ Ícono de categoría subido a Supabase con éxito");
+      }
+    } catch (err: any) {
+      console.error("Upload error:", err);
+      toast.error("Error al subir imagen a Supabase: " + (err.message || "Intenta de nuevo"));
+    } finally {
+      if (type === "product") {
+        setUploadingProdImg(false);
+        if (prodFileInputRef.current) prodFileInputRef.current.value = "";
+      } else {
+        setUploadingCatImg(false);
+        if (catFileInputRef.current) catFileInputRef.current.value = "";
+      }
+    }
+  }
+
+
   // --- TOGGLE DISPONIBILIDAD DE PRODUCTO ---
   async function toggleProductAvailability(product: Product) {
     const nextVal = product.is_available === false ? true : false;
@@ -353,7 +416,7 @@ export function AdminPedidosPage() {
 
     const { error } = await supabase
       .from("products")
-      .update({ is_available: nextVal })
+      .update({ is_available: nextVal, updated_at: new Date().toISOString() })
       .eq("id", product.id);
 
     if (error) {
@@ -407,13 +470,14 @@ export function AdminPedidosPage() {
 
     setProdSaving(true);
     try {
-      const payload = {
+      const payload: Record<string, any> = {
         name: prodName.trim(),
         category_id: prodCategoryId || null,
         price: numPrice,
         description: prodDescription.trim() || null,
         image_url: prodImageUrl.trim() || null,
         is_available: prodIsAvailable,
+        updated_at: new Date().toISOString(),
       };
 
       if (editingProduct) {
@@ -433,6 +497,7 @@ export function AdminPedidosPage() {
 
       setProdDialogOpen(false);
       queryClient.invalidateQueries({ queryKey: ["products"] });
+      queryClient.invalidateQueries({ queryKey: ["product"] });
     } catch (err: any) {
       toast.error("Error al guardar producto: " + (err.message || "Error inesperado"));
     } finally {
@@ -440,20 +505,34 @@ export function AdminPedidosPage() {
     }
   }
 
-  async function handleDeleteProduct(prod: Product) {
-    if (!confirm(`¿Estás seguro de eliminar el producto "${prod.name}"?`)) return;
+  // Ejecuta la eliminación real del producto de Supabase
+  async function confirmExecuteDeleteProduct() {
+    if (!deleteProductTarget) return;
 
+    setDeleting(true);
     try {
+      // 1. Optimistic removal
+      queryClient.setQueryData(["products", "", ""], (old: Product[] | undefined) => {
+        if (!old) return old;
+        return old.filter((p) => p.id !== deleteProductTarget.id);
+      });
+
       const { error } = await supabase
         .from("products")
         .delete()
-        .eq("id", prod.id);
+        .eq("id", deleteProductTarget.id);
 
       if (error) throw error;
-      toast.success("Producto eliminado");
+
+      toast.success(`Producto "${deleteProductTarget.name}" eliminado correctamente`);
+      setDeleteProductTarget(null);
       queryClient.invalidateQueries({ queryKey: ["products"] });
+      queryClient.invalidateQueries({ queryKey: ["product"] });
     } catch (err: any) {
-      toast.error("No se pudo eliminar: " + (err.message || ""));
+      toast.error("No se pudo eliminar el producto: " + (err.message || ""));
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -514,25 +593,37 @@ export function AdminPedidosPage() {
     }
   }
 
-  async function handleDeleteCategory(cat: Category) {
+  // Inicia la eliminación de una categoría verificando dependencias
+  function requestDeleteCategory(cat: Category) {
     const productsInCat = (products ?? []).filter((p) => p.category_id === cat.id).length;
     if (productsInCat > 0) {
-      toast.error(`No puedes eliminar esta categoría porque tiene ${productsInCat} productos asignados.`);
+      toast.error(`No puedes eliminar "${cat.name}" porque tiene ${productsInCat} productos asignados. Reasigna o elimina los productos primero.`);
       return;
     }
-    if (!confirm(`¿Eliminar la categoría "${cat.name}"?`)) return;
+    setDeleteCategoryTarget(cat);
+  }
 
+  // Ejecuta la eliminación real de la categoría en Supabase
+  async function confirmExecuteDeleteCategory() {
+    if (!deleteCategoryTarget) return;
+
+    setDeleting(true);
     try {
       const { error } = await supabase
         .from("categories")
         .delete()
-        .eq("id", cat.id);
+        .eq("id", deleteCategoryTarget.id);
 
       if (error) throw error;
-      toast.success("Categoría eliminada");
+
+      toast.success(`Categoría "${deleteCategoryTarget.name}" eliminada`);
+      setDeleteCategoryTarget(null);
       queryClient.invalidateQueries({ queryKey: ["categories"] });
     } catch (err: any) {
       toast.error("No se pudo eliminar la categoría: " + (err.message || ""));
+      queryClient.invalidateQueries({ queryKey: ["categories"] });
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -576,22 +667,27 @@ export function AdminPedidosPage() {
             <button
               type="button"
               role="switch"
+              disabled={isToggling}
               aria-checked={isOpen}
               onClick={() => toggleStoreStatus()}
               className={cn(
                 "relative inline-flex h-8 w-15 shrink-0 cursor-pointer rounded-full p-0.5 transition-colors duration-200 ease-in-out focus:outline-none shadow-inner active:scale-95",
-                isOpen ? "bg-emerald-500" : "bg-red-600"
+                isOpen ? "bg-emerald-500" : "bg-red-600",
+                isToggling && "opacity-80 cursor-wait"
               )}
               title={isOpen ? "Toca para Cerrar la tienda" : "Toca para Abrir la tienda"}
             >
               <span
                 className={cn(
-                  "pointer-events-none inline-block size-7 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out",
+                  "pointer-events-none inline-flex items-center justify-center size-7 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out",
                   isOpen ? "translate-x-7" : "translate-x-0"
                 )}
-              />
+              >
+                {isToggling && <Loader2 className="size-3.5 animate-spin text-muted-foreground" />}
+              </span>
             </button>
           </div>
+
 
           <p className="mt-2.5 text-[11px] text-muted-foreground border-t border-border/20 pt-2 leading-tight">
             {isOpen 
@@ -1121,7 +1217,7 @@ export function AdminPedidosPage() {
               <div>
                 <h2 className="text-lg font-extrabold text-foreground">Catálogo de Productos</h2>
                 <p className="text-[11px] text-muted-foreground">
-                  Gestiona precios, descripciones y disponibilidad en 1 toque.
+                  Gestiona precios, fotos y disponibilidad en 1 toque.
                 </p>
               </div>
 
@@ -1262,7 +1358,7 @@ export function AdminPedidosPage() {
                           <Button
                             size="sm"
                             variant="destructive"
-                            onClick={() => handleDeleteProduct(prod)}
+                            onClick={() => setDeleteProductTarget(prod)}
                             className="h-8 rounded-xl px-2 text-xs font-semibold"
                             title="Eliminar producto"
                           >
@@ -1359,7 +1455,7 @@ export function AdminPedidosPage() {
                         <Button
                           size="sm"
                           variant="destructive"
-                          onClick={() => handleDeleteCategory(cat)}
+                          onClick={() => requestDeleteCategory(cat)}
                           className="h-8 rounded-xl px-2 text-xs font-semibold"
                           title="Eliminar categoría"
                         >
@@ -1376,7 +1472,7 @@ export function AdminPedidosPage() {
       </div>
 
       {/* ============================================================ */}
-      {/* MODAL CREAR / EDITAR PRODUCTO */}
+      {/* MODAL CREAR / EDITAR PRODUCTO CON SUBIDA DE IMAGEN DIRECTA */}
       {/* ============================================================ */}
       <Dialog open={prodDialogOpen} onOpenChange={setProdDialogOpen}>
         <DialogContent className="max-w-md">
@@ -1385,7 +1481,7 @@ export function AdminPedidosPage() {
               {editingProduct ? "Editar Producto" : "Nuevo Producto"}
             </DialogTitle>
             <DialogDescription className="text-xs text-muted-foreground">
-              Define los datos principales que verán los clientes en la tienda.
+              Define los datos principales y la foto del producto.
             </DialogDescription>
           </DialogHeader>
 
@@ -1437,27 +1533,77 @@ export function AdminPedidosPage() {
               </div>
             </div>
 
-            <div>
-              <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">
-                URL de Imagen
+            {/* SECCIÓN DE IMAGEN CON SUBIDA DIRECTA A SUPABASE + URL FALLBACK */}
+            <div className="space-y-1.5">
+              <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground block">
+                Foto del producto
               </label>
-              <Input
-                value={prodImageUrl}
-                onChange={(e) => setProdImageUrl(e.target.value)}
-                placeholder="https://... o /tripi-logo-app.png"
-                className="h-10 rounded-xl bg-surface border-border/60 text-xs"
+
+              {/* Input file oculto para cámara y galería */}
+              <input
+                type="file"
+                ref={prodFileInputRef}
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) handleFileUpload(f, "product");
+                }}
               />
+
+              <Button
+                type="button"
+                variant="outline"
+                disabled={uploadingProdImg}
+                onClick={() => prodFileInputRef.current?.click()}
+                className="rounded-xl h-11 text-xs font-bold w-full border-dashed border-primary/50 bg-primary/10 text-primary hover:bg-primary/20 flex items-center justify-center gap-2 shadow-sm active:scale-[0.98]"
+              >
+                {uploadingProdImg ? (
+                  <>
+                    <Loader2 className="size-4 animate-spin text-primary" />
+                    <span>Subiendo a Supabase Storage...</span>
+                  </>
+                ) : (
+                  <>
+                    <Upload className="size-4 text-primary" />
+                    <span>📸 Subir foto desde galería o cámara</span>
+                  </>
+                )}
+              </Button>
+
+              <div className="relative">
+                <Input
+                  value={prodImageUrl}
+                  onChange={(e) => setProdImageUrl(e.target.value)}
+                  placeholder="O pega aquí el enlace de la imagen (https://...)"
+                  className="h-9 rounded-xl bg-surface border-border/60 text-[11px]"
+                />
+              </div>
+
               {prodImageUrl && (
-                <div className="mt-1.5 flex items-center gap-2">
-                  <span className="text-[10px] text-muted-foreground">Vista previa:</span>
+                <div className="flex items-center gap-2.5 rounded-xl bg-surface p-2 border border-border/40">
                   <img
                     src={prodImageUrl}
                     alt="Preview"
-                    className="size-7 rounded-lg object-cover border border-border"
+                    className="size-11 rounded-lg object-cover border border-border shrink-0 bg-surface-2"
                     onError={(e) => {
                       (e.target as HTMLElement).style.display = "none";
                     }}
                   />
+                  <div className="flex-1 min-w-0">
+                    <span className="text-[11px] font-bold text-emerald-400 flex items-center gap-1">
+                      <Check className="size-3" /> Foto asignada
+                    </span>
+                    <p className="text-[10px] text-muted-foreground truncate">{prodImageUrl}</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setProdImageUrl("")}
+                    className="p-1.5 text-muted-foreground hover:text-red-400 rounded-lg hover:bg-red-500/10 transition-colors"
+                    title="Quitar foto"
+                  >
+                    <XCircle className="size-4.5" />
+                  </button>
                 </div>
               )}
             </div>
@@ -1504,7 +1650,7 @@ export function AdminPedidosPage() {
               </Button>
               <Button
                 type="submit"
-                disabled={prodSaving}
+                disabled={prodSaving || uploadingProdImg}
                 className="bg-primary text-primary-foreground font-bold rounded-xl flex-1 text-xs h-9"
               >
                 {prodSaving ? "Guardando..." : editingProduct ? "Actualizar" : "Crear Producto"}
@@ -1515,7 +1661,7 @@ export function AdminPedidosPage() {
       </Dialog>
 
       {/* ============================================================ */}
-      {/* MODAL CREAR / EDITAR CATEGORÍA */}
+      {/* MODAL CREAR / EDITAR CATEGORÍA CON SUBIDA DE ÍCONO DIRECTA */}
       {/* ============================================================ */}
       <Dialog open={catDialogOpen} onOpenChange={setCatDialogOpen}>
         <DialogContent className="max-w-md">
@@ -1559,17 +1705,80 @@ export function AdminPedidosPage() {
               />
             </div>
 
-            <div>
-              <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">
-                URL de Icono / Imagen
+            {/* SECCIÓN DE SUBIDA DE ÍCONO A SUPABASE + URL FALLBACK */}
+            <div className="space-y-1.5">
+              <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground block">
+                Ícono / Imagen de Categoría
               </label>
-              <Input
-                value={catIconUrl}
-                onChange={(e) => setCatIconUrl(e.target.value)}
-                placeholder="/categorias/sintéticos.png o https://..."
-                className="h-10 rounded-xl bg-surface border-border/60 text-xs"
+
+              <input
+                type="file"
+                ref={catFileInputRef}
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) handleFileUpload(f, "category");
+                }}
               />
+
+              <Button
+                type="button"
+                variant="outline"
+                disabled={uploadingCatImg}
+                onClick={() => catFileInputRef.current?.click()}
+                className="rounded-xl h-11 text-xs font-bold w-full border-dashed border-primary/50 bg-primary/10 text-primary hover:bg-primary/20 flex items-center justify-center gap-2 shadow-sm active:scale-[0.98]"
+              >
+                {uploadingCatImg ? (
+                  <>
+                    <Loader2 className="size-4 animate-spin text-primary" />
+                    <span>Subiendo a Supabase Storage...</span>
+                  </>
+                ) : (
+                  <>
+                    <Upload className="size-4 text-primary" />
+                    <span>📸 Subir ícono desde galería o cámara</span>
+                  </>
+                )}
+              </Button>
+
+              <div className="relative">
+                <Input
+                  value={catIconUrl}
+                  onChange={(e) => setCatIconUrl(e.target.value)}
+                  placeholder="O pega aquí el enlace del ícono (https://...)"
+                  className="h-9 rounded-xl bg-surface border-border/60 text-[11px]"
+                />
+              </div>
+
+              {catIconUrl && (
+                <div className="flex items-center gap-2.5 rounded-xl bg-surface p-2 border border-border/40">
+                  <img
+                    src={catIconUrl}
+                    alt="Icon preview"
+                    className="size-11 rounded-lg object-contain border border-border shrink-0 bg-surface-2 p-1"
+                    onError={(e) => {
+                      (e.target as HTMLElement).style.display = "none";
+                    }}
+                  />
+                  <div className="flex-1 min-w-0">
+                    <span className="text-[11px] font-bold text-emerald-400 flex items-center gap-1">
+                      <Check className="size-3" /> Ícono cargado
+                    </span>
+                    <p className="text-[10px] text-muted-foreground truncate">{catIconUrl}</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setCatIconUrl("")}
+                    className="p-1.5 text-muted-foreground hover:text-red-400 rounded-lg hover:bg-red-500/10 transition-colors"
+                    title="Quitar ícono"
+                  >
+                    <XCircle className="size-4.5" />
+                  </button>
+                </div>
+              )}
             </div>
+
 
             <DialogFooter className="pt-2 flex flex-row gap-2 justify-end">
               <Button
@@ -1582,13 +1791,107 @@ export function AdminPedidosPage() {
               </Button>
               <Button
                 type="submit"
-                disabled={catSaving}
+                disabled={catSaving || uploadingCatImg}
                 className="bg-primary text-primary-foreground font-bold rounded-xl flex-1 text-xs h-9"
               >
                 {catSaving ? "Guardando..." : editingCategory ? "Actualizar" : "Crear Categoría"}
               </Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* ============================================================ */}
+      {/* MODAL DE CONFIRMACIÓN DE ELIMINACIÓN DE PRODUCTO (100% MOBILE) */}
+      {/* ============================================================ */}
+      <Dialog open={Boolean(deleteProductTarget)} onOpenChange={(open) => !open && setDeleteProductTarget(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <div className="mx-auto size-12 rounded-full bg-red-500/20 text-red-400 grid place-items-center mb-2">
+              <Trash2 className="size-6" />
+            </div>
+            <DialogTitle className="text-center text-lg font-bold">
+              ¿Eliminar este producto?
+            </DialogTitle>
+            <DialogDescription className="text-center text-xs text-muted-foreground">
+              Estás a punto de eliminar <span className="font-bold text-foreground">"{deleteProductTarget?.name}"</span> de forma permanente de tu catálogo.
+            </DialogDescription>
+          </DialogHeader>
+
+          <DialogFooter className="pt-3 flex flex-col sm:flex-row gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              disabled={deleting}
+              onClick={() => setDeleteProductTarget(null)}
+              className="rounded-xl w-full text-xs h-10"
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              disabled={deleting}
+              onClick={confirmExecuteDeleteProduct}
+              className="rounded-xl w-full text-xs font-bold h-10 bg-red-600 hover:bg-red-700"
+            >
+              {deleting ? (
+                <>
+                  <Loader2 className="size-3.5 animate-spin mr-1.5" />
+                  Eliminando...
+                </>
+              ) : (
+                "Eliminar Producto"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ============================================================ */}
+      {/* MODAL DE CONFIRMACIÓN DE ELIMINACIÓN DE CATEGORÍA (100% MOBILE) */}
+      {/* ============================================================ */}
+      <Dialog open={Boolean(deleteCategoryTarget)} onOpenChange={(open) => !open && setDeleteCategoryTarget(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <div className="mx-auto size-12 rounded-full bg-red-500/20 text-red-400 grid place-items-center mb-2">
+              <Trash2 className="size-6" />
+            </div>
+            <DialogTitle className="text-center text-lg font-bold">
+              ¿Eliminar esta categoría?
+            </DialogTitle>
+            <DialogDescription className="text-center text-xs text-muted-foreground">
+              Estás a punto de eliminar la categoría <span className="font-bold text-foreground">"{deleteCategoryTarget?.name}"</span>.
+            </DialogDescription>
+          </DialogHeader>
+
+          <DialogFooter className="pt-3 flex flex-col sm:flex-row gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              disabled={deleting}
+              onClick={() => setDeleteCategoryTarget(null)}
+              className="rounded-xl w-full text-xs h-10"
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              disabled={deleting}
+              onClick={confirmExecuteDeleteCategory}
+              className="rounded-xl w-full text-xs font-bold h-10 bg-red-600 hover:bg-red-700"
+            >
+              {deleting ? (
+                <>
+                  <Loader2 className="size-3.5 animate-spin mr-1.5" />
+                  Eliminando...
+                </>
+              ) : (
+                "Eliminar Categoría"
+              )}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </AppShell>
