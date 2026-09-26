@@ -225,14 +225,14 @@ export function AppShell({ children }: { children: ReactNode }) {
         )}
       </header>
 
-      <main className="mx-auto max-w-5xl px-4 pb-32 pt-4 md:pb-12">{children}</main>
+      <main className="mx-auto max-w-5xl px-4 pb-36 pt-4 md:pb-12">{children}</main>
 
       {/* PÍLDORA FLOTANTE "IR AL CARRITO" (Solo en Home y Catálogo cuando hay productos) */}
       {showFloatingCartPill && (
-        <div className="fixed bottom-[68px] inset-x-0 flex justify-center z-40 px-4 pointer-events-none animate-in slide-in-from-bottom-4 fade-in duration-300">
+        <div className="fixed bottom-[80px] inset-x-0 flex justify-center z-40 px-4 pointer-events-none animate-in slide-in-from-bottom-3 fade-in duration-300">
           <Link
             to="/carrito"
-            className="pointer-events-auto h-11 px-4 rounded-full bg-background/90 backdrop-blur-2xl text-white shadow-[0_10px_30px_rgba(0,0,0,0.6)] border border-white/15 flex items-center gap-3 transition-transform active:scale-95 hover:bg-neutral-900"
+            className="pointer-events-auto h-11 px-4 rounded-full bg-[#18181b]/95 backdrop-blur-2xl text-white shadow-[0_10px_30px_rgba(0,0,0,0.6)] border border-white/15 flex items-center gap-3 transition-transform active:scale-95 hover:bg-neutral-900"
           >
             <div className="flex items-center gap-2">
               <span className="flex size-5.5 items-center justify-center rounded-full bg-white text-black text-[11px] font-black">
@@ -255,32 +255,37 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       )}
 
+      {/* BARRA DE NAVEGACIÓN INFERIOR: PÍLDORA FLOTANTE OSCURA CON SELECTOR BLANCO CREMA */}
       {!hideBottomNav && (
-        <nav className="fixed inset-x-0 bottom-0 z-30 md:hidden bg-background/95 backdrop-blur-2xl border-t border-border/30">
-          <div className="flex h-13 items-center justify-around px-2">
+        <div className="fixed bottom-4 inset-x-0 z-30 md:hidden flex justify-center px-4 pointer-events-none">
+          <nav className="pointer-events-auto flex items-center gap-1.5 p-1.5 rounded-full bg-[#121214]/90 backdrop-blur-2xl border border-white/15 shadow-[0_12px_36px_rgba(0,0,0,0.65)]">
             {NAV.map(({ to, label, icon: Icon }) => {
               const active = to === "/" ? pathname === "/" : pathname.startsWith(to);
               return (
                 <Link
                   key={to}
                   to={to as any}
+                  aria-label={label}
                   className={cn(
-                    "relative flex flex-col items-center justify-center w-14 h-full transition-colors",
-                    active ? "text-white" : "text-muted-foreground hover:text-foreground"
+                    "relative flex size-10.5 items-center justify-center rounded-full transition-all duration-200 active:scale-90",
+                    active
+                      ? "bg-[#F2F2F5] text-neutral-950 shadow-md"
+                      : "text-neutral-400 hover:text-white"
                   )}
                 >
                   <Icon
                     strokeWidth={active ? 2.5 : 2}
-                    className={cn(
-                      "size-5 transition-transform",
-                      active ? "scale-110" : ""
-                    )}
+                    className="size-5"
                   />
+                  {/* Badge para el carrito si no está activo pero tiene ítems */}
+                  {to === "/carrito" && !active && count > 0 && (
+                    <span className="absolute top-1 right-1 flex size-2 rounded-full bg-candy-lime ring-2 ring-[#121214]" />
+                  )}
                 </Link>
               );
             })}
-          </div>
-        </nav>
+          </nav>
+        </div>
       )}
     </div>
   );
