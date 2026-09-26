@@ -215,9 +215,9 @@ export function ProductDetailPage() {
             className="relative flex size-10 items-center justify-center rounded-full bg-surface-2 border border-border/40 text-foreground transition-transform active:scale-90 shadow-sm"
             aria-label="Ver Carrito"
           >
-            <ShoppingBag className="size-5 text-candy-lime" />
+            <ShoppingBag className="size-5 text-foreground" />
             {cartTotalCount > 0 && (
-              <span className="absolute -top-1 -right-1 flex size-5 items-center justify-center rounded-full bg-candy-lime text-[10px] font-black text-black ring-2 ring-background">
+              <span className="absolute -top-1 -right-1 flex size-5 items-center justify-center rounded-full bg-primary text-[10px] font-black text-primary-foreground ring-2 ring-background">
                 {cartTotalCount}
               </span>
             )}
@@ -235,8 +235,8 @@ export function ProductDetailPage() {
             {product.name}
           </h1>
 
-          {/* Estrellas doradas / lima */}
-          <div className="flex justify-end items-center gap-1 mt-1 text-candy-lime text-xs">
+          {/* Estrellas blanco crema */}
+          <div className="flex justify-end items-center gap-1 mt-1 text-primary text-xs">
             {"★".repeat(5)}
           </div>
         </div>
@@ -298,7 +298,7 @@ export function ProductDetailPage() {
               <span className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground mr-1.5">
                 CONTENIDO
               </span>
-              <span className="text-[12px] font-black text-candy-lime">
+              <span className="text-[12px] font-black text-primary">
                 {product.weight_g ? `${product.weight_g} gramos` : "3 gramos"}
               </span>
             </div>
@@ -316,7 +316,7 @@ export function ProductDetailPage() {
             </span>
             <div className="flex-1 h-2 rounded-full bg-surface-2 overflow-hidden border border-border/30">
               <div
-                className="h-full rounded-full bg-candy-lime transition-all duration-500 shadow-[0_0_8px_rgba(180,255,50,0.4)]"
+                className="h-full rounded-full bg-primary transition-all duration-500 shadow-[0_0_8px_rgba(255,255,255,0.25)]"
                 style={{ width: `${Math.min(100, Math.max(10, thcValue))}%` }}
               />
             </div>
@@ -329,7 +329,7 @@ export function ProductDetailPage() {
             </span>
             <div className="flex-1 h-2 rounded-full bg-surface-2 overflow-hidden border border-border/30">
               <div
-                className="h-full rounded-full bg-candy-lime transition-all duration-500 shadow-[0_0_8px_rgba(180,255,50,0.4)]"
+                className="h-full rounded-full bg-primary transition-all duration-500 shadow-[0_0_8px_rgba(255,255,255,0.25)]"
                 style={{ width: `${Math.min(100, Math.max(10, cbdValue))}%` }}
               />
             </div>
@@ -342,7 +342,7 @@ export function ProductDetailPage() {
             </span>
             <div className="flex-1 h-2 rounded-full bg-surface-2 overflow-hidden border border-border/30">
               <div
-                className="h-full rounded-full bg-candy-lime transition-all duration-500 shadow-[0_0_8px_rgba(180,255,50,0.4)]"
+                className="h-full rounded-full bg-primary transition-all duration-500 shadow-[0_0_8px_rgba(255,255,255,0.25)]"
                 style={{ width: `${weightPercent}%` }}
               />
             </div>
@@ -354,21 +354,21 @@ export function ProductDetailPage() {
               onClick={() => setActiveDot(0)}
               className={cn(
                 "size-2 rounded-full transition-all cursor-pointer",
-                activeDot === 0 ? "bg-candy-lime ring-2 ring-candy-lime/30" : "bg-surface-2"
+                activeDot === 0 ? "bg-primary ring-2 ring-primary/30" : "bg-surface-2"
               )}
             />
             <span
               onClick={() => setActiveDot(1)}
               className={cn(
                 "size-1.5 rounded-full transition-all cursor-pointer",
-                activeDot === 1 ? "bg-candy-lime ring-2 ring-candy-lime/30" : "bg-surface-2"
+                activeDot === 1 ? "bg-primary ring-2 ring-primary/30" : "bg-surface-2"
               )}
             />
             <span
               onClick={() => setActiveDot(2)}
               className={cn(
                 "size-1.5 rounded-full transition-all cursor-pointer",
-                activeDot === 2 ? "bg-candy-lime ring-2 ring-candy-lime/30" : "bg-surface-2"
+                activeDot === 2 ? "bg-primary ring-2 ring-primary/30" : "bg-surface-2"
               )}
             />
           </div>
@@ -379,7 +379,7 @@ export function ProductDetailPage() {
         {/* ============================================================ */}
         <div className="pt-2 space-y-2 border-t border-border/20">
           {product.effects && (
-            <div className="flex items-center gap-1.5 text-[11px] font-bold text-candy-lime">
+            <div className="flex items-center gap-1.5 text-[11px] font-bold text-primary">
               <Sparkles className="size-3.5 shrink-0" />
               <span>{product.effects}</span>
             </div>
@@ -427,7 +427,7 @@ export function ProductDetailPage() {
           {isAlreadyInCart ? (
             <Link
               to="/carrito"
-              className="flex-1 h-13 rounded-2xl bg-candy-lime text-black font-extrabold text-sm flex items-center justify-center gap-2 shadow-xl transition-all active:scale-[0.98] hover:bg-candy-lime/90"
+              className="flex-1 h-13 rounded-2xl bg-primary text-primary-foreground font-black text-sm flex items-center justify-center gap-2 shadow-xl transition-all active:scale-[0.98] hover:bg-primary/90"
             >
               <Check className="size-4.5 stroke-[3]" />
               <span>Ir al Carrito</span>
@@ -441,7 +441,7 @@ export function ProductDetailPage() {
               className={cn(
                 "flex-1 h-13 rounded-2xl font-black text-sm flex items-center justify-between px-5 shadow-xl transition-all active:scale-[0.98]",
                 available
-                  ? "bg-candy-lime text-black hover:bg-candy-lime/90"
+                  ? "bg-primary text-primary-foreground hover:bg-primary/90"
                   : "bg-surface-2 text-muted-foreground opacity-50 cursor-not-allowed"
               )}
             >

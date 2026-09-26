@@ -1541,7 +1541,7 @@ export function AdminPedidosPage() {
                               </span>
                             )}
                             {prod.weight_g != null && (
-                              <span className="text-[10px] font-bold text-candy-lime/90 bg-surface px-1.5 py-0.5 rounded">
+                              <span className="text-[10px] font-bold text-primary/90 bg-surface px-1.5 py-0.5 rounded">
                                 {prod.weight_g}g
                               </span>
                             )}
@@ -1552,7 +1552,7 @@ export function AdminPedidosPage() {
                             )}
                           </div>
 
-                          <p className="text-[13px] font-black text-candy-lime mt-1">
+                          <p className="text-[13px] font-black text-primary mt-1">
                             {formatPrice(prod.price)}
                           </p>
                         </div>
