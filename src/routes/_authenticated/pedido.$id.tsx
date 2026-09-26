@@ -11,6 +11,7 @@ import { EmptyState, ErrorState } from "@/components/States";
 import { supabase } from "@/integrations/supabase/client";
 import { orderQuery, orderHistoryQuery } from "@/lib/queries";
 import { formatDate, formatPrice } from "@/lib/format";
+import { playWhatsAppChime } from "@/lib/sound";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -39,8 +40,6 @@ const STATUS_ANNOUNCEMENTS: Record<string, string> = {
   delivered: "Pedido entregado con éxito. Que lo disfrutes.",
   cancelled: "Tu pedido fue cancelado.",
 };
-
-import { playWhatsAppChime } from "@/lib/sound";
 
 function triggerVibration() {
   try {
