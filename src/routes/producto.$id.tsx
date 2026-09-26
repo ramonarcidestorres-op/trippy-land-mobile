@@ -251,22 +251,22 @@ export function ProductDetailPage() {
     return (
       <div className="relative min-h-screen bg-background overflow-hidden">
         {renderBackgroundStore()}
-        <div className="fixed inset-0 z-50 flex flex-col justify-end bg-black/35 backdrop-blur-[2px] animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-50 flex flex-col justify-end bg-black/40 backdrop-blur-sm animate-in fade-in duration-200">
           <div 
             className="flex-1 w-full min-h-[14vh] cursor-pointer" 
             onClick={() => handleClose(true)} 
             aria-label="Cerrar modal"
           />
-          <div className="relative w-full max-w-lg mx-auto bg-black/45 backdrop-blur-2xl rounded-t-[36px] p-5 h-[86vh] flex flex-col justify-between animate-pulse shadow-2xl border-t border-x border-white/15">
+          <div className="relative w-full max-w-lg mx-auto bg-[#F2F2F5] rounded-t-[36px] p-6 h-[86vh] flex flex-col justify-between animate-pulse shadow-2xl">
             <div className="flex justify-between items-center pt-2">
-              <div className="size-11 rounded-full bg-white/10" />
-              <div className="size-11 rounded-full bg-white/10" />
+              <div className="size-12 rounded-full bg-white shadow-sm" />
+              <div className="size-12 rounded-full bg-white shadow-sm" />
             </div>
-            <div className="my-auto size-48 rounded-full bg-white/5 mx-auto" />
-            <div className="rounded-t-[32px] bg-white p-6 space-y-4">
-              <div className="h-6 w-2/3 bg-neutral-200 rounded-lg" />
+            <div className="my-auto size-52 rounded-full bg-white/60 mx-auto" />
+            <div className="rounded-t-[32px] bg-white p-6 space-y-5">
+              <div className="h-7 w-2/3 bg-neutral-200 rounded-lg" />
               <div className="h-4 w-full bg-neutral-200 rounded-lg" />
-              <div className="h-12 w-full bg-neutral-900 rounded-2xl" />
+              <div className="h-14 w-full bg-neutral-900 rounded-full" />
             </div>
           </div>
         </div>
@@ -278,7 +278,7 @@ export function ProductDetailPage() {
     return (
       <div className="relative min-h-screen bg-background overflow-hidden">
         {renderBackgroundStore()}
-        <div className="fixed inset-0 z-50 flex flex-col justify-end bg-black/35 backdrop-blur-[2px]">
+        <div className="fixed inset-0 z-50 flex flex-col justify-end bg-black/40 backdrop-blur-sm">
           <div 
             className="flex-1 w-full min-h-[14vh] cursor-pointer" 
             onClick={() => handleClose(true)} 
@@ -318,9 +318,11 @@ export function ProductDetailPage() {
 
   const img = product.image_url || fallbackImg;
 
-  // Has specs/effects to show
+  // Category name or strain for pill badge
+  const categoryName = (product as any).categories?.name || product.strain_type || "Premium";
+
+  // Has extra specs/effects to show
   const hasSpecs = Boolean(
-    product.strain_type || 
     product.weight_g || 
     product.thc_percentage != null || 
     product.cbd_percentage != null || 
@@ -329,12 +331,12 @@ export function ProductDetailPage() {
 
   return (
     <div className="relative min-h-screen bg-background overflow-hidden">
-      {/* VISTA DE LA TIENDA DE FONDO (Permite ver el catálogo y header real arriba del sheet) */}
+      {/* VISTA DE LA TIENDA DE FONDO */}
       {renderBackgroundStore()}
 
       {/* MODAL BOTTOM SHEET OVERLAY */}
       <div 
-        className="fixed inset-0 z-50 flex flex-col justify-end bg-black/35 backdrop-blur-[2px] transition-opacity duration-200"
+        className="fixed inset-0 z-50 flex flex-col justify-end bg-black/40 backdrop-blur-sm transition-opacity duration-200"
         style={{ opacity: backdropOpacity }}
       >
         {/* Zona de fondo clickeable para cerrar */}
@@ -345,12 +347,11 @@ export function ProductDetailPage() {
         />
 
         {/* ============================================================ */}
-        {/* TARJETA DE PRODUCTO: HERO TRANSLÚCIDO GLASS + CARD INFERIOR BLANCA */}
-        {/* GESTO DE DESLIZAR HACIA ABAJO PARA CERRAR */}
+        {/* TARJETA DE PRODUCTO: FONDO SUPERIOR CLARO SÓLIDO + CARD INFERIOR BLANCA */}
         {/* ============================================================ */}
         <div 
           ref={sheetRef}
-          className="relative w-full max-w-lg mx-auto bg-black/45 backdrop-blur-2xl rounded-t-[36px] shadow-2xl flex flex-col max-h-[88vh] h-[88vh] overflow-hidden animate-in slide-in-from-bottom duration-300 ease-out border-t border-x border-white/15 select-none touch-none"
+          className="relative w-full max-w-lg mx-auto bg-[#F2F2F5] rounded-t-[36px] shadow-2xl flex flex-col max-h-[88vh] h-[88vh] overflow-hidden animate-in slide-in-from-bottom duration-300 ease-out select-none touch-none border-t border-neutral-200/40"
         >
           {/* SECCIÓN SUPERIOR DE ARRASTRE (HANDLE + CABECERA + HERO) */}
           <div
@@ -361,50 +362,50 @@ export function ProductDetailPage() {
           >
             {/* BARRA SUPERIOR DE ARRASTRE (SWIPE HANDLE) */}
             <div className="pt-2.5 pb-1 flex justify-center shrink-0">
-              <div className="w-12 h-1.5 rounded-full bg-white/30 hover:bg-white/50 transition-colors" />
+              <div className="w-12 h-1.5 rounded-full bg-neutral-300/80 hover:bg-neutral-400 transition-colors" />
             </div>
 
             {/* CABECERA SUPERIOR FLOTANTE (BOTÓN ATRÁS Y FAVORITO + CARRITO) */}
             <div className="px-5 pt-2 pb-2 flex items-center justify-between shrink-0 z-20">
-              {/* Botón Volver circular */}
+              {/* Botón Volver circular blanco */}
               <button
                 type="button"
                 onClick={() => handleClose(false)}
                 onTouchStart={(e) => e.stopPropagation()}
                 onTouchEnd={(e) => e.stopPropagation()}
-                className="flex size-11 items-center justify-center rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-white shadow-lg transition-transform active:scale-90 hover:bg-white/20"
+                className="flex size-12 items-center justify-center rounded-full bg-white shadow-md border border-neutral-100 text-neutral-900 transition-transform active:scale-90 hover:bg-neutral-50"
                 aria-label="Volver"
               >
                 <ChevronLeft className="size-6 stroke-[2.5]" />
               </button>
 
               <div 
-                className="flex items-center gap-2.5"
+                className="flex items-center gap-3"
                 onTouchStart={(e) => e.stopPropagation()}
                 onTouchEnd={(e) => e.stopPropagation()}
               >
-                {/* Botón Favorito */}
+                {/* Botón Favorito circular blanco */}
                 <button
                   type="button"
                   onClick={toggleFavorite}
                   className={cn(
-                    "flex size-11 items-center justify-center rounded-full bg-white/10 backdrop-blur-md border border-white/15 shadow-lg transition-transform active:scale-90 hover:bg-white/20",
-                    isFavorite ? "text-red-400 border-red-500/30 bg-red-500/20" : "text-white/80 hover:text-white"
+                    "flex size-12 items-center justify-center rounded-full bg-white shadow-md border border-neutral-100 transition-transform active:scale-90 hover:bg-neutral-50",
+                    isFavorite ? "text-red-500" : "text-neutral-900"
                   )}
                   aria-label="Favorito"
                 >
-                  <Heart className={cn("size-5", isFavorite && "fill-current")} />
+                  <Heart className={cn("size-5.5", isFavorite && "fill-current")} />
                 </button>
 
                 {/* Botón Carrito con badge */}
                 <Link
                   to="/carrito"
-                  className="relative flex size-11 items-center justify-center rounded-full bg-white/10 backdrop-blur-md border border-white/15 shadow-lg transition-transform active:scale-90 text-white hover:bg-white/20"
+                  className="relative flex size-12 items-center justify-center rounded-full bg-white shadow-md border border-neutral-100 transition-transform active:scale-90 text-neutral-900 hover:bg-neutral-50"
                   aria-label="Ver Carrito"
                 >
-                  <ShoppingCart className="size-5" />
+                  <ShoppingCart className="size-5.5" />
                   {cartTotalCount > 0 && (
-                    <span className="absolute -top-1 -right-1 flex size-5 items-center justify-center rounded-full bg-white text-[10px] font-black text-black ring-2 ring-black">
+                    <span className="absolute -top-1 -right-1 flex size-5 items-center justify-center rounded-full bg-black text-[10px] font-black text-white ring-2 ring-white">
                       {cartTotalCount}
                     </span>
                   )}
@@ -412,17 +413,17 @@ export function ProductDetailPage() {
               </div>
             </div>
 
-            {/* SECCIÓN HERO CENTRAL: IMAGEN CON ILUMINACIÓN / HALO SUAVE DETRÁS */}
+            {/* SECCIÓN HERO CENTRAL: IMAGEN CON HALO SUAVE DETRÁS */}
             <div className="flex-1 flex items-center justify-center p-4 relative min-h-0">
               {/* Iluminación / Halo suave radial detrás del producto */}
-              <div className="absolute size-52 sm:size-64 rounded-full bg-[radial-gradient(circle,rgba(255,255,255,0.22)_0%,rgba(255,255,255,0.06)_45%,transparent_70%)] blur-xl pointer-events-none" />
+              <div className="absolute size-64 sm:size-72 rounded-full bg-[radial-gradient(circle,rgba(255,255,255,0.95)_0%,rgba(235,235,242,0.6)_50%,transparent_75%)] blur-lg pointer-events-none" />
 
-              {/* Imagen PNG del producto */}
-              <div className="relative aspect-square w-full max-w-[240px] drop-shadow-[0_25px_40px_rgba(0,0,0,0.85)] transition-transform duration-500 hover:scale-105 z-10 pointer-events-none">
+              {/* Imagen PNG del producto con drop shadow */}
+              <div className="relative aspect-square w-full max-w-[250px] drop-shadow-[0_20px_35px_rgba(0,0,0,0.18)] transition-transform duration-500 hover:scale-105 z-10 pointer-events-none">
                 <img
                   src={img}
                   alt={product.name}
-                  className="size-full object-contain filter drop-shadow-[0_15px_30px_rgba(0,0,0,0.7)]"
+                  className="size-full object-contain filter drop-shadow-[0_12px_24px_rgba(0,0,0,0.15)]"
                 />
                 {!available && (
                   <div className="absolute inset-0 grid place-items-center rounded-3xl bg-black/85 text-[11px] font-black uppercase tracking-widest text-red-400 border border-red-500/30 backdrop-blur-sm">
@@ -434,134 +435,134 @@ export function ProductDetailPage() {
           </div>
 
           {/* ============================================================ */}
-          {/* CARD INFERIOR EN BLANCO: TÍTULO, ESPECIFICACIONES, PRECIO Y BOTÓN */}
+          {/* CARD INFERIOR EN BLANCO: TÍTULO, ESPECIFICACIONES, PRECIO, SELECTOR Y BOTÓN */}
           {/* ============================================================ */}
-          <div className="bg-white rounded-t-[36px] p-6 pb-[max(env(safe-area-inset-bottom),22px)] shadow-[0_-15px_35px_rgba(0,0,0,0.3)] space-y-4 shrink-0 overflow-y-auto max-h-[50vh] overscroll-contain">
-          
-          {/* TÍTULO Y DESCRIPCIÓN */}
-          <div className="space-y-1">
-            <h1 className="text-2xl sm:text-[26px] font-black tracking-tight text-neutral-900 leading-tight">
-              {product.name}
-            </h1>
-            <p className="text-[13px] text-neutral-500 font-medium leading-relaxed">
-              {product.description || "Fórmula e ingredientes seleccionados de primera calidad listos para disfrutar."}
-            </p>
-          </div>
+          <div className="bg-white rounded-t-[36px] p-6 pt-7 pb-[max(env(safe-area-inset-bottom),26px)] shadow-[0_-15px_40px_rgba(0,0,0,0.12)] space-y-5 shrink-0 overflow-y-auto max-h-[52vh]">
+            
+            {/* TÍTULO Y DESCRIPCIÓN */}
+            <div className="space-y-1.5">
+              <h1 className="text-2xl sm:text-[28px] font-bold tracking-tight text-neutral-950 leading-tight">
+                {product.name}
+              </h1>
+              <p className="text-[13px] sm:text-[14px] text-neutral-500 font-normal leading-relaxed">
+                {product.description || "The ready-to-drink formula offers a smooth, creamy texture in a compact bottle that's easy to carry."}
+              </p>
+            </div>
 
-          {/* ESPECIFICACIONES ADAPTATIVAS (SI EL PRODUCTO LAS TIENE) */}
-          {hasSpecs && (
-            <div className="space-y-2 pt-1 border-t border-neutral-100">
-              {/* Badges de Tipo, Gramos y THC/CBD */}
-              <div className="flex flex-wrap items-center gap-1.5">
-                {product.strain_type && (
-                  <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold bg-neutral-100 text-neutral-800 border border-neutral-200/60">
-                    {product.strain_type}
-                  </span>
+            {/* ESPECIFICACIONES ADAPTATIVAS (SI EL PRODUCTO LAS TIENE) */}
+            {hasSpecs && (
+              <div className="space-y-2 pt-1 border-t border-neutral-100">
+                <div className="flex flex-wrap items-center gap-1.5">
+                  {product.weight_g != null && (
+                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold bg-neutral-100 text-neutral-800 border border-neutral-200/60">
+                      ⚖️ {product.weight_g} gramos
+                    </span>
+                  )}
+                  {product.thc_percentage != null && (
+                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold bg-neutral-100 text-neutral-800 border border-neutral-200/60">
+                      THC: {product.thc_percentage}%
+                    </span>
+                  )}
+                  {product.cbd_percentage != null && (
+                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold bg-neutral-100 text-neutral-800 border border-neutral-200/60">
+                      CBD: {product.cbd_percentage}%
+                    </span>
+                  )}
+                </div>
+
+                {product.effects && (
+                  <div className="flex items-center gap-1.5 text-[12px] font-bold text-neutral-800 bg-neutral-50 px-3 py-1.5 rounded-xl border border-neutral-200/50">
+                    <Sparkles className="size-3.5 text-neutral-600 shrink-0" />
+                    <span>{product.effects}</span>
+                  </div>
                 )}
-                {product.weight_g != null && (
-                  <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold bg-neutral-100 text-neutral-800 border border-neutral-200/60">
-                    ⚖️ {product.weight_g} gramos
+              </div>
+            )}
+
+            {/* FILA DE PRECIO CON PÍLDORA NEGRA DE CATEGORÍA Y SELECTOR DE CANTIDAD LIMPIO */}
+            <div className="flex items-center justify-between pt-2">
+              {/* Precio + Píldora Negra de Categoría como en la referencia */}
+              <div>
+                <div className="flex items-center gap-2.5">
+                  <span className="text-2xl sm:text-[28px] font-bold tracking-tight text-neutral-950 leading-none">
+                    {formatPrice(totalPrice)}
                   </span>
-                )}
-                {product.thc_percentage != null && (
-                  <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold bg-neutral-100 text-neutral-800 border border-neutral-200/60">
-                    THC: {product.thc_percentage}%
-                  </span>
-                )}
-                {product.cbd_percentage != null && (
-                  <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold bg-neutral-100 text-neutral-800 border border-neutral-200/60">
-                    CBD: {product.cbd_percentage}%
+                  {categoryName && (
+                    <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-black text-white text-[11px] font-bold uppercase tracking-wider shadow-sm">
+                      {categoryName}
+                    </span>
+                  )}
+                </div>
+                {qty > 1 && (
+                  <span className="text-[11px] font-semibold text-neutral-400 block mt-1">
+                    {formatPrice(singlePrice)} c/u
                   </span>
                 )}
               </div>
 
-              {/* Efectos Destacados */}
-              {product.effects && (
-                <div className="flex items-center gap-1.5 text-[12px] font-bold text-neutral-800 bg-neutral-50 px-3 py-1.5 rounded-xl border border-neutral-200/50">
-                  <Sparkles className="size-3.5 text-neutral-600 shrink-0" />
-                  <span>{product.effects}</span>
-                </div>
-              )}
-            </div>
-          )}
+              {/* Selector de Cantidad limpio (sin píldoras en - y +) */}
+              <div className="flex items-center rounded-full bg-neutral-100/90 px-4 py-2 gap-4 border border-neutral-200/50">
+                <button
+                  type="button"
+                  onClick={handleQtyMinus}
+                  disabled={!available || qty <= 1}
+                  className="flex items-center justify-center text-neutral-800 hover:text-black transition-transform active:scale-90 disabled:opacity-25"
+                  aria-label="Disminuir cantidad"
+                >
+                  <Minus className="size-4 stroke-[2.5]" />
+                </button>
 
-          {/* FILA DE PRECIO (SUMA DINÁMICA) Y SELECTOR DE CANTIDAD */}
-          <div className="flex items-center justify-between pt-1">
-            {/* Precio dinámico según cantidad seleccionada */}
-            <div>
-              <p className="text-2xl sm:text-[28px] font-black tracking-tight text-neutral-900 leading-none">
-                {formatPrice(totalPrice)}
-              </p>
-              {qty > 1 && (
-                <span className="text-[11px] font-semibold text-neutral-400 block mt-1">
-                  {formatPrice(singlePrice)} c/u
+                <span className="w-4 text-center text-sm font-bold text-neutral-950">
+                  {qty}
                 </span>
+
+                <button
+                  type="button"
+                  onClick={handleQtyPlus}
+                  disabled={!available}
+                  className="flex items-center justify-center text-neutral-800 hover:text-black transition-transform active:scale-90 disabled:opacity-25"
+                  aria-label="Aumentar cantidad"
+                >
+                  <Plus className="size-4 stroke-[2.5]" />
+                </button>
+              </div>
+            </div>
+
+            {/* BOTÓN PRINCIPAL EN PILL NEGRO REDONDEADO */}
+            <div className="pt-2">
+              {isAlreadyInCart ? (
+                <Link
+                  to="/carrito"
+                  className="w-full h-14 rounded-full bg-black text-white font-bold text-base flex items-center justify-center gap-2 shadow-xl hover:bg-neutral-900 active:scale-[0.98] transition-all"
+                >
+                  <Check className="size-5 stroke-[3]" />
+                  <span>Ir al Carrito • {formatPrice(totalPrice)}</span>
+                  <ArrowRight className="size-4 ml-1" />
+                </Link>
+              ) : (
+                <button
+                  type="button"
+                  disabled={!available}
+                  onClick={handleAddToCart}
+                  className={cn(
+                    "w-full h-14 rounded-full font-bold text-base flex items-center justify-center gap-2 shadow-xl transition-all active:scale-[0.98]",
+                    available
+                      ? "bg-black text-white hover:bg-neutral-900"
+                      : "bg-neutral-200 text-neutral-400 cursor-not-allowed"
+                  )}
+                >
+                  {available ? (
+                    <span>Buy for {formatPrice(totalPrice)}</span>
+                  ) : (
+                    <span>Agotado</span>
+                  )}
+                </button>
               )}
             </div>
-
-            {/* Selector de Cantidad [-] 1 [+] */}
-            <div className="flex items-center rounded-full bg-neutral-100 px-3.5 py-1.5 gap-3.5 border border-neutral-200/80 shadow-sm">
-              <button
-                type="button"
-                onClick={handleQtyMinus}
-                disabled={!available || qty <= 1}
-                className="flex size-7 items-center justify-center rounded-full text-neutral-700 hover:text-black transition-transform active:scale-90 disabled:opacity-30"
-                aria-label="Disminuir cantidad"
-              >
-                <Minus className="size-4 stroke-[2.5]" />
-              </button>
-
-              <span className="w-4 text-center text-sm font-black text-neutral-900">
-                {qty}
-              </span>
-
-              <button
-                type="button"
-                onClick={handleQtyPlus}
-                disabled={!available}
-                className="flex size-7 items-center justify-center rounded-full text-neutral-700 hover:text-black transition-transform active:scale-90 disabled:opacity-30"
-                aria-label="Aumentar cantidad"
-              >
-                <Plus className="size-4 stroke-[2.5]" />
-              </button>
-            </div>
           </div>
 
-          {/* BOTÓN PRINCIPAL EN NEGRO SÓLIDO (AGREGAR O IR AL CARRITO) */}
-          <div>
-            {isAlreadyInCart ? (
-              <Link
-                to="/carrito"
-                className="w-full h-14 rounded-2xl bg-black text-white font-black text-base flex items-center justify-center gap-2 shadow-xl hover:bg-neutral-900 active:scale-[0.98] transition-all"
-              >
-                <Check className="size-5 stroke-[3]" />
-                <span>Ir al Carrito • {formatPrice(totalPrice)}</span>
-                <ArrowRight className="size-4 ml-1" />
-              </Link>
-            ) : (
-              <button
-                type="button"
-                disabled={!available}
-                onClick={handleAddToCart}
-                className={cn(
-                  "w-full h-14 rounded-2xl font-black text-base flex items-center justify-center gap-2 shadow-xl transition-all active:scale-[0.98]",
-                  available
-                    ? "bg-black text-white hover:bg-neutral-900"
-                    : "bg-neutral-200 text-neutral-400 cursor-not-allowed"
-                )}
-              >
-                {available ? (
-                  <span>Agregar al Carrito • {formatPrice(totalPrice)}</span>
-                ) : (
-                  <span>Agotado</span>
-                )}
-              </button>
-            )}
-          </div>
         </div>
-
       </div>
     </div>
-  </div>
-);
+  );
 }
