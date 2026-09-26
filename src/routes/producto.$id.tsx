@@ -4,14 +4,14 @@ import { useState, useEffect } from "react";
 import { 
   ChevronLeft, 
   Heart, 
-  ShoppingBag, 
+  ShoppingCart, 
   Minus, 
   Plus, 
   Sparkles, 
   Check, 
   ArrowRight,
   Candy,
-  Share2
+  X
 } from "lucide-react";
 import { toast } from "sonner";
 import { useCart } from "@/hooks/useCart";
@@ -65,6 +65,14 @@ export function ProductDetailPage() {
     }
   }, [id]);
 
+  const handleClose = () => {
+    if (window.history.length > 1) {
+      window.history.back();
+    } else {
+      navigate({ to: "/catalogo" });
+    }
+  };
+
   const toggleFavorite = () => {
     try {
       const favs = JSON.parse(localStorage.getItem("tls_favorites") || "[]");
@@ -112,40 +120,47 @@ export function ProductDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background text-foreground flex flex-col justify-between p-4 max-w-lg mx-auto animate-pulse">
-        <div className="flex justify-between items-center pt-2">
-          <div className="size-10 rounded-full bg-surface-2" />
-          <div className="flex gap-2">
+      <div className="fixed inset-0 z-50 flex flex-col justify-end bg-black/70 backdrop-blur-sm animate-in fade-in duration-200">
+        <div className="relative w-full max-w-lg mx-auto bg-background rounded-t-[32px] border-t border-x border-border/40 p-5 h-[80vh] flex flex-col justify-between animate-pulse">
+          <div className="w-12 h-1.5 rounded-full bg-white/20 mx-auto mb-4 shrink-0" />
+          <div className="flex justify-between items-center">
             <div className="size-10 rounded-full bg-surface-2" />
-            <div className="size-10 rounded-full bg-surface-2" />
+            <div className="flex gap-2">
+              <div className="size-10 rounded-full bg-surface-2" />
+              <div className="size-10 rounded-full bg-surface-2" />
+            </div>
           </div>
+          <div className="my-6 space-y-4">
+            <div className="h-8 w-3/4 bg-surface-2 rounded-xl" />
+            <div className="h-48 w-full bg-surface-2 rounded-3xl" />
+            <div className="h-16 w-full bg-surface-2 rounded-2xl" />
+          </div>
+          <div className="h-14 w-full bg-surface-2 rounded-2xl mb-2" />
         </div>
-        <div className="my-8 space-y-4">
-          <div className="h-8 w-3/4 bg-surface-2 rounded-xl" />
-          <div className="h-64 w-full bg-surface-2 rounded-3xl" />
-          <div className="h-20 w-full bg-surface-2 rounded-2xl" />
-        </div>
-        <div className="h-16 w-full bg-surface-2 rounded-full mb-4" />
       </div>
     );
   }
 
   if (error || !product) {
     return (
-      <div className="min-h-screen bg-background text-foreground p-4 flex flex-col justify-center max-w-lg mx-auto">
-        <EmptyState
-          icon={<Candy className="size-8 text-primary" />}
-          title="Producto no disponible"
-          description="Este producto no existe o fue retirado del catálogo."
-          action={
-            <Link
-              to="/catalogo"
-              className="mt-4 inline-flex h-11 items-center justify-center rounded-full bg-primary px-6 text-sm font-bold text-primary-foreground shadow-md transition-transform active:scale-95"
-            >
-              Volver al Catálogo
-            </Link>
-          }
-        />
+      <div className="fixed inset-0 z-50 flex flex-col justify-end bg-black/70 backdrop-blur-sm">
+        <div className="relative w-full max-w-lg mx-auto bg-background rounded-t-[32px] border-t border-x border-border/40 p-6 max-h-[85vh]">
+          <div className="w-12 h-1.5 rounded-full bg-white/20 mx-auto mb-4 shrink-0" />
+          <EmptyState
+            icon={<Candy className="size-8 text-primary" />}
+            title="Producto no disponible"
+            description="Este producto no existe o fue retirado del catálogo."
+            action={
+              <button
+                type="button"
+                onClick={handleClose}
+                className="mt-4 inline-flex h-11 items-center justify-center rounded-full bg-primary px-6 text-sm font-bold text-primary-foreground shadow-md transition-transform active:scale-95"
+              >
+                Cerrar
+              </button>
+            }
+          />
+        </div>
       </div>
     );
   }
@@ -173,286 +188,298 @@ export function ProductDetailPage() {
   const familyName = product.strain_type || (product.name.toLowerCase().includes("indoor") ? "Indoor" : "Premium");
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col justify-between max-w-lg mx-auto relative overflow-x-hidden animate-in slide-in-from-bottom-5 duration-300">
-      {/* ============================================================ */}
-      {/* CABECERA SUPERIOR (< ATRÁS, FAVORITO, CARRITO) */}
-      {/* ============================================================ */}
-      <div className="sticky top-0 z-30 bg-background/90 backdrop-blur-xl px-4 pt-[max(env(safe-area-inset-top),14px)] pb-2 flex items-center justify-between">
-        <button
-          type="button"
-          onClick={() => {
-            if (window.history.length > 1) {
-              window.history.back();
-            } else {
-              navigate({ to: "/catalogo" });
-            }
-          }}
-          className="flex size-10 items-center justify-center rounded-full bg-surface-2 border border-border/40 text-foreground shadow-sm transition-transform active:scale-90"
-          aria-label="Volver"
-        >
-          <ChevronLeft className="size-6" />
-        </button>
+    <div className="fixed inset-0 z-50 flex flex-col justify-end bg-black/75 backdrop-blur-md animate-in fade-in duration-300">
+      {/* Zona de fondo clickeable para cerrar */}
+      <div 
+        className="flex-1 w-full" 
+        onClick={handleClose} 
+        aria-label="Cerrar modal"
+      />
 
-        <div className="flex items-center gap-2">
-          {/* Botón Favorito */}
+      {/* ============================================================ */}
+      {/* CONTENEDOR TIPO HOJA DESLIZABLE (BOTTOM SHEET) */}
+      {/* ============================================================ */}
+      <div className="relative w-full max-w-lg mx-auto bg-background rounded-t-[32px] border-t border-x border-border/50 shadow-2xl flex flex-col max-h-[92vh] h-[92vh] overflow-hidden animate-in slide-in-from-bottom duration-300 ease-out">
+        
+        {/* Barra superior de arrastre / Handle */}
+        <div className="pt-2.5 pb-1 flex justify-center shrink-0 cursor-pointer" onClick={handleClose}>
+          <div className="w-12 h-1.5 rounded-full bg-white/25 hover:bg-white/40 transition-colors" />
+        </div>
+
+        {/* ============================================================ */}
+        {/* CABECERA SUPERIOR (< ATRÁS, FAVORITO, CARRITO EXACTO DE LA HOME) */}
+        {/* ============================================================ */}
+        <div className="px-4 pb-2 pt-1 flex items-center justify-between shrink-0 bg-background/90 backdrop-blur-xl border-b border-border/20">
           <button
             type="button"
-            onClick={toggleFavorite}
-            className={cn(
-              "flex size-10 items-center justify-center rounded-full border transition-transform active:scale-90 shadow-sm",
-              isFavorite
-                ? "bg-red-500/20 border-red-500/40 text-red-400"
-                : "bg-surface-2 border-border/40 text-muted-foreground hover:text-foreground"
-            )}
-            aria-label="Favorito"
+            onClick={handleClose}
+            className="flex size-10 items-center justify-center rounded-full bg-surface-2 border border-border/40 text-foreground shadow-sm transition-transform active:scale-90"
+            aria-label="Volver"
           >
-            <Heart className={cn("size-5", isFavorite && "fill-current")} />
+            <ChevronLeft className="size-6" />
           </button>
 
-          {/* Botón Carrito */}
-          <Link
-            to="/carrito"
-            className="relative flex size-10 items-center justify-center rounded-full bg-surface-2 border border-border/40 text-foreground transition-transform active:scale-90 shadow-sm"
-            aria-label="Ver Carrito"
-          >
-            <ShoppingBag className="size-5 text-foreground" />
-            {cartTotalCount > 0 && (
-              <span className="absolute -top-1 -right-1 flex size-5 items-center justify-center rounded-full bg-primary text-[10px] font-black text-primary-foreground ring-2 ring-background">
-                {cartTotalCount}
-              </span>
-            )}
-          </Link>
-        </div>
-      </div>
-
-      {/* ============================================================ */}
-      {/* CONTENIDO PRINCIPAL DE LA HOJA DE PRODUCTO */}
-      {/* ============================================================ */}
-      <div className="flex-1 px-4 pt-2 pb-32 space-y-6">
-        {/* TÍTULO Y CALIFICACIÓN */}
-        <div className="text-right">
-          <h1 className="text-[28px] sm:text-[32px] font-black tracking-tight text-white leading-tight">
-            {product.name}
-          </h1>
-
-          {/* Estrellas blanco crema */}
-          <div className="flex justify-end items-center gap-1 mt-1 text-primary text-xs">
-            {"★".repeat(5)}
-          </div>
-        </div>
-
-        {/* METADATOS: TIPO Y FAMILIA */}
-        <div className="flex justify-end items-center gap-4 text-right">
-          <div className="border-r border-border/30 pr-4">
-            <span className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground block">
-              TIPO
-            </span>
-            <span className="text-xs font-bold text-foreground block">
-              {categoryName}
-            </span>
-          </div>
-
-          <div>
-            <span className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground block">
-              FAMILIA
-            </span>
-            <span className="text-xs font-bold text-foreground block">
-              {familyName}
-            </span>
-          </div>
-        </div>
-
-        {/* ============================================================ */}
-        {/* SECCIÓN HERO (IMAGEN PNG A LA IZQUIERDA, PRECIO Y GRAMOS A LA DERECHA) */}
-        {/* ============================================================ */}
-        <div className="grid grid-cols-12 gap-3 items-center min-h-[220px]">
-          {/* Imagen PNG en perspectiva limpia */}
-          <div className="col-span-6 sm:col-span-7 flex items-center justify-center relative">
-            <div className="relative aspect-square w-full max-w-[210px] drop-shadow-[0_15px_30px_rgba(0,0,0,0.7)] transition-transform duration-500 hover:scale-105">
-              <img
-                src={img}
-                alt={product.name}
-                className="size-full object-contain filter drop-shadow-[0_10px_20px_rgba(0,0,0,0.5)]"
-              />
-              {!available && (
-                <div className="absolute inset-0 grid place-items-center rounded-3xl bg-background/85 text-[11px] font-black uppercase tracking-widest text-red-400 border border-red-500/30 backdrop-blur-sm">
-                  Agotado
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Bloque de Precio y Contenido */}
-          <div className="col-span-6 sm:col-span-5 flex flex-col items-end justify-center space-y-4 text-right pl-2">
-            <div>
-              <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">
-                Precio
-              </span>
-              <p className="text-[26px] sm:text-[32px] font-black tracking-tight text-white leading-none mt-1">
-                {formatPrice(singlePrice)}
-              </p>
-            </div>
-
-            {/* Badge Contenido / Gramos */}
-            <div className="rounded-full bg-surface-2/90 border border-border/50 px-3.5 py-1.5 shadow-inner">
-              <span className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground mr-1.5">
-                CONTENIDO
-              </span>
-              <span className="text-[12px] font-black text-primary">
-                {product.weight_g ? `${product.weight_g} gramos` : "3 gramos"}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* ============================================================ */}
-        {/* BARRAS DE EFECTOS / NIVELES (THC, CBD, PESO) */}
-        {/* ============================================================ */}
-        <div className="space-y-3 pt-2">
-          {/* THC */}
-          <div className="flex items-center gap-4">
-            <span className="w-14 text-right text-[11px] font-black tracking-wider text-muted-foreground shrink-0 uppercase">
-              THC
-            </span>
-            <div className="flex-1 h-2 rounded-full bg-surface-2 overflow-hidden border border-border/30">
-              <div
-                className="h-full rounded-full bg-primary transition-all duration-500 shadow-[0_0_8px_rgba(255,255,255,0.25)]"
-                style={{ width: `${Math.min(100, Math.max(10, thcValue))}%` }}
-              />
-            </div>
-          </div>
-
-          {/* CBD */}
-          <div className="flex items-center gap-4">
-            <span className="w-14 text-right text-[11px] font-black tracking-wider text-muted-foreground shrink-0 uppercase">
-              CBD
-            </span>
-            <div className="flex-1 h-2 rounded-full bg-surface-2 overflow-hidden border border-border/30">
-              <div
-                className="h-full rounded-full bg-primary transition-all duration-500 shadow-[0_0_8px_rgba(255,255,255,0.25)]"
-                style={{ width: `${Math.min(100, Math.max(10, cbdValue))}%` }}
-              />
-            </div>
-          </div>
-
-          {/* PESO / INTENSIDAD */}
-          <div className="flex items-center gap-4">
-            <span className="w-14 text-right text-[11px] font-black tracking-wider text-muted-foreground shrink-0 uppercase">
-              PESO
-            </span>
-            <div className="flex-1 h-2 rounded-full bg-surface-2 overflow-hidden border border-border/30">
-              <div
-                className="h-full rounded-full bg-primary transition-all duration-500 shadow-[0_0_8px_rgba(255,255,255,0.25)]"
-                style={{ width: `${weightPercent}%` }}
-              />
-            </div>
-          </div>
-
-          {/* Puntos de Paginación visuales estilo app */}
-          <div className="flex items-center justify-start gap-1.5 pl-6 pt-2">
-            <span
-              onClick={() => setActiveDot(0)}
-              className={cn(
-                "size-2 rounded-full transition-all cursor-pointer",
-                activeDot === 0 ? "bg-primary ring-2 ring-primary/30" : "bg-surface-2"
-              )}
-            />
-            <span
-              onClick={() => setActiveDot(1)}
-              className={cn(
-                "size-1.5 rounded-full transition-all cursor-pointer",
-                activeDot === 1 ? "bg-primary ring-2 ring-primary/30" : "bg-surface-2"
-              )}
-            />
-            <span
-              onClick={() => setActiveDot(2)}
-              className={cn(
-                "size-1.5 rounded-full transition-all cursor-pointer",
-                activeDot === 2 ? "bg-primary ring-2 ring-primary/30" : "bg-surface-2"
-              )}
-            />
-          </div>
-        </div>
-
-        {/* ============================================================ */}
-        {/* DESCRIPCIÓN Y DETALLES DE EFECTOS */}
-        {/* ============================================================ */}
-        <div className="pt-2 space-y-2 border-t border-border/20">
-          {product.effects && (
-            <div className="flex items-center gap-1.5 text-[11px] font-bold text-primary">
-              <Sparkles className="size-3.5 shrink-0" />
-              <span>{product.effects}</span>
-            </div>
-          )}
-
-          <p className="text-[13px] leading-relaxed text-muted-foreground">
-            {product.description || "Excelente variedad para relajación profunda y creatividad seleccionada especialmente para ti."}
-          </p>
-        </div>
-      </div>
-
-      {/* ============================================================ */}
-      {/* BARRA FLOTANTE DE ACCIÓN (SELECTOR DE CANTIDAD Y AGREGAR / IR AL CARRITO) */}
-      {/* ============================================================ */}
-      <div className="fixed inset-x-0 bottom-0 z-40 mx-auto max-w-lg px-4 pb-[max(env(safe-area-inset-bottom),14px)] pt-3 bg-gradient-to-t from-background via-background/95 to-transparent">
-        <div className="flex items-center gap-3">
-          {/* Selector de Cantidad: [-] QTY [+] */}
-          <div className="flex h-13 items-center justify-between rounded-2xl bg-surface-2 border border-border/50 px-3.5 gap-3 shadow-lg">
+          <div className="flex items-center gap-2">
+            {/* Botón Favorito */}
             <button
               type="button"
-              onClick={handleQtyMinus}
-              disabled={!available || qty <= 1}
-              className="flex size-7 items-center justify-center rounded-lg bg-surface border border-border/40 text-foreground transition-transform active:scale-90 disabled:opacity-40"
-              aria-label="Disminuir cantidad"
+              onClick={toggleFavorite}
+              className={cn(
+                "flex size-10 items-center justify-center rounded-full border transition-transform active:scale-90 shadow-sm",
+                isFavorite
+                  ? "bg-red-500/20 border-red-500/40 text-red-400"
+                  : "bg-surface-2 border-border/40 text-muted-foreground hover:text-foreground"
+              )}
+              aria-label="Favorito"
             >
-              <Minus className="size-3.5" />
+              <Heart className={cn("size-5", isFavorite && "fill-current")} />
             </button>
 
-            <span className="w-5 text-center text-sm font-black text-foreground">
-              {qty}
-            </span>
-
-            <button
-              type="button"
-              onClick={handleQtyPlus}
-              disabled={!available}
-              className="flex size-7 items-center justify-center rounded-lg bg-surface border border-border/40 text-foreground transition-transform active:scale-90 disabled:opacity-40"
-              aria-label="Aumentar cantidad"
-            >
-              <Plus className="size-3.5" />
-            </button>
-          </div>
-
-          {/* Botón Principal: Agregar al Carrito O Ir al Carrito */}
-          {isAlreadyInCart ? (
+            {/* Botón Carrito — EXACTO AL DE LA HOME */}
             <Link
               to="/carrito"
-              className="flex-1 h-13 rounded-2xl bg-primary text-primary-foreground font-black text-sm flex items-center justify-center gap-2 shadow-xl transition-all active:scale-[0.98] hover:bg-primary/90"
+              className="relative grid size-10 shrink-0 place-items-center rounded-full bg-surface-2 border border-border/40 transition-transform active:scale-90 shadow-sm text-foreground"
+              aria-label="Ver Carrito"
             >
-              <Check className="size-4.5 stroke-[3]" />
-              <span>Ir al Carrito</span>
-              <ArrowRight className="size-4 ml-1" />
-            </Link>
-          ) : (
-            <button
-              type="button"
-              disabled={!available}
-              onClick={handleAddToCart}
-              className={cn(
-                "flex-1 h-13 rounded-2xl font-black text-sm flex items-center justify-between px-5 shadow-xl transition-all active:scale-[0.98]",
-                available
-                  ? "bg-primary text-primary-foreground hover:bg-primary/90"
-                  : "bg-surface-2 text-muted-foreground opacity-50 cursor-not-allowed"
-              )}
-            >
-              <span>{available ? "Agregar al Carrito" : "Agotado"}</span>
-              {available && (
-                <span className="text-xs font-black opacity-90">
-                  {formatPrice(totalPrice)}
+              <ShoppingCart className="size-5" />
+              {cartTotalCount > 0 && (
+                <span className="absolute -right-0.5 -top-0.5 grid min-w-5 place-items-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground">
+                  {cartTotalCount}
                 </span>
               )}
-            </button>
-          )}
+            </Link>
+          </div>
+        </div>
+
+        {/* ============================================================ */}
+        {/* CONTENIDO SCROLLEABLE DE LA HOJA DE PRODUCTO */}
+        {/* ============================================================ */}
+        <div className="flex-1 overflow-y-auto px-4 pt-3 pb-6 space-y-6 scrollbar-hide">
+          {/* TÍTULO Y CALIFICACIÓN */}
+          <div className="text-right">
+            <h1 className="text-[26px] sm:text-[30px] font-black tracking-tight text-white leading-tight">
+              {product.name}
+            </h1>
+
+            {/* Estrellas blanco crema */}
+            <div className="flex justify-end items-center gap-1 mt-1 text-primary text-xs">
+              {"★".repeat(5)}
+            </div>
+          </div>
+
+          {/* METADATOS: TIPO Y FAMILIA */}
+          <div className="flex justify-end items-center gap-4 text-right">
+            <div className="border-r border-border/30 pr-4">
+              <span className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground block">
+                TIPO
+              </span>
+              <span className="text-xs font-bold text-foreground block">
+                {categoryName}
+              </span>
+            </div>
+
+            <div>
+              <span className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground block">
+                FAMILIA
+              </span>
+              <span className="text-xs font-bold text-foreground block">
+                {familyName}
+              </span>
+            </div>
+          </div>
+
+          {/* ============================================================ */}
+          {/* SECCIÓN HERO (IMAGEN PNG A LA IZQUIERDA, PRECIO Y GRAMOS A LA DERECHA) */}
+          {/* ============================================================ */}
+          <div className="grid grid-cols-12 gap-3 items-center min-h-[200px]">
+            {/* Imagen PNG en perspectiva limpia */}
+            <div className="col-span-6 sm:col-span-7 flex items-center justify-center relative">
+              <div className="relative aspect-square w-full max-w-[200px] drop-shadow-[0_15px_30px_rgba(0,0,0,0.7)] transition-transform duration-500 hover:scale-105">
+                <img
+                  src={img}
+                  alt={product.name}
+                  className="size-full object-contain filter drop-shadow-[0_10px_20px_rgba(0,0,0,0.5)]"
+                />
+                {!available && (
+                  <div className="absolute inset-0 grid place-items-center rounded-3xl bg-background/85 text-[11px] font-black uppercase tracking-widest text-red-400 border border-red-500/30 backdrop-blur-sm">
+                    Agotado
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Bloque de Precio y Contenido */}
+            <div className="col-span-6 sm:col-span-5 flex flex-col items-end justify-center space-y-4 text-right pl-2">
+              <div>
+                <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">
+                  Precio
+                </span>
+                <p className="text-[26px] sm:text-[30px] font-black tracking-tight text-white leading-none mt-1">
+                  {formatPrice(singlePrice)}
+                </p>
+              </div>
+
+              {/* Badge Contenido / Gramos */}
+              <div className="rounded-full bg-surface-2/90 border border-border/50 px-3.5 py-1.5 shadow-inner">
+                <span className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground mr-1.5">
+                  CONTENIDO
+                </span>
+                <span className="text-[12px] font-black text-primary">
+                  {product.weight_g ? `${product.weight_g} gramos` : "3 gramos"}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* ============================================================ */}
+          {/* BARRAS DE EFECTOS / NIVELES (THC, CBD, PESO) */}
+          {/* ============================================================ */}
+          <div className="space-y-3 pt-2">
+            {/* THC */}
+            <div className="flex items-center gap-4">
+              <span className="w-14 text-right text-[11px] font-black tracking-wider text-muted-foreground shrink-0 uppercase">
+                THC
+              </span>
+              <div className="flex-1 h-2 rounded-full bg-surface-2 overflow-hidden border border-border/30">
+                <div
+                  className="h-full rounded-full bg-primary transition-all duration-500 shadow-[0_0_8px_rgba(255,255,255,0.25)]"
+                  style={{ width: `${Math.min(100, Math.max(10, thcValue))}%` }}
+                />
+              </div>
+            </div>
+
+            {/* CBD */}
+            <div className="flex items-center gap-4">
+              <span className="w-14 text-right text-[11px] font-black tracking-wider text-muted-foreground shrink-0 uppercase">
+                CBD
+              </span>
+              <div className="flex-1 h-2 rounded-full bg-surface-2 overflow-hidden border border-border/30">
+                <div
+                  className="h-full rounded-full bg-primary transition-all duration-500 shadow-[0_0_8px_rgba(255,255,255,0.25)]"
+                  style={{ width: `${Math.min(100, Math.max(10, cbdValue))}%` }}
+                />
+              </div>
+            </div>
+
+            {/* PESO / INTENSIDAD */}
+            <div className="flex items-center gap-4">
+              <span className="w-14 text-right text-[11px] font-black tracking-wider text-muted-foreground shrink-0 uppercase">
+                PESO
+              </span>
+              <div className="flex-1 h-2 rounded-full bg-surface-2 overflow-hidden border border-border/30">
+                <div
+                  className="h-full rounded-full bg-primary transition-all duration-500 shadow-[0_0_8px_rgba(255,255,255,0.25)]"
+                  style={{ width: `${weightPercent}%` }}
+                />
+              </div>
+            </div>
+
+            {/* Puntos de Paginación visuales estilo app */}
+            <div className="flex items-center justify-start gap-1.5 pl-6 pt-1">
+              <span
+                onClick={() => setActiveDot(0)}
+                className={cn(
+                  "size-2 rounded-full transition-all cursor-pointer",
+                  activeDot === 0 ? "bg-primary ring-2 ring-primary/30" : "bg-surface-2"
+                )}
+              />
+              <span
+                onClick={() => setActiveDot(1)}
+                className={cn(
+                  "size-1.5 rounded-full transition-all cursor-pointer",
+                  activeDot === 1 ? "bg-primary ring-2 ring-primary/30" : "bg-surface-2"
+                )}
+              />
+              <span
+                onClick={() => setActiveDot(2)}
+                className={cn(
+                  "size-1.5 rounded-full transition-all cursor-pointer",
+                  activeDot === 2 ? "bg-primary ring-2 ring-primary/30" : "bg-surface-2"
+                )}
+              />
+            </div>
+          </div>
+
+          {/* ============================================================ */}
+          {/* DESCRIPCIÓN Y DETALLES DE EFECTOS */}
+          {/* ============================================================ */}
+          <div className="pt-2 space-y-2 border-t border-border/20">
+            {product.effects && (
+              <div className="flex items-center gap-1.5 text-[11px] font-bold text-primary">
+                <Sparkles className="size-3.5 shrink-0" />
+                <span>{product.effects}</span>
+              </div>
+            )}
+
+            <p className="text-[13px] leading-relaxed text-muted-foreground">
+              {product.description || "Excelente variedad para relajación profunda y creatividad seleccionada especialmente para ti."}
+            </p>
+          </div>
+        </div>
+
+        {/* ============================================================ */}
+        {/* BARRA INFERIOR DE ACCIÓN (SELECTOR DE CANTIDAD Y BOTÓN BLANCO CREMA) */}
+        {/* ============================================================ */}
+        <div className="p-4 pt-2 bg-gradient-to-t from-background via-background/98 to-transparent border-t border-border/20 shrink-0">
+          <div className="flex items-center gap-3">
+            {/* Selector de Cantidad: [-] QTY [+] */}
+            <div className="flex h-13 items-center justify-between rounded-2xl bg-surface-2 border border-border/50 px-3.5 gap-3 shadow-lg">
+              <button
+                type="button"
+                onClick={handleQtyMinus}
+                disabled={!available || qty <= 1}
+                className="flex size-7 items-center justify-center rounded-lg bg-surface border border-border/40 text-foreground transition-transform active:scale-90 disabled:opacity-40"
+                aria-label="Disminuir cantidad"
+              >
+                <Minus className="size-3.5" />
+              </button>
+
+              <span className="w-5 text-center text-sm font-black text-foreground">
+                {qty}
+              </span>
+
+              <button
+                type="button"
+                onClick={handleQtyPlus}
+                disabled={!available}
+                className="flex size-7 items-center justify-center rounded-lg bg-surface border border-border/40 text-foreground transition-transform active:scale-90 disabled:opacity-40"
+                aria-label="Aumentar cantidad"
+              >
+                <Plus className="size-3.5" />
+              </button>
+            </div>
+
+            {/* Botón Principal: Agregar al Carrito O Ir al Carrito */}
+            {isAlreadyInCart ? (
+              <Link
+                to="/carrito"
+                className="flex-1 h-13 rounded-2xl bg-primary text-primary-foreground font-black text-sm flex items-center justify-center gap-2 shadow-xl transition-all active:scale-[0.98] hover:bg-primary/90"
+              >
+                <Check className="size-4.5 stroke-[3]" />
+                <span>Ir al Carrito</span>
+                <ArrowRight className="size-4 ml-1" />
+              </Link>
+            ) : (
+              <button
+                type="button"
+                disabled={!available}
+                onClick={handleAddToCart}
+                className={cn(
+                  "flex-1 h-13 rounded-2xl font-black text-sm flex items-center justify-between px-5 shadow-xl transition-all active:scale-[0.98]",
+                  available
+                    ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                    : "bg-surface-2 text-muted-foreground opacity-50 cursor-not-allowed"
+                )}
+              >
+                <span>{available ? "Agregar al Carrito" : "Agotado"}</span>
+                {available && (
+                  <span className="text-xs font-black opacity-90">
+                    {formatPrice(totalPrice)}
+                  </span>
+                )}
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>
