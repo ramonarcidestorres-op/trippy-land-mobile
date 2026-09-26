@@ -406,7 +406,7 @@ export function ProductDetailSheet() {
               {activeProd?.name || "Cargando..."}
             </h1>
             
-            <p className="text-[13px] sm:text-[14px] text-neutral-500 font-normal leading-relaxed">
+            <p className="text-[13px] sm:text-[14px] text-neutral-600 font-normal leading-relaxed whitespace-pre-line">
               {activeProd?.description || "The ready-to-drink formula offers a smooth, creamy texture in a compact bottle that's easy to carry."}
             </p>
           </div>
