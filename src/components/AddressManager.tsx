@@ -185,7 +185,7 @@ export function AddressManager({ trigger }: { trigger?: React.ReactNode } = {}) 
         {trigger ? (
           trigger
         ) : (
-          <button className="flex w-full items-center justify-between p-1 transition-transform active:scale-95">
+          <button className="flex w-full items-center justify-between p-1 transition-transform active:scale-95 cursor-pointer select-none touch-manipulation">
             <div className="flex items-center gap-2.5 text-left">
               <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-surface-2 text-foreground">
                 <MapPin className="size-3.5" />

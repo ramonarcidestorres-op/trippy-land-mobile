@@ -16,7 +16,6 @@ import { useReferral } from "@/hooks/useReferral";
 import { useProductModal } from "@/hooks/useProductModal";
 import { productQuery, type Product } from "@/lib/queries";
 import { formatPrice } from "@/lib/format";
-import { getProductImageUrl } from "@/lib/productImages";
 import { cn } from "@/lib/utils";
 
 export function ProductDetailSheet() {
@@ -135,6 +134,9 @@ export function ProductDetailSheet() {
 
   const handleTouchStart = (e: React.TouchEvent) => {
     if (isExiting) return;
+    if ((e.target as HTMLElement).closest("button, a, input, textarea, select, [role='button']")) {
+      return;
+    }
     const touch = e.touches[0];
     startYRef.current = touch.clientY;
     lastYRef.current = touch.clientY;
@@ -260,7 +262,13 @@ export function ProductDetailSheet() {
   const singlePrice = activeProd ? getAdjustedPrice(activeProd.price) : 0;
   const totalPrice = singlePrice * qty;
 
-  const img = activeProd ? getProductImageUrl(activeProd) : "";
+  const fallbackImg = activeProd?.name.toLowerCase().includes("gom")
+    ? "https://images.unsplash.com/photo-1582058091505-f87a2e55a40f?w=600&q=80"
+    : activeProd?.name.toLowerCase().includes("choco")
+    ? "https://images.unsplash.com/photo-1606312619070-d48b4c652a52?w=600&q=80"
+    : "https://images.unsplash.com/photo-1550258987-190a2d41a8ba?w=600&q=80";
+
+  const img = activeProd?.image_url || fallbackImg;
   const categoryName = (activeProd as any)?.categories?.name || activeProd?.strain_type || "Premium";
 
   const hasSpecs = Boolean(
@@ -347,7 +355,7 @@ export function ProductDetailSheet() {
                   handleDismissAnimation(true);
                   navigate({ to: "/carrito" });
                 }}
-                className="relative flex size-12 items-center justify-center rounded-full bg-white shadow-md border border-neutral-100 transition-transform active:scale-90 text-neutral-900 hover:bg-neutral-50 cursor-pointer"
+                className="relative flex size-12 items-center justify-center rounded-full bg-white shadow-md border border-neutral-100 transition-transform active:scale-90 text-neutral-900 hover:bg-neutral-50 cursor-pointer select-none touch-manipulation"
                 aria-label="Ver Carrito"
               >
                 <ShoppingCart className="size-5.5" />
@@ -458,13 +466,13 @@ export function ProductDetailSheet() {
                 type="button"
                 onClick={handleQtyMinus}
                 disabled={!available || qty <= 1}
-                className="flex size-10 items-center justify-center text-neutral-800 hover:text-black transition-transform active:scale-80 disabled:opacity-20 cursor-pointer"
+                className="flex size-10 items-center justify-center text-neutral-800 hover:text-black transition-transform active:scale-80 disabled:opacity-20 cursor-pointer select-none touch-manipulation"
                 aria-label="Disminuir cantidad"
               >
                 <Minus className="size-6 stroke-[2.5]" />
               </button>
 
-              <span className="min-w-6 text-center text-lg sm:text-xl font-bold text-neutral-950">
+              <span className="min-w-6 text-center text-lg sm:text-xl font-bold text-neutral-950 select-none">
                 {qty}
               </span>
 
@@ -472,7 +480,7 @@ export function ProductDetailSheet() {
                 type="button"
                 onClick={handleQtyPlus}
                 disabled={!available}
-                className="flex size-10 items-center justify-center text-neutral-800 hover:text-black transition-transform active:scale-80 disabled:opacity-20 cursor-pointer"
+                className="flex size-10 items-center justify-center text-neutral-800 hover:text-black transition-transform active:scale-80 disabled:opacity-20 cursor-pointer select-none touch-manipulation"
                 aria-label="Aumentar cantidad"
               >
                 <Plus className="size-6 stroke-[2.5]" />
@@ -487,7 +495,7 @@ export function ProductDetailSheet() {
               disabled={!available || !activeProd}
               onClick={handleAddToCart}
               className={cn(
-                "w-full h-14 rounded-full font-bold text-base flex items-center justify-center gap-2 shadow-xl transition-all active:scale-[0.98] cursor-pointer",
+                "w-full h-14 rounded-full font-bold text-base flex items-center justify-center gap-2 shadow-xl transition-all active:scale-[0.98] cursor-pointer select-none touch-manipulation",
                 available && activeProd
                   ? "bg-black text-white hover:bg-neutral-900"
                   : "bg-neutral-200 text-neutral-400 cursor-not-allowed"

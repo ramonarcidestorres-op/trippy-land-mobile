@@ -146,8 +146,8 @@ export function AppShell({ children }: { children: ReactNode }) {
               </div>
               <Link
                 to="/carrito"
-                preload="intent"
-                className="relative grid size-10 shrink-0 place-items-center rounded-full bg-surface-2 cursor-pointer touch-manipulation transition-transform active:scale-90"
+                preload={false}
+                className="relative grid size-10 shrink-0 place-items-center rounded-full bg-surface-2 transition-transform active:scale-90 select-none touch-manipulation cursor-pointer"
                 aria-label="Carrito"
               >
                 <ShoppingCart className="size-5" />
@@ -204,7 +204,8 @@ export function AppShell({ children }: { children: ReactNode }) {
               ) : (
                 <Link
                   to="/auth"
-                  className="relative grid size-10 shrink-0 place-items-center rounded-full bg-surface-2"
+                  preload={false}
+                  className="relative grid size-10 shrink-0 place-items-center rounded-full bg-surface-2 transition-transform active:scale-90 select-none touch-manipulation cursor-pointer"
                   aria-label="Entrar"
                 >
                   <User className="size-5 text-muted-foreground" />
@@ -234,28 +235,28 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       {/* PÍLDORA FLOTANTE "IR AL CARRITO" (Solo en Home y Catálogo cuando hay productos) */}
       {showFloatingCartPill && (
-        <div className="fixed bottom-[82px] inset-x-0 flex justify-center z-40 px-4 pointer-events-none">
+        <div className="fixed bottom-[82px] inset-x-0 flex justify-center z-40 px-4 pointer-events-none animate-in slide-in-from-bottom-3 fade-in duration-300">
           <Link
             to="/carrito"
-            preload="intent"
-            className="pointer-events-auto h-11 px-4.5 rounded-full bg-neutral-950/90 backdrop-blur-2xl text-white shadow-[0_10px_30px_rgba(0,0,0,0.6)] border border-white/15 flex items-center gap-3 transition-transform active:scale-95 hover:bg-neutral-900 cursor-pointer touch-manipulation select-none"
+            preload={false}
+            className="pointer-events-auto h-12 min-h-[48px] px-5 rounded-full bg-neutral-950/90 backdrop-blur-2xl text-white shadow-[0_12px_32px_rgba(0,0,0,0.65)] border border-white/20 flex items-center gap-3 transition-transform active:scale-95 select-none touch-manipulation cursor-pointer"
           >
             <div className="flex items-center gap-2">
-              <span className="flex size-5.5 items-center justify-center rounded-full bg-white text-black text-[11px] font-black">
+              <span className="flex size-6 items-center justify-center rounded-full bg-white text-black text-[12px] font-black">
                 {count}
               </span>
-              <span className="text-xs font-bold text-white tracking-tight">
+              <span className="text-[13px] font-bold text-white tracking-tight">
                 Ir al Carrito
               </span>
             </div>
 
-            <div className="h-3 w-px bg-white/20" />
+            <div className="h-3.5 w-px bg-white/25" />
 
             <div className="flex items-center gap-1.5">
-              <span className="text-xs font-extrabold text-white">
+              <span className="text-[13px] font-extrabold text-white">
                 {formatPrice(cartSubtotal)}
               </span>
-              <ArrowRight className="size-3.5 text-white/80" />
+              <ArrowRight className="size-3.5 text-white/90" />
             </div>
           </Link>
         </div>
@@ -264,20 +265,20 @@ export function AppShell({ children }: { children: ReactNode }) {
       {/* BARRA DE NAVEGACIÓN INFERIOR: PÍLDORA FLOTANTE GLASS, ANCHA Y LISA */}
       {!hideBottomNav && (
         <div className="fixed bottom-4 inset-x-0 z-30 md:hidden flex justify-center px-4 pointer-events-none">
-          <nav className="pointer-events-auto w-[88%] max-w-[340px] h-14 px-3 flex items-center justify-around rounded-full bg-neutral-950/80 backdrop-blur-2xl border border-white/12 shadow-[0_15px_40px_rgba(0,0,0,0.6)]">
+          <nav className="pointer-events-auto w-[88%] max-w-[340px] h-14 px-3 flex items-center justify-around rounded-full bg-neutral-950/85 backdrop-blur-2xl border border-white/15 shadow-[0_15px_40px_rgba(0,0,0,0.6)]">
             {NAV.map(({ to, label, icon: Icon }) => {
               const active = to === "/" ? pathname === "/" : pathname.startsWith(to);
               return (
                 <Link
                   key={to}
                   to={to as any}
-                  preload="intent"
+                  preload={false}
                   aria-label={label}
                   className={cn(
-                    "relative flex flex-col items-center justify-center size-11 rounded-full transition-all duration-150 active:scale-90 cursor-pointer touch-manipulation",
+                    "relative flex flex-col items-center justify-center size-12 rounded-full transition-transform duration-150 active:scale-90 select-none touch-manipulation cursor-pointer",
                     active
                       ? "text-white"
-                      : "text-neutral-400/80 hover:text-neutral-200"
+                      : "text-neutral-400"
                   )}
                 >
                   <Icon

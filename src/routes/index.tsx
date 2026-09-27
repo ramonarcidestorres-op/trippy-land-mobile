@@ -7,7 +7,6 @@ import { FeaturedTinderStack } from "@/components/FeaturedTinderStack";
 import { EmptyState } from "@/components/States";
 import { Input } from "@/components/ui/input";
 import { categoriesQuery, productsQuery } from "@/lib/queries";
-import { getCategoryImageUrl } from "@/lib/productImages";
 
 export const Route = createFileRoute("/")({
   ssr: false,
@@ -58,7 +57,7 @@ function HomePage() {
         )}
       </div>
 
-      {/* Categorías Visuales con Carga Inmediata */}
+      {/* Categorías Visuales inspiradas en la referencia */}
       <section className="mb-8">
         {categories.isLoading ? (
           <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
@@ -73,26 +72,28 @@ function HomePage() {
         ) : categories.data?.length ? (
           <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory">
             {categories.data.map((c) => {
-              const n = (c.name || "").toLowerCase();
-              const s = (c.slug || "").toLowerCase();
+              const n = c.name?.toLowerCase() || "";
               
-              const imgUrl = getCategoryImageUrl(c);
+              let imgUrl = c.icon_url || "https://images.unsplash.com/photo-1550258987-190a2d41a8ba?w=400&q=80";
               
               let activeColor = "bg-primary text-primary-foreground";
-              if (n.includes("coca") || s.includes("coca")) {
+              if (n.includes("coca")) {
                 activeColor = "bg-[#F5F5F0] text-black";
-              } else if (n.includes("pre-roll") || n.includes("joint") || s.includes("pre-roll")) {
+                if (!c.icon_url) imgUrl = "/categorias/Coca.png";
+              } else if (n.includes("pre-roll") || n.includes("pre roll")) {
                 activeColor = "bg-[#9EAB91] text-black";
-              } else if (n.includes("weed") || n.includes("cannabis") || s.includes("weed")) {
+                if (!c.icon_url) imgUrl = "/categorias/Pre-Rolls.png";
+              } else if (n.includes("weed")) {
                 activeColor = "bg-[#9EAB91] text-black";
-              } else if (n.includes("farm") || n.includes("pharm") || s.includes("farm")) {
+                if (!c.icon_url) imgUrl = "/categorias/Weed.png";
+              } else if (n.includes("farma")) {
                 activeColor = "bg-[#A7C7E7] text-black";
-              } else if (n.includes("sint") || n.includes("synth") || s.includes("sint")) {
+                if (!c.icon_url) imgUrl = "/categorias/farmacia.png";
+              } else if (n.includes("sint")) {
                 activeColor = "bg-[#FCA5A5] text-black";
-              } else if (n.includes("psych") || n.includes("psic") || s.includes("psych")) {
-                activeColor = "bg-[#BDB2FF] text-black";
-              } else if (n.includes("extract") || s.includes("extract")) {
-                activeColor = "bg-[#E59866] text-black";
+                if (!c.icon_url) imgUrl = "/categorias/sintéticos.png";
+              } else {
+                if (!c.icon_url) imgUrl = `/categorias/${c.name}.png`;
               }
 
               const isActive = selectedCategory === c.id;
@@ -102,18 +103,11 @@ function HomePage() {
                 <button
                   key={c.id}
                   onClick={() => setSelectedCategory(isActive ? null : c.id)}
-                  className={`group relative flex w-[95px] shrink-0 snap-center flex-col items-center justify-between overflow-hidden rounded-[32px] p-2 transition-transform active:scale-95 cursor-pointer touch-manipulation ${colorClasses}`}
+                  className={`group relative flex w-[95px] shrink-0 snap-center flex-col items-center justify-between overflow-hidden rounded-[32px] p-2 transition-transform active:scale-95 cursor-pointer select-none touch-manipulation ${colorClasses}`}
                   style={{ minHeight: "140px" }}
                 >
-                  <div className="relative mt-1 aspect-square w-[75px] overflow-hidden rounded-full bg-transparent flex items-center justify-center">
-                    <img 
-                      src={imgUrl} 
-                      alt={c.name} 
-                      loading="eager"
-                      fetchPriority="high"
-                      decoding="async"
-                      className="size-full object-cover transition-transform group-hover:scale-110" 
-                    />
+                  <div className="relative mt-1 aspect-square w-[75px] overflow-hidden rounded-full bg-transparent">
+                    <img src={imgUrl} alt={c.name} className="size-full object-cover transition-transform group-hover:scale-110" />
                   </div>
                   <div className="mb-3 mt-3 text-center">
                     <p className={`text-[12px] font-bold leading-tight ${isActive ? "" : "text-foreground"}`}>

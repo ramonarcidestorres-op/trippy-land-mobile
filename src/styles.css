@@ -116,6 +116,18 @@
     -webkit-font-smoothing: antialiased;
   }
 
+  /* Optimización táctil instantánea: elimina el retraso de 300ms y los tap boxes grises de mobile */
+  button, 
+  a, 
+  [role="button"],
+  input[type="button"],
+  input[type="submit"] {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
   /* Prevenir zoom automático molesto de iOS en inputs */
   input, 
   textarea, 
@@ -127,15 +139,6 @@
   select.text-xs,
   select.text-sm {
     font-size: 16px !important;
-  }
-
-  /* Optimización táctil inmediata: elimina los 300ms de latencia y el doble tap en móviles */
-  button, 
-  a, 
-  [role="button"],
-  .touch-manipulation {
-    touch-action: manipulation;
-    -webkit-tap-highlight-color: transparent;
   }
 }
 

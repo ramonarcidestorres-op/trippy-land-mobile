@@ -7,7 +7,6 @@ import { useReferral } from "@/hooks/useReferral";
 import { useProductModal } from "@/hooks/useProductModal";
 import { formatPrice } from "@/lib/format";
 import { type Product } from "@/lib/queries";
-import { getProductImageUrl } from "@/lib/productImages";
 import { cn } from "@/lib/utils";
 
 interface MatteCardTheme {
@@ -75,21 +74,16 @@ export function FeaturedTinderStack({ products }: FeaturedTinderStackProps) {
   const isIntentDeterminedRef = useRef(false);
   const isSwipingCardRef = useRef(false);
 
-  // Pre-cargar de forma inteligente las siguientes tarjetas con la URL ultra-optimizada
+  // Preload all product images in background for instantaneous swipe transitions
   useEffect(() => {
     if (!products || products.length === 0) return;
-    const next1 = products[(currentIndex + 1) % products.length];
-    const next2 = products[(currentIndex + 2) % products.length];
-    [next1, next2].forEach((p) => {
-      if (p) {
-        const url = getProductImageUrl(p);
-        if (url) {
-          const preImg = new Image();
-          preImg.src = url;
-        }
+    products.forEach((p) => {
+      if (p.image_url) {
+        const preImg = new Image();
+        preImg.src = p.image_url;
       }
     });
-  }, [currentIndex, products]);
+  }, [products]);
 
   // Sync favorites
   useEffect(() => {
@@ -152,6 +146,10 @@ export function FeaturedTinderStack({ products }: FeaturedTinderStackProps) {
   // Robust touch gesture handlers with scroll lock
   const handleTouchStart = (e: React.TouchEvent) => {
     if (isAnimatingOut) return;
+    // Si el usuario tocó un botón o enlace directamente, permitir el click instantáneo sin interferencia
+    if ((e.target as HTMLElement).closest("button, a, input")) {
+      return;
+    }
     const touch = e.touches[0];
     startPosRef.current = { x: touch.clientX, y: touch.clientY, time: Date.now() };
     lastPosRef.current = { x: touch.clientX, y: touch.clientY, time: Date.now() };
@@ -243,7 +241,14 @@ export function FeaturedTinderStack({ products }: FeaturedTinderStackProps) {
           const isFav = favorites.includes(product.id);
           const price = getAdjustedPrice(product.price);
           const available = product.is_available !== false;
-          const img = getProductImageUrl(product);
+
+          const fallbackImg = product.name.toLowerCase().includes("gom")
+            ? "https://images.unsplash.com/photo-1582058091505-f87a2e55a40f?w=600&q=80"
+            : product.name.toLowerCase().includes("choco")
+            ? "https://images.unsplash.com/photo-1606312619070-d48b4c652a52?w=600&q=80"
+            : "https://images.unsplash.com/photo-1550258987-190a2d41a8ba?w=600&q=80";
+
+          const img = product.image_url || fallbackImg;
 
           // Cálculo de transformaciones para el efecto Tinder 3D Stack
           let transformStyle = "";
@@ -307,10 +312,8 @@ export function FeaturedTinderStack({ products }: FeaturedTinderStackProps) {
                 <button
                   type="button"
                   onClick={(e) => toggleFavorite(product.id, e)}
-                  onTouchStart={(e) => e.stopPropagation()}
-                  onTouchEnd={(e) => e.stopPropagation()}
                   className={cn(
-                    "flex size-11 shrink-0 items-center justify-center rounded-full border transition-transform active:scale-90 shadow-sm cursor-pointer touch-manipulation",
+                    "flex size-11 shrink-0 items-center justify-center rounded-full border transition-transform active:scale-90 shadow-sm cursor-pointer select-none touch-manipulation",
                     theme.favBtn
                   )}
                   aria-label="Favorito"
@@ -339,11 +342,7 @@ export function FeaturedTinderStack({ products }: FeaturedTinderStackProps) {
               </div>
 
               {/* SECCIÓN INFERIOR: PÍLDORA BLANCA FLOTANTE CON PRECIO Y BOTÓN AGREGAR */}
-              <div 
-                className="relative z-10"
-                onTouchStart={(e) => e.stopPropagation()}
-                onTouchEnd={(e) => e.stopPropagation()}
-              >
+              <div className="relative z-10">
                 <div className="w-full bg-white rounded-full p-1.5 pl-5 pr-1.5 flex items-center justify-between shadow-[0_6px_20px_rgba(0,0,0,0.15)] border border-neutral-200/50">
                   {/* Precio */}
                   <span className="text-xl sm:text-[22px] font-black text-neutral-950 tracking-tight select-none">
@@ -355,12 +354,10 @@ export function FeaturedTinderStack({ products }: FeaturedTinderStackProps) {
                     type="button"
                     disabled={!available}
                     onClick={(e) => handleAddToCart(product, e)}
-                    onTouchStart={(e) => e.stopPropagation()}
-                    onTouchEnd={(e) => e.stopPropagation()}
                     className={cn(
-                      "h-10 px-4.5 rounded-full font-bold text-xs flex items-center gap-1.5 transition-transform active:scale-95 shadow-sm cursor-pointer touch-manipulation",
+                      "h-10 px-4.5 rounded-full font-bold text-xs flex items-center gap-1.5 transition-transform active:scale-95 shadow-sm cursor-pointer select-none touch-manipulation",
                       available
-                        ? "bg-black text-white hover:bg-neutral-900 active:bg-neutral-800"
+                        ? "bg-black text-white hover:bg-neutral-900"
                         : "bg-neutral-200 text-neutral-400 cursor-not-allowed"
                     )}
                   >

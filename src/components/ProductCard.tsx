@@ -4,7 +4,6 @@ import { useProductModal } from "@/hooks/useProductModal";
 import { formatPrice } from "@/lib/format";
 import { type Product } from "@/lib/queries";
 import { useReferral } from "@/hooks/useReferral";
-import { getProductImageUrl } from "@/lib/productImages";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -31,12 +30,19 @@ export function ProductCard({ product }: { product: Product }) {
     }
   }
   
-  const img = getProductImageUrl(product);
+  // Use unsplash fallbacks for the images to match the premium dark look if none exists
+  const fallbackImg = product.name.toLowerCase().includes("gom") 
+    ? "https://images.unsplash.com/photo-1582058091505-f87a2e55a40f?w=400&q=80"
+    : product.name.toLowerCase().includes("choco")
+    ? "https://images.unsplash.com/photo-1606312619070-d48b4c652a52?w=400&q=80"
+    : "https://images.unsplash.com/photo-1550258987-190a2d41a8ba?w=400&q=80";
+
+  const img = product.image_url || fallbackImg;
 
   return (
     <div 
       onClick={() => openProduct(product)}
-      className="group relative flex w-full flex-col overflow-hidden rounded-[26px] bg-surface-2/90 border border-border/40 pb-4 transition-all focus-within:ring-2 focus-within:ring-primary/30 active:scale-[0.98] shadow-sm cursor-pointer"
+      className="group relative flex w-full flex-col overflow-hidden rounded-[26px] bg-surface-2/90 border border-border/40 pb-4 transition-all focus-within:ring-2 focus-within:ring-primary/30 active:scale-[0.98] shadow-sm cursor-pointer select-none touch-manipulation"
     >
       <div
         className="relative z-10 mx-auto mt-4 block aspect-square w-36 sm:w-40 drop-shadow-[0_10px_22px_rgba(0,0,0,0.38)] transition-transform duration-500"
@@ -72,10 +78,8 @@ export function ProductCard({ product }: { product: Product }) {
           {available && (
             <button 
               onClick={handleAdd}
-              onTouchStart={(e) => e.stopPropagation()}
-              onTouchEnd={(e) => e.stopPropagation()}
               disabled={busy}
-              className="flex size-8 shrink-0 items-center justify-center rounded-full bg-surface hover:bg-primary hover:text-black border border-border/60 text-foreground transition-all active:scale-90 disabled:opacity-50 shadow-sm cursor-pointer touch-manipulation"
+              className="flex size-8 shrink-0 items-center justify-center rounded-full bg-surface hover:bg-primary hover:text-black border border-border/60 text-foreground transition-all active:scale-90 disabled:opacity-50 shadow-sm select-none touch-manipulation cursor-pointer"
               aria-label="Agregar al carrito"
             >
               {busy ? <Loader2 className="size-3.5 animate-spin" /> : <Plus className="size-4" strokeWidth={2.5} />}

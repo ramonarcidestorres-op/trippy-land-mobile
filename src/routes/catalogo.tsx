@@ -89,7 +89,7 @@ export function CatalogPage() {
             })
           }
           className={cn(
-            "shrink-0 rounded-full px-5 py-2.5 text-[14px] font-semibold transition-all active:scale-95",
+            "shrink-0 rounded-full px-5 py-2.5 text-[14px] font-semibold transition-all active:scale-95 cursor-pointer select-none touch-manipulation",
             !categoria ? "bg-primary text-primary-foreground shadow-sm" : "bg-surface-2/60 text-foreground hover:bg-surface-2"
           )}
         >
@@ -116,7 +116,7 @@ export function CatalogPage() {
               key={c.id}
               onClick={() => navigate({ search: (prev: CatalogSearch) => ({ ...prev, categoria: c.slug }) as any })}
               className={cn(
-                "shrink-0 rounded-full px-5 py-2.5 text-[14px] font-semibold transition-all active:scale-95",
+                "shrink-0 rounded-full px-5 py-2.5 text-[14px] font-semibold transition-all active:scale-95 cursor-pointer select-none touch-manipulation",
                 categoria === c.slug
                   ? activeColor
                   : "bg-surface-2/60 text-foreground hover:bg-surface-2"
