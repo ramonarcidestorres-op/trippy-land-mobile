@@ -60,10 +60,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => sub.subscription.unsubscribe();
   }, []);
 
-  const isAdminEmail =
-    session?.user?.email === "ramon.arcidestorres@gmail.com" ||
-    session?.user?.email === "bookingjerianmoreno@gmail.com";
-  const effectiveRole = isAdminEmail ? "admin" : (role || undefined);
+  const userEmail = session?.user?.email?.toLowerCase().trim() || "";
+  const isAdminEmail = userEmail === "ramon.arcidestorres@gmail.com";
+  const effectiveRole = isAdminEmail || role === "admin" ? "admin" : (role || undefined);
 
   const value = useMemo(
     () => ({

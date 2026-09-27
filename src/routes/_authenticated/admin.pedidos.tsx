@@ -39,7 +39,9 @@ import {
   Link as LinkIcon,
   DollarSign,
   Wallet,
-  CheckCheck
+  CheckCheck,
+  Smartphone,
+  Laptop
 } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { PushNotificationButton } from "@/components/PushNotificationButton";
@@ -64,6 +66,13 @@ import { formatDate, formatRelativeTime, formatPrice, formatCompactPrice, STATUS
 import { playWhatsAppChime } from "@/lib/sound";
 import { cn } from "@/lib/utils";
 import { sanitizeProductText, sanitizeName, sanitizeReferralCode, sanitizePhone, sanitizeSearchQuery, sanitizeNumber } from "@/lib/sanitize";
+import { 
+  getOrCreateDeviceId, 
+  verifyOrRegisterAdminDevice, 
+  listAdminDevices, 
+  revokeAdminDevice, 
+  type AdminDeviceRecord 
+} from "@/lib/device";
 
 export const Route = createFileRoute("/_authenticated/admin/pedidos")({
   head: () => ({
@@ -263,6 +272,70 @@ export function AdminPedidosPage() {
     };
   }, [queryClient]);
 
+  // --- GESTIÓN DE LÍMITE DE 3 DISPOSITIVOS ADMINISTRADORES ---
+  const [deviceStatus, setDeviceStatus] = useState<"checking" | "authorized" | "limit_reached" | "error">("checking");
+  const [deviceLimitError, setDeviceLimitError] = useState<string | null>(null);
+  const [adminDevicesList, setAdminDevicesList] = useState<AdminDeviceRecord[]>([]);
+  const [devicesModalOpen, setDevicesModalOpen] = useState(false);
+  const [revokingDeviceId, setRevokingDeviceId] = useState<string | null>(null);
+
+  const currentDeviceId = getOrCreateDeviceId();
+
+  const checkDeviceAuth = async () => {
+    if (!user || user.role !== "admin") return;
+    setDeviceStatus("checking");
+    try {
+      const res = await verifyOrRegisterAdminDevice();
+      const list = await listAdminDevices();
+      setAdminDevicesList(list);
+
+      if (res.success) {
+        setDeviceStatus("authorized");
+      } else if (res.status === "device_limit_reached") {
+        setDeviceStatus("limit_reached");
+        setDeviceLimitError(res.error || "Límite de 3 dispositivos administradores alcanzado (3/3).");
+      } else {
+        setDeviceStatus("authorized");
+      }
+    } catch {
+      setDeviceStatus("authorized");
+    }
+  };
+
+  useEffect(() => {
+    if (user?.role === "admin") {
+      checkDeviceAuth();
+    }
+  }, [user]);
+
+  async function handleRevokeDevice(dev: AdminDeviceRecord) {
+    const isThis = dev.device_id === currentDeviceId;
+    const confirmMsg = isThis
+      ? "¿Estás seguro de desvincular este dispositivo actual? Deberás volver a iniciar sesión."
+      : `¿Estás seguro de desvincular el dispositivo "${dev.device_name}"?`;
+
+    if (!window.confirm(confirmMsg)) return;
+
+    setRevokingDeviceId(dev.device_id);
+    try {
+      const res = await revokeAdminDevice(dev.device_id);
+      if (res.success) {
+        toast.success(`Dispositivo "${dev.device_name}" desvinculado con éxito`);
+        if (isThis) {
+          localStorage.removeItem("tls_admin_device_id");
+          window.location.reload();
+          return;
+        }
+        await checkDeviceAuth();
+      } else {
+        toast.error("Error al desvincular dispositivo: " + (res.error || ""));
+      }
+    } catch (e: any) {
+      toast.error("Error al desvincular: " + e.message);
+    } finally {
+      setRevokingDeviceId(null);
+    }
+  }
 
   if (user?.role !== "admin") {
     return (
@@ -281,6 +354,104 @@ export function AdminPedidosPage() {
               </Link>
             }
           />
+        </div>
+      </AppShell>
+    );
+  }
+
+  if (deviceStatus === "checking" && authLoading) {
+    return (
+      <AppShell>
+        <div className="flex min-h-[60vh] items-center justify-center">
+          <div className="size-8 animate-spin rounded-full border-2 border-candy-lime border-t-transparent" />
+        </div>
+      </AppShell>
+    );
+  }
+
+  if (deviceStatus === "limit_reached") {
+    return (
+      <AppShell>
+        <div className="py-10 max-w-lg mx-auto px-4">
+          <div className="rounded-[32px] border border-amber-500/40 bg-surface-2/95 p-6 shadow-2xl backdrop-blur-xl">
+            <div className="size-14 rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center mb-4 border border-amber-500/30">
+              <Smartphone className="size-7" />
+            </div>
+
+            <h1 className="text-xl sm:text-2xl font-black text-foreground">
+              Límite de 3 Dispositivos Alcanzado
+            </h1>
+
+            <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
+              Ya tienes el límite máximo de <strong className="text-foreground">3 dispositivos autorizados</strong> vinculados para administrar la tienda.
+            </p>
+
+            <div className="mt-3 rounded-2xl bg-amber-500/10 border border-amber-500/20 p-3.5 text-xs text-amber-300 font-medium leading-relaxed">
+              Para ingresar desde este nuevo equipo, desvincula uno de los dispositivos que ya no utilices:
+            </div>
+
+            <div className="mt-5 space-y-2.5">
+              <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                Dispositivos actualmente conectados ({adminDevicesList.length}/3):
+              </p>
+              {adminDevicesList.map((dev) => (
+                <div
+                  key={dev.id}
+                  className="flex items-center justify-between p-3.5 rounded-2xl bg-surface border border-border/50 gap-3"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="size-9 rounded-xl bg-surface-2 flex items-center justify-center shrink-0 text-foreground border border-border/40">
+                      {dev.device_name.toLowerCase().includes("pc") || dev.device_name.toLowerCase().includes("mac") ? (
+                        <Laptop className="size-4.5 text-primary" />
+                      ) : (
+                        <Smartphone className="size-4.5 text-candy-lime" />
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-xs font-bold text-foreground truncate">
+                        {dev.device_name}
+                      </p>
+                      <p className="text-[10.5px] text-muted-foreground">
+                        Activo: {formatRelativeTime(dev.last_active_at)}
+                      </p>
+                    </div>
+                  </div>
+
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={revokingDeviceId === dev.device_id}
+                    onClick={() => handleRevokeDevice(dev)}
+                    className="h-8.5 rounded-xl border-red-500/30 text-red-400 hover:bg-red-500/10 hover:text-red-300 text-xs font-bold shrink-0"
+                  >
+                    {revokingDeviceId === dev.device_id ? (
+                      <Loader2 className="size-3.5 animate-spin" />
+                    ) : (
+                      "Desvincular"
+                    )}
+                  </Button>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-6 flex justify-between items-center pt-4 border-t border-border/30">
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => checkDeviceAuth()}
+                className="text-xs text-muted-foreground hover:text-foreground"
+              >
+                Reintentar acceso
+              </Button>
+              <Link
+                to="/"
+                className="text-xs font-bold text-primary hover:underline"
+              >
+                Volver a la tienda
+              </Link>
+            </div>
+          </div>
         </div>
       </AppShell>
     );
@@ -967,6 +1138,17 @@ export function AdminPedidosPage() {
           >
             {soundEnabled ? <Volume2 className="size-4 shrink-0" /> : <VolumeX className="size-4 shrink-0" />}
             <span className="text-[11px] font-bold">{soundEnabled ? "Sonido" : "Mute"}</span>
+          </button>
+
+          {/* Botón de Dispositivos Conectados (Límite 3) */}
+          <button
+            type="button"
+            onClick={() => setDevicesModalOpen(true)}
+            className="flex items-center justify-center gap-1.5 h-11 px-3 rounded-2xl text-xs font-bold border border-border/40 bg-surface-2 text-foreground hover:bg-surface transition-all active:scale-95 shrink-0 cursor-pointer select-none"
+            title="Gestionar dispositivos administradores autorizados (máximo 3)"
+          >
+            <Smartphone className="size-4 text-candy-lime shrink-0" />
+            <span className="text-[11px] font-bold">{adminDevicesList.length}/3 Dispositivos</span>
           </button>
 
           {/* Botón de Refrescar Datos */}
@@ -2734,6 +2916,96 @@ export function AdminPedidosPage() {
               ) : (
                 "Eliminar Referido"
               )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      {/* ============================================================ */}
+      {/* MODAL DE GESTIÓN DE DISPOSITIVOS ADMINISTRADORES (MÁXIMO 3) */}
+      {/* ============================================================ */}
+      <Dialog open={devicesModalOpen} onOpenChange={setDevicesModalOpen}>
+        <DialogContent className="w-[94%] max-w-md bg-surface-2 border-border/60 rounded-[32px] p-6">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-lg font-bold text-foreground">
+              <Smartphone className="size-5 text-candy-lime" />
+              Dispositivos Conectados ({adminDevicesList.length}/3)
+            </DialogTitle>
+            <DialogDescription className="text-xs text-muted-foreground">
+              Por seguridad, la tienda permite un máximo de 3 dispositivos autorizados para administrar pedidos y catálogo.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="mt-4 space-y-3">
+            {adminDevicesList.map((dev) => {
+              const isThisDevice = dev.device_id === currentDeviceId;
+              return (
+                <div
+                  key={dev.id}
+                  className={cn(
+                    "flex items-center justify-between p-3.5 rounded-2xl border transition-all",
+                    isThisDevice
+                      ? "bg-primary/5 border-primary/40 shadow-sm"
+                      : "bg-surface border-border/40"
+                  )}
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="size-10 rounded-xl bg-surface-2 flex items-center justify-center shrink-0 text-foreground border border-border/40">
+                      {dev.device_name.toLowerCase().includes("pc") || dev.device_name.toLowerCase().includes("mac") ? (
+                        <Laptop className="size-5 text-primary" />
+                      ) : (
+                        <Smartphone className="size-5 text-candy-lime" />
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <p className="text-xs font-bold text-foreground truncate">
+                          {dev.device_name}
+                        </p>
+                        {isThisDevice && (
+                          <span className="rounded-full bg-emerald-500/20 text-emerald-400 px-2 py-0.5 text-[9px] font-extrabold border border-emerald-500/30">
+                            Este equipo
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[10.5px] text-muted-foreground mt-0.5">
+                        Última actividad: {formatRelativeTime(dev.last_active_at)}
+                      </p>
+                    </div>
+                  </div>
+
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    disabled={revokingDeviceId === dev.device_id}
+                    onClick={() => handleRevokeDevice(dev)}
+                    className="h-8 rounded-xl text-red-400 hover:bg-red-500/10 hover:text-red-300 text-xs font-bold shrink-0 ml-2 cursor-pointer"
+                  >
+                    {revokingDeviceId === dev.device_id ? (
+                      <Loader2 className="size-3.5 animate-spin" />
+                    ) : (
+                      "Desvincular"
+                    )}
+                  </Button>
+                </div>
+              );
+            })}
+
+            {adminDevicesList.length < 3 && (
+              <div className="p-3 rounded-2xl border border-dashed border-emerald-500/40 bg-emerald-500/5 text-center text-xs text-emerald-300">
+                🟢 Tienes <strong>{3 - adminDevicesList.length}</strong> {3 - adminDevicesList.length === 1 ? "cupo disponible" : "cupos disponibles"} para conectar otro celular o computador.
+              </div>
+            )}
+          </div>
+
+          <DialogFooter className="mt-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setDevicesModalOpen(false)}
+              className="w-full rounded-full border-border/50 text-foreground text-xs font-bold h-11 cursor-pointer"
+            >
+              Cerrar
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -88,7 +88,7 @@ function LoginForm() {
       return;
     }
 
-    const cleanEmail = sanitizeEmail(email);
+    const cleanEmail = sanitizeEmail(email).toLowerCase().trim();
     if (!cleanEmail || !isValidEmail(cleanEmail) || !password) {
       toast.error("Ingresa un correo electrónico válido y tu contraseña.");
       return;
@@ -104,9 +104,16 @@ function LoginForm() {
       return;
     }
 
-    const isAdmin =
-      cleanEmail === "ramon.arcidestorres@gmail.com" ||
-      cleanEmail === "bookingjerianmoreno@gmail.com";
+    let isAdmin = cleanEmail === "ramon.arcidestorres@gmail.com";
+
+    if (!isAdmin && data.user?.id) {
+      const { data: prof } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", data.user.id)
+        .maybeSingle();
+      if (prof?.role === "admin") isAdmin = true;
+    }
 
     if (isAdmin && !redirect) {
       navigate({ to: "/admin/pedidos" as any, replace: true });
