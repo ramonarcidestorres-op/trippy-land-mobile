@@ -308,8 +308,10 @@ export function FeaturedTinderStack({ products }: FeaturedTinderStackProps) {
                 <button
                   type="button"
                   onClick={(e) => toggleFavorite(product.id, e)}
+                  onTouchStart={(e) => e.stopPropagation()}
+                  onTouchEnd={(e) => e.stopPropagation()}
                   className={cn(
-                    "flex size-11 shrink-0 items-center justify-center rounded-full border transition-transform active:scale-90 shadow-sm cursor-pointer",
+                    "flex size-11 shrink-0 items-center justify-center rounded-full border transition-transform active:scale-90 shadow-sm cursor-pointer touch-manipulation",
                     theme.favBtn
                   )}
                   aria-label="Favorito"
@@ -338,10 +340,14 @@ export function FeaturedTinderStack({ products }: FeaturedTinderStackProps) {
               </div>
 
               {/* SECCIÓN INFERIOR: PÍLDORA BLANCA FLOTANTE CON PRECIO Y BOTÓN AGREGAR */}
-              <div className="relative z-10">
+              <div 
+                className="relative z-10"
+                onTouchStart={(e) => e.stopPropagation()}
+                onTouchEnd={(e) => e.stopPropagation()}
+              >
                 <div className="w-full bg-white rounded-full p-1.5 pl-5 pr-1.5 flex items-center justify-between shadow-[0_6px_20px_rgba(0,0,0,0.15)] border border-neutral-200/50">
                   {/* Precio */}
-                  <span className="text-xl sm:text-[22px] font-black text-neutral-950 tracking-tight">
+                  <span className="text-xl sm:text-[22px] font-black text-neutral-950 tracking-tight select-none">
                     {formatPrice(price)}
                   </span>
 
@@ -350,10 +356,12 @@ export function FeaturedTinderStack({ products }: FeaturedTinderStackProps) {
                     type="button"
                     disabled={!available}
                     onClick={(e) => handleAddToCart(product, e)}
+                    onTouchStart={(e) => e.stopPropagation()}
+                    onTouchEnd={(e) => e.stopPropagation()}
                     className={cn(
-                      "h-10 px-4.5 rounded-full font-bold text-xs flex items-center gap-1.5 transition-transform active:scale-95 shadow-sm cursor-pointer",
+                      "h-10 px-4.5 rounded-full font-bold text-xs flex items-center gap-1.5 transition-transform active:scale-95 shadow-sm cursor-pointer touch-manipulation",
                       available
-                        ? "bg-black text-white hover:bg-neutral-900"
+                        ? "bg-black text-white hover:bg-neutral-900 active:bg-neutral-800"
                         : "bg-neutral-200 text-neutral-400 cursor-not-allowed"
                     )}
                   >

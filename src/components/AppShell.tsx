@@ -146,7 +146,8 @@ export function AppShell({ children }: { children: ReactNode }) {
               </div>
               <Link
                 to="/carrito"
-                className="relative grid size-10 shrink-0 place-items-center rounded-full bg-surface-2"
+                preload="intent"
+                className="relative grid size-10 shrink-0 place-items-center rounded-full bg-surface-2 cursor-pointer touch-manipulation transition-transform active:scale-90"
                 aria-label="Carrito"
               >
                 <ShoppingCart className="size-5" />
@@ -233,10 +234,11 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       {/* PÍLDORA FLOTANTE "IR AL CARRITO" (Solo en Home y Catálogo cuando hay productos) */}
       {showFloatingCartPill && (
-        <div className="fixed bottom-[82px] inset-x-0 flex justify-center z-40 px-4 pointer-events-none animate-in slide-in-from-bottom-3 fade-in duration-300">
+        <div className="fixed bottom-[82px] inset-x-0 flex justify-center z-40 px-4 pointer-events-none">
           <Link
             to="/carrito"
-            className="pointer-events-auto h-11 px-4 rounded-full bg-neutral-950/85 backdrop-blur-2xl text-white shadow-[0_10px_30px_rgba(0,0,0,0.6)] border border-white/15 flex items-center gap-3 transition-transform active:scale-95 hover:bg-neutral-900"
+            preload="intent"
+            className="pointer-events-auto h-11 px-4.5 rounded-full bg-neutral-950/90 backdrop-blur-2xl text-white shadow-[0_10px_30px_rgba(0,0,0,0.6)] border border-white/15 flex items-center gap-3 transition-transform active:scale-95 hover:bg-neutral-900 cursor-pointer touch-manipulation select-none"
           >
             <div className="flex items-center gap-2">
               <span className="flex size-5.5 items-center justify-center rounded-full bg-white text-black text-[11px] font-black">
@@ -269,9 +271,10 @@ export function AppShell({ children }: { children: ReactNode }) {
                 <Link
                   key={to}
                   to={to as any}
+                  preload="intent"
                   aria-label={label}
                   className={cn(
-                    "relative flex flex-col items-center justify-center size-11 rounded-full transition-all duration-200 active:scale-90",
+                    "relative flex flex-col items-center justify-center size-11 rounded-full transition-all duration-150 active:scale-90 cursor-pointer touch-manipulation",
                     active
                       ? "text-white"
                       : "text-neutral-400/80 hover:text-neutral-200"

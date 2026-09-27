@@ -179,7 +179,8 @@ function CartPage() {
               {isOpen ? (
                 <Link
                   to="/checkout"
-                  className="flex h-[54px] w-full items-center justify-center rounded-full bg-primary text-[16px] font-bold text-primary-foreground shadow-sm transition-transform active:scale-95"
+                  preload="intent"
+                  className="flex h-[54px] w-full items-center justify-center rounded-full bg-primary text-[16px] font-bold text-primary-foreground shadow-sm transition-transform active:scale-95 cursor-pointer touch-manipulation select-none"
                 >
                   Proceder al pago
                 </Link>

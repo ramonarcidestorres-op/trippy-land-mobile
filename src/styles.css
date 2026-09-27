@@ -128,6 +128,15 @@
   select.text-sm {
     font-size: 16px !important;
   }
+
+  /* Optimización táctil inmediata: elimina los 300ms de latencia y el doble tap en móviles */
+  button, 
+  a, 
+  [role="button"],
+  .touch-manipulation {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
 }
 
 /* Regla global anti-zoom para cualquier formulario en pantalla táctil */

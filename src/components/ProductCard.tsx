@@ -78,8 +78,10 @@ export function ProductCard({ product }: { product: Product }) {
           {available && (
             <button 
               onClick={handleAdd}
+              onTouchStart={(e) => e.stopPropagation()}
+              onTouchEnd={(e) => e.stopPropagation()}
               disabled={busy}
-              className="flex size-8 shrink-0 items-center justify-center rounded-full bg-surface hover:bg-primary hover:text-black border border-border/60 text-foreground transition-all active:scale-90 disabled:opacity-50 shadow-sm"
+              className="flex size-8 shrink-0 items-center justify-center rounded-full bg-surface hover:bg-primary hover:text-black border border-border/60 text-foreground transition-all active:scale-90 disabled:opacity-50 shadow-sm cursor-pointer touch-manipulation"
               aria-label="Agregar al carrito"
             >
               {busy ? <Loader2 className="size-3.5 animate-spin" /> : <Plus className="size-4" strokeWidth={2.5} />}
