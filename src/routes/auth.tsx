@@ -8,6 +8,8 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { sanitizeEmail, isValidEmail, sanitizeName } from "@/lib/sanitize";
+import { checkAndNotifyRateLimit } from "@/lib/rateLimit";
 
 export const Route = createFileRoute("/auth")({
   ssr: false,
@@ -81,13 +83,19 @@ function LoginForm() {
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (busy) return;
-    if (!email.trim() || !password) {
-      toast.error("Escribe tu correo y tu contraseña.");
+
+    if (!checkAndNotifyRateLimit("auth", "Demasiados intentos de acceso. Por seguridad, espera un momento.")) {
+      return;
+    }
+
+    const cleanEmail = sanitizeEmail(email);
+    if (!cleanEmail || !isValidEmail(cleanEmail) || !password) {
+      toast.error("Ingresa un correo electrónico válido y tu contraseña.");
       return;
     }
     setBusy(true);
     const { data, error } = await supabase.auth.signInWithPassword({
-      email: email.trim(),
+      email: cleanEmail,
       password,
     });
     setBusy(false);
@@ -96,7 +104,6 @@ function LoginForm() {
       return;
     }
 
-    const cleanEmail = email.trim().toLowerCase();
     const isAdmin =
       cleanEmail === "ramon.arcidestorres@gmail.com" ||
       cleanEmail === "bookingjerianmoreno@gmail.com";
@@ -109,11 +116,16 @@ function LoginForm() {
   }
 
   async function resetPassword() {
-    if (!email.trim()) {
-      toast.error("Escribe tu correo para enviarte el enlace de recuperación.");
+    if (!checkAndNotifyRateLimit("auth", "Demasiadas solicitudes de recuperación. Espera un momento.")) {
       return;
     }
-    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+
+    const cleanEmail = sanitizeEmail(email);
+    if (!cleanEmail || !isValidEmail(cleanEmail)) {
+      toast.error("Escribe un correo electrónico válido para enviarte el enlace de recuperación.");
+      return;
+    }
+    const { error } = await supabase.auth.resetPasswordForEmail(cleanEmail, {
       redirectTo: `${window.location.origin}/auth`,
     });
     if (error) toast.error(error.message);
@@ -166,17 +178,34 @@ function SignupForm() {
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (busy) return;
-    if (!fullName.trim() || !email.trim() || password.length < 6) {
-      toast.error("Completa tu nombre, correo y una contraseña de al menos 6 caracteres.");
+
+    if (!checkAndNotifyRateLimit("auth", "Demasiados intentos de registro. Por seguridad, espera un momento.")) {
       return;
     }
+
+    const cleanName = sanitizeName(fullName);
+    const cleanEmail = sanitizeEmail(email);
+
+    if (!cleanName || cleanName.length < 2) {
+      toast.error("Por favor ingresa un nombre válido (mínimo 2 letras).");
+      return;
+    }
+    if (!cleanEmail || !isValidEmail(cleanEmail)) {
+      toast.error("Por favor ingresa un correo electrónico válido.");
+      return;
+    }
+    if (password.length < 6) {
+      toast.error("La contraseña debe tener al menos 6 caracteres.");
+      return;
+    }
+
     setBusy(true);
     const { error } = await supabase.auth.signUp({
-      email: email.trim(),
+      email: cleanEmail,
       password,
       options: {
         emailRedirectTo: `${window.location.origin}/`,
-        data: { full_name: fullName.trim() },
+        data: { full_name: cleanName },
       },
     });
     setBusy(false);

@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { sanitizeReferralCode } from "@/lib/sanitize";
 
 const EVENT_NAME = "trippy_ref_updated";
 const STORAGE_KEY = "trippy_ref_code";
@@ -92,10 +93,12 @@ export function getStoredReferral(): string | null {
   // 1. Revisar si la URL actual trae un código de referido explícito (?ref=CODIGO)
   const urlRef = new URLSearchParams(window.location.search).get("ref");
   if (urlRef && urlRef.trim() !== "") {
-    const clean = urlRef.trim().toUpperCase();
-    cachedReferral = clean;
-    saveReferralEverywhere(clean);
-    return clean;
+    const clean = sanitizeReferralCode(urlRef);
+    if (clean) {
+      cachedReferral = clean;
+      saveReferralEverywhere(clean);
+      return clean;
+    }
   }
 
   // 2. Si la URL NO tiene ?ref=, significa que el usuario entró por el link original directo.
@@ -135,7 +138,7 @@ function clearReferralEverywhere() {
 function saveReferralEverywhere(code: string | null, pct?: number) {
   if (typeof window === "undefined") return;
   if (code) {
-    const clean = code.trim().toUpperCase();
+    const clean = sanitizeReferralCode(code);
     try {
       localStorage.setItem(STORAGE_KEY, clean);
       sessionStorage.setItem(STORAGE_KEY, clean);

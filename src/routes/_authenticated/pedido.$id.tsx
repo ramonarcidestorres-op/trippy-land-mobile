@@ -14,6 +14,8 @@ import { formatDate, formatPrice } from "@/lib/format";
 import { playWhatsAppChime } from "@/lib/sound";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
+import { sanitizePhone } from "@/lib/sanitize";
+import { checkAndNotifyRateLimit } from "@/lib/rateLimit";
 
 type OrderDetailSearch = { nuevo?: boolean | undefined };
 
@@ -161,14 +163,25 @@ function OrderDetailPage() {
   }, [data?.status, history]);
 
   async function handleSendWa() {
-    if (!waText || !data?.id) return;
+    if (!data?.id) return;
+
+    if (!checkAndNotifyRateLimit("contact", "Espera un momento antes de reenviar tu número de contacto.")) {
+      return;
+    }
+
+    const cleanPhone = sanitizePhone(waText);
+    if (!cleanPhone || cleanPhone.length < 7) {
+      toast.error("Por favor ingresa un número de teléfono válido.");
+      return;
+    }
     setWaSending(true);
-    const { error } = await supabase.from("orders").update({ whatsapp_contact: waText }).eq("id", data.id);
+    const { error } = await supabase.from("orders").update({ whatsapp_contact: cleanPhone }).eq("id", data.id);
     setWaSending(false);
     if (error) {
       toast.error("No se pudo enviar. Intenta de nuevo.");
     } else {
       toast.success("Número enviado al domiciliario.");
+      setWaText("");
       queryClient.invalidateQueries({ queryKey: ["order", id] });
     }
   }

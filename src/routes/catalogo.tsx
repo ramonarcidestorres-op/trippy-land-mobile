@@ -8,6 +8,8 @@ import { EmptyState } from "@/components/States";
 import { Input } from "@/components/ui/input";
 import { categoriesQuery, productsQuery } from "@/lib/queries";
 import { cn } from "@/lib/utils";
+import { sanitizeSearchQuery } from "@/lib/sanitize";
+import { checkAndNotifyRateLimit } from "@/lib/rateLimit";
 
 type CatalogSearch = { q?: string | undefined; categoria?: string | undefined };
 
@@ -34,16 +36,19 @@ export function CatalogPage() {
   const categories = useQuery(categoriesQuery());
   const activeCategory = categories.data?.find((c) => c.slug === categoria) ?? null;
   const products = useQuery(
-    productsQuery({ search: q, categoryId: activeCategory?.id ?? null }),
+    productsQuery({ search: q ? sanitizeSearchQuery(q) : undefined, categoryId: activeCategory?.id ?? null }),
   );
 
   function applySearch(value: string) {
-    const trimmed = value.trim();
+    if (value.trim() && !checkAndNotifyRateLimit("search")) {
+      return;
+    }
+    const clean = sanitizeSearchQuery(value);
     navigate({
       search: (prev: CatalogSearch) => {
         const next: Record<string, string> = {};
         if (prev.categoria) next["categoria"] = prev.categoria;
-        if (trimmed) next["q"] = trimmed;
+        if (clean) next["q"] = clean;
         return next as any;
       },
     });

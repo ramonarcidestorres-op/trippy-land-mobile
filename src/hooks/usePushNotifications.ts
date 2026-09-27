@@ -1,8 +1,12 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { checkAndNotifyRateLimit } from "@/lib/rateLimit";
 
-export const VAPID_PUBLIC_KEY = "BOYL9RtuGiIigziik4eue0JR3egVG2m-Tw-XgQPnIctY-w9mpiJSlzywqVNRoI4MN_hkCKaNCvmZR0fSpSKLJmE";
+export const VAPID_PUBLIC_KEY =
+  (typeof import.meta !== "undefined" && import.meta.env?.VITE_VAPID_PUBLIC_KEY) ||
+  (typeof process !== "undefined" && process.env?.VAPID_PUBLIC_KEY) ||
+  "BOYL9RtuGiIigziik4eue0JR3egVG2m-Tw-XgQPnIctY-w9mpiJSlzywqVNRoI4MN_hkCKaNCvmZR0fSpSKLJmE";
 
 function urlBase64ToUint8Array(base64String: string): Uint8Array {
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
@@ -72,6 +76,10 @@ export function usePushNotifications() {
 
       if (!isSupported) {
         return { success: false, error: "Tu navegador no soporta notificaciones push" };
+      }
+
+      if (!checkAndNotifyRateLimit("push")) {
+        return { success: false, error: "Demasiadas solicitudes de avisos. Intenta más tarde." };
       }
 
       setLoading(true);

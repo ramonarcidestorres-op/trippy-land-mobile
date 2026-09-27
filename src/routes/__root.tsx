@@ -4,6 +4,7 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
+  useRouterState,
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
@@ -14,6 +15,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { processUrlForReferral } from "../hooks/useReferral";
 import { AuthProvider } from "../hooks/useAuth";
 import { playWhatsAppChime } from "../lib/sound";
+import { checkAndNotifyRateLimit } from "../lib/rateLimit";
 
 function NotFoundComponent() {
   return (
@@ -148,6 +150,12 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+
+  // Rate Limiting de transiciones de ruta para proteger contra bots o bucles de navegación
+  useEffect(() => {
+    checkAndNotifyRateLimit("routes", "Navegación demasiado rápida. Por favor espera un momento.");
+  }, [pathname]);
 
   useEffect(() => {
     processUrlForReferral();

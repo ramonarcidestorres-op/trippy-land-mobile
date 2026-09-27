@@ -12,11 +12,29 @@ try {
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const rootDir = path.resolve(__dirname, '..');
-const productsDir = path.resolve(rootDir, 'public', 'productos');
+function getEnvConfig() {
+  let url = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || '';
+  let key = process.env.VITE_SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_PUBLISHABLE_KEY || '';
 
-const SUPABASE_HOST = 'cdmoyqxorxecbmqbsafz.supabase.co';
-const SUPABASE_URL = `https://${SUPABASE_HOST}`;
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNkbW95cXhvcnhlY2JtcWJzYWZ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODczNzIyNzQsImV4cCI6MjEwMjk0ODI3NH0.e9pcbzDbHvCiq6rDWmW0jgwMw_B1wUVVQffACgmSxPo';
+  const envPath = path.resolve(rootDir, '.env');
+  if (fs.existsSync(envPath)) {
+    const envContent = fs.readFileSync(envPath, 'utf8');
+    const lines = envContent.split('\n');
+    for (const line of lines) {
+      const match = line.match(/^\s*([A-Za-z0-9_]+)\s*=\s*["']?(.*?)["']?\s*$/);
+      if (match) {
+        const [, k, val] = match;
+        if (!url && (k === 'VITE_SUPABASE_URL' || k === 'SUPABASE_URL')) url = val;
+        if (!key && (k === 'VITE_SUPABASE_PUBLISHABLE_KEY' || k === 'SUPABASE_PUBLISHABLE_KEY')) key = val;
+      }
+    }
+  }
+
+  const host = (url || '').replace(/^https?:\/\//, '').replace(/\/.*$/, '');
+  return { url, host, key };
+}
+
+const { url: SUPABASE_URL, host: SUPABASE_HOST, key: SUPABASE_KEY } = getEnvConfig();
 
 function normalize(str) {
   return (str || '')

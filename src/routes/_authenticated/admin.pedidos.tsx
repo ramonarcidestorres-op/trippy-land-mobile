@@ -63,6 +63,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { formatDate, formatRelativeTime, formatPrice, formatCompactPrice, STATUS_LABELS, ORDER_STATUSES } from "@/lib/format";
 import { playWhatsAppChime } from "@/lib/sound";
 import { cn } from "@/lib/utils";
+import { sanitizeProductText, sanitizeName, sanitizeReferralCode, sanitizePhone, sanitizeSearchQuery, sanitizeNumber } from "@/lib/sanitize";
 
 export const Route = createFileRoute("/_authenticated/admin/pedidos")({
   head: () => ({
@@ -522,11 +523,12 @@ export function AdminPedidosPage() {
 
   async function handleSaveProduct(e: React.FormEvent) {
     e.preventDefault();
-    if (!prodName.trim()) {
+    const cleanName = sanitizeProductText(prodName);
+    if (!cleanName) {
       toast.error("El nombre del producto es obligatorio");
       return;
     }
-    const numPrice = Number(prodPrice);
+    const numPrice = sanitizeNumber(prodPrice, 0, 100000000);
     if (isNaN(numPrice) || numPrice < 0) {
       toast.error("Ingresa un precio válido");
       return;
@@ -535,16 +537,16 @@ export function AdminPedidosPage() {
     setProdSaving(true);
     try {
       const payload: Record<string, any> = {
-        name: prodName.trim(),
+        name: cleanName,
         category_id: prodCategoryId || null,
         price: numPrice,
-        description: prodDescription.trim() || null,
+        description: prodDescription ? sanitizeProductText(prodDescription) : null,
         image_url: prodImageUrl.trim() || null,
-        strain_type: prodStrainType.trim() || null,
-        weight_g: prodWeightG ? Number(prodWeightG) : null,
-        thc_percentage: prodThc ? Number(prodThc) : null,
-        cbd_percentage: prodCbd ? Number(prodCbd) : null,
-        effects: prodEffects.trim() || null,
+        strain_type: prodStrainType ? sanitizeProductText(prodStrainType) : null,
+        weight_g: prodWeightG ? sanitizeNumber(prodWeightG, 0, 100000) : null,
+        thc_percentage: prodThc ? sanitizeNumber(prodThc, 0, 100) : null,
+        cbd_percentage: prodCbd ? sanitizeNumber(prodCbd, 0, 100) : null,
+        effects: prodEffects ? sanitizeProductText(prodEffects) : null,
         is_available: prodIsAvailable,
         updated_at: new Date().toISOString(),
       };
@@ -624,17 +626,20 @@ export function AdminPedidosPage() {
 
   async function handleSaveCategory(e: React.FormEvent) {
     e.preventDefault();
-    if (!catName.trim()) {
+    const cleanCatName = sanitizeName(catName);
+    if (!cleanCatName) {
       toast.error("El nombre de la categoría es obligatorio");
       return;
     }
-    const slugVal = catSlug.trim() || catName.trim().toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+    const cleanSlug = catSlug
+      ? catSlug.trim().toLowerCase().replace(/[^a-z0-9-]/g, "")
+      : cleanCatName.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
 
     setCatSaving(true);
     try {
       const payload = {
-        name: catName.trim(),
-        slug: slugVal,
+        name: cleanCatName,
+        slug: cleanSlug,
         icon_url: catIconUrl.trim() || null,
       };
 
@@ -698,7 +703,7 @@ export function AdminPedidosPage() {
 
   // --- REFERRAL CRUD & SHARING ---
   function sanitizeRefCode(text: string) {
-    return text.toUpperCase().replace(/\s+/g, "").replace(/[^A-Z0-9_-]/g, "");
+    return sanitizeReferralCode(text);
   }
 
   function openCreateReferralModal() {
@@ -725,16 +730,17 @@ export function AdminPedidosPage() {
 
   async function handleSaveReferral(e: React.FormEvent) {
     e.preventDefault();
-    if (!refName.trim()) {
+    const cleanRefName = sanitizeName(refName);
+    if (!cleanRefName) {
       toast.error("El nombre del referido es obligatorio");
       return;
     }
-    const cleanCode = sanitizeRefCode(refCode.trim() || refName.trim());
+    const cleanCode = sanitizeReferralCode(refCode.trim() || refName.trim());
     if (!cleanCode) {
       toast.error("Ingresa un código de referido válido");
       return;
     }
-    const numPct = Number(refCommissionPct);
+    const numPct = sanitizeNumber(refCommissionPct, 0, 100);
     if (isNaN(numPct) || numPct < 0 || numPct > 100) {
       toast.error("El porcentaje debe ser entre 0% y 100%");
       return;
@@ -743,11 +749,11 @@ export function AdminPedidosPage() {
     setRefSaving(true);
     try {
       const payload = {
-        name: refName.trim(),
+        name: cleanRefName,
         code: cleanCode,
         commission_percentage: numPct,
-        phone: refPhone.trim() || null,
-        notes: refNotes.trim() || null,
+        phone: refPhone ? sanitizePhone(refPhone) : null,
+        notes: refNotes ? sanitizeProductText(refNotes) : null,
         is_active: refIsActive,
         updated_at: new Date().toISOString(),
       };

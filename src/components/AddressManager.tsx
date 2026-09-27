@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { fetchUserAddresses, saveUserAddress, mapDBToSaved, type DBAddress } from "@/lib/addresses-db";
 import { addressStore, type SavedAddress } from "@/lib/address";
 import { cn } from "@/lib/utils";
+import { sanitizeAddress } from "@/lib/sanitize";
 
 export function AddressManager({ trigger }: { trigger?: React.ReactNode } = {}) {
   const { user } = useAuth();
@@ -109,7 +110,12 @@ export function AddressManager({ trigger }: { trigger?: React.ReactNode } = {}) 
   }
 
   async function handleSave() {
-    if (form.address.trim().length < 5) {
+    const cleanAddress = sanitizeAddress(form.address);
+    const cleanNeighborhood = sanitizeAddress(form.neighborhood);
+    const cleanApartment = sanitizeAddress(form.apartment);
+    const cleanInstructions = sanitizeAddress(form.instructions);
+
+    if (cleanAddress.length < 5) {
       toast.error("Escribe una dirección válida.");
       return;
     }
@@ -119,10 +125,10 @@ export function AddressManager({ trigger }: { trigger?: React.ReactNode } = {}) 
 
     if (user) {
       newDbAddress = await saveUserAddress({
-        address: form.address.trim(),
-        neighborhood: form.neighborhood.trim() || null,
-        apartment: form.apartment.trim() || null,
-        instructions: form.instructions.trim() || null,
+        address: cleanAddress,
+        neighborhood: cleanNeighborhood || null,
+        apartment: cleanApartment || null,
+        instructions: cleanInstructions || null,
         lat: form.lat,
         lng: form.lng,
       }, user.id);
@@ -132,10 +138,10 @@ export function AddressManager({ trigger }: { trigger?: React.ReactNode } = {}) 
         : "addr_" + Date.now() + "_" + Math.random().toString(36).substring(2, 9);
       newDbAddress = {
         id: safeId,
-        address: form.address.trim(),
-        neighborhood: form.neighborhood.trim() || null,
-        apartment: form.apartment.trim() || null,
-        instructions: form.instructions.trim() || null,
+        address: cleanAddress,
+        neighborhood: cleanNeighborhood || null,
+        apartment: cleanApartment || null,
+        instructions: cleanInstructions || null,
         lat: form.lat,
         lng: form.lng,
       };

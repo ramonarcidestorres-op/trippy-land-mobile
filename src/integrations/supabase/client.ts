@@ -3,12 +3,34 @@ import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 import { brokeredPreviewStorage } from './previewAuthStorage';
 
+import { isApiRateLimited } from "@/lib/rateLimit";
+
 function isNewSupabaseApiKey(value: string): boolean {
   return value.startsWith('sb_publishable_') || value.startsWith('sb_secret_');
 }
 
 function createSupabaseFetch(supabaseKey: string): typeof fetch {
   return (input, init) => {
+    const urlStr = typeof input === "string" ? input : input instanceof Request ? input.url : "";
+    
+    // Check Rate Limiting for API requests to prevent bot flooding
+    if (isApiRateLimited(urlStr)) {
+      console.warn(`[RateLimit] API call throttled: ${urlStr}`);
+      return Promise.resolve(
+        new Response(
+          JSON.stringify({ error: "Too Many Requests (Rate limit exceeded). Please wait a few seconds." }),
+          {
+            status: 429,
+            statusText: "Too Many Requests",
+            headers: {
+              "Content-Type": "application/json",
+              "Retry-After": "5",
+            },
+          }
+        )
+      );
+    }
+
     const headers = new Headers(
       typeof Request !== 'undefined' && input instanceof Request ? input.headers : undefined,
     );

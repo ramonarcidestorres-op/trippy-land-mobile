@@ -16,6 +16,8 @@ import { addressStore, composeAddress } from "@/lib/address";
 import { AddressManager } from "@/components/AddressManager";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { sanitizeAddress } from "@/lib/sanitize";
+import { checkAndNotifyRateLimit } from "@/lib/rateLimit";
 
 export const Route = createFileRoute("/_authenticated/checkout")({
   ssr: false,
@@ -113,13 +115,23 @@ function CheckoutPage() {
       return;
     }
 
+    // Rate Limiting para prevenir spam de pedidos y ataques de bots
+    if (!checkAndNotifyRateLimit("checkout", "Has realizado varios intentos de pedido seguidos. Por favor espera unos segundos.")) {
+      return;
+    }
+
+    const cleanAddress = sanitizeAddress(manualAddress);
+    const cleanNeighborhood = sanitizeAddress(manualNeighborhood);
+    const cleanApartment = sanitizeAddress(manualApartment);
+    const cleanNotes = sanitizeAddress(manualNotes);
+
     const effectiveAddress = selected && !isEditingAddress
-      ? composeAddress(selected)
+      ? sanitizeAddress(composeAddress(selected))
       : [
-          manualAddress.trim(),
-          manualNeighborhood.trim() && `Barrio: ${manualNeighborhood.trim()}`,
-          manualApartment.trim() && `Apto/Casa: ${manualApartment.trim()}`,
-          manualNotes.trim() && `Nota: ${manualNotes.trim()}`,
+          cleanAddress,
+          cleanNeighborhood && `Barrio: ${cleanNeighborhood}`,
+          cleanApartment && `Apto/Casa: ${cleanApartment}`,
+          cleanNotes && `Nota: ${cleanNotes}`,
         ]
           .filter(Boolean)
           .join(" • ");
@@ -131,13 +143,13 @@ function CheckoutPage() {
     }
 
     // Guardar dirección en el dispositivo para futuros pedidos si se ingresó manualmente
-    if ((!selected || isEditingAddress) && manualAddress.trim()) {
+    if ((!selected || isEditingAddress) && cleanAddress) {
       addressStore.save({
         label: "Mi dirección",
-        address: manualAddress.trim(),
-        neighborhood: manualNeighborhood.trim() || undefined,
-        apartment: manualApartment.trim() || undefined,
-        notes: manualNotes.trim() || undefined,
+        address: cleanAddress,
+        neighborhood: cleanNeighborhood || undefined,
+        apartment: cleanApartment || undefined,
+        notes: cleanNotes || undefined,
       });
     }
 

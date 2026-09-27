@@ -66,7 +66,6 @@ export function FeaturedTinderStack({ products }: FeaturedTinderStackProps) {
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [isAnimatingOut, setIsAnimatingOut] = useState<"left" | "right" | null>(null);
-
   const startPosRef = useRef({ x: 0, y: 0, time: 0 });
   const lastPosRef = useRef({ x: 0, y: 0, time: 0 });
   const velocityRef = useRef(0);
@@ -74,6 +73,17 @@ export function FeaturedTinderStack({ products }: FeaturedTinderStackProps) {
   // Intent-locking refs to prevent accidental drag during page scroll
   const isIntentDeterminedRef = useRef(false);
   const isSwipingCardRef = useRef(false);
+
+  // Preload all product images in background for instantaneous swipe transitions
+  useEffect(() => {
+    if (!products || products.length === 0) return;
+    products.forEach((p) => {
+      if (p.image_url) {
+        const preImg = new Image();
+        preImg.src = p.image_url;
+      }
+    });
+  }, [products]);
 
   // Sync favorites
   useEffect(() => {
@@ -314,7 +324,10 @@ export function FeaturedTinderStack({ products }: FeaturedTinderStackProps) {
                   <img
                     src={img}
                     alt={product.name}
-                    className="max-h-full max-w-full w-auto h-auto object-contain scale-125 filter drop-shadow-[0_16px_28px_rgba(0,0,0,0.25)] transition-transform duration-300"
+                    loading={isTop ? "eager" : "lazy"}
+                    fetchPriority={isTop ? "high" : "auto"}
+                    decoding="async"
+                    className="max-h-full max-w-full w-auto h-auto object-contain scale-110 drop-shadow-[0_12px_24px_rgba(0,0,0,0.22)] transition-transform duration-300"
                   />
                   {!available && (
                     <div className="absolute inset-0 grid place-items-center rounded-3xl bg-black/85 text-[11px] font-black uppercase tracking-widest text-red-400 border border-red-500/30 backdrop-blur-sm">
