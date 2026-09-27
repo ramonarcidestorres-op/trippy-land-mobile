@@ -1,13 +1,19 @@
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
 import { createClient } from '@supabase/supabase-js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const rootDir = path.resolve(__dirname, '..');
+const productsDir = path.resolve(rootDir, 'public', 'productos');
 
 const SUPABASE_URL = 'https://cdmoyqxorxecbmqbsafz.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNkbW95cXhvcnhlY2JtcWJzYWZ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODczNzIyNzQsImV4cCI6MjEwMjk0ODI3NH0.e9pcbzDbHvCiq6rDWmW0jgwMw_B1wUVVQffACgmSxPo';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-const productsDir = path.resolve('public/productos');
+console.log('Directorio de productos:', productsDir);
 
 // Mapping file base names to product names in DB
 const fileToProductsMap = [
@@ -39,7 +45,7 @@ const fileToProductsMap = [
   { file: 'Papel LSD.png', products: ['Papel LSD'] },
   { file: 'Polen - kieff 1gr.png', products: ['Polen - kieff 1gr'] },
   { file: 'Popper Fermín nacional.png', products: ['Popper Fermín nacional'] },
-  { file: 'Popper rush.png', products: ['Popper rush importado'] },
+  { file: 'Popper rush.png', products: ['Popper rush importado', 'Popper rush'] },
   { file: 'Potencializador sexual Caja x 3.png', products: ['Potencializador sexual Caja x 3', 'Potencializador unidad'] },
   { file: 'Píldora Candy fliping.png', products: ['Píldora Candy fliping'] },
   { file: 'Píldora Nexus.png', products: ['Píldora Nexus'] },
@@ -54,55 +60,74 @@ const fileToProductsMap = [
 ];
 
 async function run() {
-  console.log('Iniciando subida de imagenes a Supabase Storage...');
+  if (!fs.existsSync(productsDir)) {
+    console.error(`[ERROR] No existe la carpeta: ${productsDir}`);
+    return;
+  }
+
+  const filesInDir = fs.readdirSync(productsDir);
+  console.log(`Encontrados ${filesInDir.length} archivos en ${productsDir}`);
+
+  let successCount = 0;
+  let failCount = 0;
 
   for (const item of fileToProductsMap) {
     const filePath = path.join(productsDir, item.file);
     if (!fs.existsSync(filePath)) {
-      console.warn(`[WARN] Archivo no encontrado: ${item.file}`);
+      console.warn(`[WARN] Archivo no encontrado en disco: "${item.file}"`);
       continue;
     }
 
-    const fileBuffer = fs.readFileSync(filePath);
-    // Sanitize filename for storage
-    const cleanFileName = Date.now() + '_' + item.file.replace(/[^a-zA-Z0-9._-]/g, '_');
-    const storagePath = `products/${cleanFileName}`;
+    try {
+      const fileBuffer = fs.readFileSync(filePath);
+      const cleanFileName = Date.now() + '_' + item.file.replace(/[^a-zA-Z0-9._-]/g, '_');
+      const storagePath = `products/${cleanFileName}`;
 
-    console.log(`Subiendo ${item.file} -> ${storagePath}...`);
-    const { data, error } = await supabase.storage
-      .from('product-images')
-      .upload(storagePath, fileBuffer, {
-        contentType: 'image/png',
-        upsert: true,
-      });
+      console.log(`Subiendo "${item.file}" -> ${storagePath}...`);
+      const { data, error } = await supabase.storage
+        .from('product-images')
+        .upload(storagePath, fileBuffer, {
+          contentType: 'image/png',
+          upsert: true,
+        });
 
-    if (error) {
-      console.error(`Error subiendo ${item.file}:`, error);
-      continue;
-    }
-
-    const { data: publicUrlData } = supabase.storage
-      .from('product-images')
-      .getPublicUrl(storagePath);
-
-    const publicUrl = publicUrlData.publicUrl;
-    console.log(`Public URL: ${publicUrl}`);
-
-    for (const prodName of item.products) {
-      const { error: updateError } = await supabase
-        .from('products')
-        .update({ image_url: publicUrl })
-        .ilike('name', prodName);
-
-      if (updateError) {
-        console.error(`Error actualizando ${prodName}:`, updateError);
-      } else {
-        console.log(`✓ Producto "${prodName}" actualizado con éxito`);
+      if (error) {
+        console.error(`[ERROR] al subir ${item.file}:`, error.message);
+        failCount++;
+        continue;
       }
+
+      const { data: publicUrlData } = supabase.storage
+        .from('product-images')
+        .getPublicUrl(storagePath);
+
+      const publicUrl = publicUrlData.publicUrl;
+
+      for (const prodName of item.products) {
+        const { error: updateError } = await supabase
+          .from('products')
+          .update({ image_url: publicUrl })
+          .ilike('name', prodName);
+
+        if (updateError) {
+          console.error(`[ERROR] actualizando DB para "${prodName}":`, updateError.message);
+        } else {
+          console.log(`  ✓ Producto "${prodName}" -> ${publicUrl}`);
+          successCount++;
+        }
+      }
+    } catch (err) {
+      console.error(`[EXCEPCION] en ${item.file}:`, err);
+      failCount++;
     }
   }
 
-  console.log('Subida completada.');
+  console.log(`\n==============================================`);
+  console.log(`Subida completada: ${successCount} productos actualizados con éxito.`);
+  if (failCount > 0) {
+    console.log(`Hubo ${failCount} errores.`);
+  }
+  console.log(`==============================================\n`);
 }
 
 run();
