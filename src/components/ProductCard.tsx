@@ -4,6 +4,7 @@ import { useProductModal } from "@/hooks/useProductModal";
 import { formatPrice } from "@/lib/format";
 import { type Product } from "@/lib/queries";
 import { useReferral } from "@/hooks/useReferral";
+import { getProductImageUrl } from "@/lib/productImages";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -30,14 +31,7 @@ export function ProductCard({ product }: { product: Product }) {
     }
   }
   
-  // Use unsplash fallbacks for the images to match the premium dark look if none exists
-  const fallbackImg = product.name.toLowerCase().includes("gom") 
-    ? "https://images.unsplash.com/photo-1582058091505-f87a2e55a40f?w=400&q=80"
-    : product.name.toLowerCase().includes("choco")
-    ? "https://images.unsplash.com/photo-1606312619070-d48b4c652a52?w=400&q=80"
-    : "https://images.unsplash.com/photo-1550258987-190a2d41a8ba?w=400&q=80";
-
-  const img = product.image_url || fallbackImg;
+  const img = getProductImageUrl(product);
 
   return (
     <div 

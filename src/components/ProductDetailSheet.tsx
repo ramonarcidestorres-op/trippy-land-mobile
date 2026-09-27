@@ -16,6 +16,7 @@ import { useReferral } from "@/hooks/useReferral";
 import { useProductModal } from "@/hooks/useProductModal";
 import { productQuery, type Product } from "@/lib/queries";
 import { formatPrice } from "@/lib/format";
+import { getProductImageUrl } from "@/lib/productImages";
 import { cn } from "@/lib/utils";
 
 export function ProductDetailSheet() {
@@ -259,13 +260,7 @@ export function ProductDetailSheet() {
   const singlePrice = activeProd ? getAdjustedPrice(activeProd.price) : 0;
   const totalPrice = singlePrice * qty;
 
-  const fallbackImg = activeProd?.name.toLowerCase().includes("gom")
-    ? "https://images.unsplash.com/photo-1582058091505-f87a2e55a40f?w=600&q=80"
-    : activeProd?.name.toLowerCase().includes("choco")
-    ? "https://images.unsplash.com/photo-1606312619070-d48b4c652a52?w=600&q=80"
-    : "https://images.unsplash.com/photo-1550258987-190a2d41a8ba?w=600&q=80";
-
-  const img = activeProd?.image_url || fallbackImg;
+  const img = activeProd ? getProductImageUrl(activeProd) : "";
   const categoryName = (activeProd as any)?.categories?.name || activeProd?.strain_type || "Premium";
 
   const hasSpecs = Boolean(

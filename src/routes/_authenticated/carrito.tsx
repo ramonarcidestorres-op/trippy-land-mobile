@@ -6,6 +6,7 @@ import { useCart } from "@/hooks/useCart";
 import { useReferral } from "@/hooks/useReferral";
 import { useStoreStatus } from "@/hooks/useStoreStatus";
 import { formatPrice } from "@/lib/format";
+import { getProductImageUrl } from "@/lib/productImages";
 
 export const Route = createFileRoute("/_authenticated/carrito")({
   ssr: false,
@@ -71,14 +72,7 @@ function CartPage() {
         <div className="pb-8">
           <ul className="space-y-4">
             {rows.map((row) => {
-              // Fallback image handling
-              const s = row.products?.name.toLowerCase() || "";
-              let imgUrl = row.products?.image_url;
-              if (!imgUrl) {
-                if (s.includes("gom")) imgUrl = "https://images.unsplash.com/photo-1582058091505-f87a2e55a40f?w=400&q=80";
-                else if (s.includes("choco")) imgUrl = "https://images.unsplash.com/photo-1606312619070-d48b4c652a52?w=400&q=80";
-                else imgUrl = "https://images.unsplash.com/photo-1550258987-190a2d41a8ba?w=400&q=80";
-              }
+              const imgUrl = getProductImageUrl(row.products || { name: "", image_url: null });
 
               return (
                 <li
@@ -91,12 +85,12 @@ function CartPage() {
                   
                   <div className="relative flex w-full overflow-x-auto snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                     <div className="flex min-w-full shrink-0 snap-start gap-4 rounded-[28px] bg-[#1E1F24] p-4">
-                      <div className="size-20 shrink-0 overflow-hidden rounded-2xl bg-surface">
+                      <div className="size-20 shrink-0 overflow-hidden rounded-2xl bg-surface flex items-center justify-center">
                         <img
                           src={imgUrl}
                           alt={row.products?.name}
                           loading="lazy"
-                          className="size-full object-cover"
+                          className="size-full object-contain"
                         />
                       </div>
                       
