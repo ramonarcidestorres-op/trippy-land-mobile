@@ -366,15 +366,15 @@ export function ProductDetailSheet() {
           </div>
 
           {/* PRODUCT HERO IMAGE WITH SOFT GLOW */}
-          <div className="flex-1 flex items-center justify-center p-4 relative min-h-0">
-            <div className="absolute size-60 rounded-full bg-[radial-gradient(circle,rgba(255,255,255,0.95)_0%,rgba(235,235,242,0.6)_50%,transparent_75%)] blur-md pointer-events-none" />
+          <div className="flex-1 flex items-center justify-center p-2 relative min-h-0">
+            <div className="absolute size-72 rounded-full bg-[radial-gradient(circle,rgba(255,255,255,0.95)_0%,rgba(235,235,242,0.6)_50%,transparent_75%)] blur-md pointer-events-none" />
 
-            <div className="relative size-56 sm:size-64 flex items-center justify-center z-10 pointer-events-none">
+            <div className="relative size-64 sm:size-72 flex items-center justify-center z-10 pointer-events-none">
               {activeProd ? (
                 <img
                   src={img}
                   alt={activeProd.name}
-                  className="max-h-full max-w-full object-contain filter drop-shadow-[0_16px_24px_rgba(0,0,0,0.18)]"
+                  className="max-h-full max-w-full w-auto h-auto object-contain scale-125 filter drop-shadow-[0_20px_32px_rgba(0,0,0,0.22)] transition-transform duration-300"
                 />
               ) : (
                 <Candy className="size-20 text-neutral-400 animate-pulse" />

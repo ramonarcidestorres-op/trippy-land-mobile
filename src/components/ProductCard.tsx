@@ -45,13 +45,13 @@ export function ProductCard({ product }: { product: Product }) {
       className="group relative flex w-full flex-col overflow-hidden rounded-[26px] bg-surface-2/90 border border-border/40 pb-4 transition-all focus-within:ring-2 focus-within:ring-primary/30 active:scale-[0.98] shadow-sm cursor-pointer"
     >
       <div
-        className="relative z-10 mx-auto mt-5 block aspect-square w-32 drop-shadow-[0_8px_16px_rgba(0,0,0,0.4)] transition-transform duration-500"
+        className="relative z-10 mx-auto mt-4 block aspect-square w-36 sm:w-40 drop-shadow-[0_10px_22px_rgba(0,0,0,0.38)] transition-transform duration-500"
       >
         <img
           src={img}
           alt={product.name}
           loading="lazy"
-          className="size-full object-contain transition-transform duration-500 group-hover:scale-110"
+          className="size-full object-contain scale-105 transition-transform duration-500 group-hover:scale-115"
         />
         {!available && (
           <div className="absolute inset-0 grid place-items-center rounded-2xl bg-background/85 text-[10px] font-black uppercase tracking-widest text-red-400 border border-red-500/30 backdrop-blur-sm">

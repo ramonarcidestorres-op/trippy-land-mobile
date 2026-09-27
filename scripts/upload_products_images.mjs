@@ -1,133 +1,225 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { createClient } from '@supabase/supabase-js';
+import dns from 'dns';
+import https from 'https';
+
+// Forzar resolución IPv4 en Windows para evitar ENOTFOUND
+try {
+  dns.setDefaultResultOrder('ipv4first');
+} catch (e) {}
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const rootDir = path.resolve(__dirname, '..');
 const productsDir = path.resolve(rootDir, 'public', 'productos');
 
-const SUPABASE_URL = 'https://cdmoyqxorxecbmqbsafz.supabase.co';
+const SUPABASE_HOST = 'cdmoyqxorxecbmqbsafz.supabase.co';
+const SUPABASE_URL = `https://${SUPABASE_HOST}`;
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNkbW95cXhvcnhlY2JtcWJzYWZ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODczNzIyNzQsImV4cCI6MjEwMjk0ODI3NH0.e9pcbzDbHvCiq6rDWmW0jgwMw_B1wUVVQffACgmSxPo';
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+function normalize(str) {
+  return (str || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]/g, '');
+}
 
-console.log('Directorio de productos:', productsDir);
+// Función HTTPS nativa con soporte robusto de red
+function httpRequest(options, dataBuffer = null) {
+  return new Promise((resolve, reject) => {
+    const req = https.request({
+      ...options,
+      family: 4, // Forzar IPv4
+    }, (res) => {
+      let body = '';
+      res.on('data', chunk => body += chunk);
+      res.on('end', () => {
+        resolve({
+          status: res.statusCode,
+          ok: res.statusCode >= 200 && res.statusCode < 300,
+          text: async () => body,
+          json: async () => JSON.parse(body || '{}'),
+        });
+      });
+    });
 
-// Mapping file base names to product names in DB
-const fileToProductsMap = [
-  { file: '2cb (tussi) 3 gramos.png', products: ['2cb (tussi) 3 gramos'] },
-  { file: 'Caja Clonazepam x30.png', products: ['Caja Clonazepam x30'] },
-  { file: 'Caja Metadona.png', products: ['Caja Metadona', 'Metadona Unidad'] },
-  { file: 'Caja Oxycodona.png', products: ['Caja Oxycodona', 'Oxycodona unidad'] },
-  { file: 'Caja Ritalina.png', products: ['Caja Ritalina', 'Ritalina unidad'] },
-  { file: 'Caja Rivotril.png', products: ['Caja Rivotril', 'Rivotril unidad'] },
-  { file: 'Caja Xanax.png', products: ['Caja Xanax', 'Xanax unidad'] },
-  { file: 'Chocolatina hongos 1gr.png', products: ['Chocolatina hongos 1gr', 'Chocolatina hongos 3 gr'] },
-  { file: 'Coca lavada 1gr.png', products: ['Coca lavada 1gr', 'Coca lavada de coco 1gr'] },
-  { file: 'Coca pura 1gr.png', products: ['Coca pura 1gr'] },
-  { file: 'DMT puro 1 gr.png', products: ['DMT puro 1 gr', 'DMT puro 1/2'] },
-  { file: 'Dmt vaporizador.png', products: ['Dmt vaporizador'] },
-  { file: 'Filimento keta.png', products: ['Filimento keta'] },
-  { file: 'GHB unidad.png', products: ['GHB unidad'] },
-  { file: 'Gomitas thc.PNG', products: ['Gomitas thc'] },
-  { file: 'Gotas Cbd.png', products: ['Gotas Cbd'] },
-  { file: 'Gotas thc .png', products: ['Gotas thc'] },
-  { file: 'Hachis 1gr .png', products: ['Hachis 1gr'] },
-  { file: 'Hongos súper pack x5.png', products: ['Hongos súper pack x5'] },
-  { file: 'Hongos unidad.png', products: ['Hongos unidad'] },
-  { file: 'Ketamina 1gr.png', products: ['Ketamina 1gr'] },
-  { file: 'Mdma 1gr.png', products: ['Mdma 1gr', 'Mdma 1/2'] },
-  { file: 'Micropunto LSD.png', products: ['Micropunto LSD'] },
-  { file: 'Molly.png', products: ['Molly 1gr', 'Molly 1/2'] },
-  { file: 'Nexus 1gr.png', products: ['Nexus 1gr', 'Nexus 1/2'] },
-  { file: 'Papel LSD.png', products: ['Papel LSD'] },
-  { file: 'Polen - kieff 1gr.png', products: ['Polen - kieff 1gr'] },
-  { file: 'Popper Fermín nacional.png', products: ['Popper Fermín nacional'] },
-  { file: 'Popper rush.png', products: ['Popper rush importado', 'Popper rush'] },
-  { file: 'Potencializador sexual Caja x 3.png', products: ['Potencializador sexual Caja x 3', 'Potencializador unidad'] },
-  { file: 'Píldora Candy fliping.png', products: ['Píldora Candy fliping'] },
-  { file: 'Píldora Nexus.png', products: ['Píldora Nexus'] },
-  { file: 'Píldora extasis holandés.png', products: ['Píldora extasis holandés'] },
-  { file: 'Rosin 1gr $100.png', products: ['Rosin 1gr'] },
-  { file: 'Tussi premium Azul 1 gr.png', products: ['Tussi premium Azul 1 gr'] },
-  { file: 'Tussi premium Tussi 1 gr.png', products: ['Tussi premium Tussi 1 gr'] },
-  { file: 'Tussi premium manilla.png', products: ['Tussi premium manilla'] },
-  { file: 'Unidad Ice cristal.png', products: ['Unidad Ice cristal'] },
-  { file: 'Vaporizador thc 2gr.png', products: ['Vaporizador thc 2gr'] },
-  { file: 'live resin.png', products: ['Live resin'] },
-];
+    req.on('error', (err) => reject(err));
+
+    if (dataBuffer) {
+      req.write(dataBuffer);
+    }
+    req.end();
+  });
+}
 
 async function run() {
+  console.log('=== SUBIENDO FOTOS A SUPABASE STORAGE ===\n');
+
   if (!fs.existsSync(productsDir)) {
-    console.error(`[ERROR] No existe la carpeta: ${productsDir}`);
+    console.error(`[ERROR] No existe el directorio: ${productsDir}`);
     return;
   }
 
-  const filesInDir = fs.readdirSync(productsDir);
-  console.log(`Encontrados ${filesInDir.length} archivos en ${productsDir}`);
+  // 1. Obtener todos los productos de Supabase
+  console.log('Obteniendo lista de productos desde Supabase...');
+  let dbProducts = [];
+  try {
+    const prodRes = await httpRequest({
+      hostname: SUPABASE_HOST,
+      path: '/rest/v1/products?select=id,name,image_url',
+      method: 'GET',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`,
+      },
+    });
 
-  let successCount = 0;
-  let failCount = 0;
+    if (!prodRes.ok) {
+      console.error('[ERROR] al obtener productos de Supabase:', await prodRes.text());
+      return;
+    }
 
-  for (const item of fileToProductsMap) {
-    const filePath = path.join(productsDir, item.file);
-    if (!fs.existsSync(filePath)) {
-      console.warn(`[WARN] Archivo no encontrado en disco: "${item.file}"`);
+    dbProducts = await prodRes.json();
+    console.log(`✓ Total productos en BD: ${dbProducts.length}\n`);
+  } catch (err) {
+    console.error('[ERROR de conexión con Supabase]:', err.message);
+    return;
+  }
+
+  // 2. Leer archivos en public/productos
+  const files = fs.readdirSync(productsDir).filter(f => !f.startsWith('.'));
+  console.log(`Archivos encontrados en public/productos: ${files.length}\n`);
+
+  let updatedCount = 0;
+
+  for (const fileName of files) {
+    const filePath = path.join(productsDir, fileName);
+    const stat = fs.statSync(filePath);
+    if (!stat.isFile()) continue;
+
+    const fileBuffer = fs.readFileSync(filePath);
+    const baseName = path.parse(fileName).name.trim();
+    const normFileName = normalize(baseName);
+
+    // Encontrar productos que coincidan
+    const matched = dbProducts.filter(p => {
+      const normProdName = normalize(p.name);
+      if (normFileName === normProdName) return true;
+
+      if (normFileName.includes('xanax') && normProdName.includes('xanax')) return true;
+      if (normFileName.includes('rivotril') && normProdName.includes('rivotril')) return true;
+      if (normFileName.includes('clonazepam') && normProdName.includes('clonazepam')) return true;
+      if (normFileName.includes('ritalina') && normProdName.includes('ritalina')) return true;
+      if (normFileName.includes('oxycodona') && normProdName.includes('oxycodona')) return true;
+      if (normFileName.includes('metadona') && normProdName.includes('metadona')) return true;
+      if (normFileName.includes('ice') && normProdName.includes('ice')) return true;
+
+      if (normFileName.includes('cocalavada') && normProdName.includes('cocalavada')) return true;
+      if (normFileName.includes('cocapura') && normProdName.includes('cocapura')) return true;
+
+      if (normFileName.includes('chocolatina') && normProdName.includes('chocolatina')) return true;
+      if (normFileName.includes('hongospack') && normProdName.includes('hongospack')) return true;
+      if (normFileName.includes('hongosunidad') && normProdName.includes('hongosunidad')) return true;
+      if (normFileName.includes('dmtpuro') && normProdName.includes('dmtpuro')) return true;
+      if (normFileName.includes('dmtvapo') && normProdName.includes('dmtvapo')) return true;
+
+      if (normFileName.includes('molly') && normProdName.includes('molly')) return true;
+      if (normFileName.includes('nexus1gr') && normProdName.includes('nexus') && !normProdName.includes('pildora')) return true;
+      if (normFileName.includes('pildoranexus') && normProdName.includes('pildoranexus')) return true;
+      if (normFileName.includes('mdma') && normProdName.includes('mdma')) return true;
+      if (normFileName.includes('popperrush') && normProdName.includes('popperrush')) return true;
+      if (normFileName.includes('popperfermin') && normProdName.includes('popperfermin')) return true;
+      if (normFileName.includes('tussi3gramos') && normProdName.includes('tussi3gramos')) return true;
+      if (normFileName.includes('tussiazul') && normProdName.includes('tussiazul')) return true;
+      if (normFileName.includes('tussimanilla') && normProdName.includes('tussimanilla')) return true;
+      if (normFileName.includes('tussitussi') && normProdName.includes('tussitussi')) return true;
+      if (normFileName.includes('potencializador') && normProdName.includes('potencializador')) return true;
+
+      if (normFileName.includes('rosin') && normProdName.includes('rosin')) return true;
+      if (normFileName.includes('liveresin') && normProdName.includes('liveresin')) return true;
+      if (normFileName.includes('hachis') && normProdName.includes('hachis')) return true;
+      if (normFileName.includes('polen') && normProdName.includes('polen')) return true;
+      if (normFileName.includes('gotascbd') && normProdName.includes('gotascbd')) return true;
+      if (normFileName.includes('gotasthc') && normProdName.includes('gotasthc')) return true;
+      if (normFileName.includes('vaporizador') && normProdName.includes('vaporizador')) return true;
+      if (normFileName.includes('gomitas') && normProdName.includes('gomitas')) return true;
+      if (normFileName.includes('extasis') && normProdName.includes('extasis')) return true;
+      if (normFileName.includes('candy') && normProdName.includes('candy')) return true;
+      if (normFileName.includes('papel') && normProdName.includes('papel')) return true;
+      if (normFileName.includes('micropunto') && normProdName.includes('micropunto')) return true;
+      if (normFileName.includes('filimento') && normProdName.includes('filimento')) return true;
+      if (normFileName.includes('ketamina') && normProdName.includes('ketamina') && !normProdName.includes('filimento')) return true;
+      if (normFileName.includes('ghb') && normProdName.includes('ghb')) return true;
+
+      return false;
+    });
+
+    if (matched.length === 0) {
+      console.log(`[OMITIDO] "${fileName}" (no coincide con productos pendientes)`);
       continue;
     }
 
+    const cleanName = Date.now() + '_' + fileName.replace(/[^a-zA-Z0-9._-]/g, '_');
+    const storagePath = `products/${cleanName}`;
+    const contentType = fileName.toLowerCase().endsWith('.png') ? 'image/png' : 'image/jpeg';
+
+    console.log(`Subiendo "${fileName}" -> Storage (${storagePath})...`);
+
     try {
-      const fileBuffer = fs.readFileSync(filePath);
-      const cleanFileName = Date.now() + '_' + item.file.replace(/[^a-zA-Z0-9._-]/g, '_');
-      const storagePath = `products/${cleanFileName}`;
+      // Subir a Storage via HTTPS con IPv4
+      const uploadRes = await httpRequest({
+        hostname: SUPABASE_HOST,
+        path: `/storage/v1/object/product-images/${storagePath}`,
+        method: 'POST',
+        headers: {
+          'apikey': SUPABASE_KEY,
+          'Authorization': `Bearer ${SUPABASE_KEY}`,
+          'Content-Type': contentType,
+          'x-upsert': 'true',
+        },
+      }, fileBuffer);
 
-      console.log(`Subiendo "${item.file}" -> ${storagePath}...`);
-      const { data, error } = await supabase.storage
-        .from('product-images')
-        .upload(storagePath, fileBuffer, {
-          contentType: 'image/png',
-          upsert: true,
-        });
-
-      if (error) {
-        console.error(`[ERROR] al subir ${item.file}:`, error.message);
-        failCount++;
+      if (!uploadRes.ok) {
+        const errText = await uploadRes.text();
+        console.error(`  [ERROR Storage] ${fileName}: ${errText}`);
         continue;
       }
 
-      const { data: publicUrlData } = supabase.storage
-        .from('product-images')
-        .getPublicUrl(storagePath);
+      const publicUrl = `${SUPABASE_URL}/storage/v1/object/public/product-images/${storagePath}`;
 
-      const publicUrl = publicUrlData.publicUrl;
+      // Actualizar cada producto en la BD
+      for (const prod of matched) {
+        const updateBody = JSON.stringify({ image_url: publicUrl });
+        const updateRes = await httpRequest({
+          hostname: SUPABASE_HOST,
+          path: `/rest/v1/products?id=eq.${prod.id}`,
+          method: 'PATCH',
+          headers: {
+            'apikey': SUPABASE_KEY,
+            'Authorization': `Bearer ${SUPABASE_KEY}`,
+            'Content-Type': 'application/json',
+            'Prefer': 'return=minimal',
+            'Content-Length': Buffer.byteLength(updateBody),
+          },
+        }, Buffer.from(updateBody));
 
-      for (const prodName of item.products) {
-        const { error: updateError } = await supabase
-          .from('products')
-          .update({ image_url: publicUrl })
-          .ilike('name', prodName);
-
-        if (updateError) {
-          console.error(`[ERROR] actualizando DB para "${prodName}":`, updateError.message);
+        if (!updateRes.ok) {
+          console.error(`  [ERROR DB] ${prod.name}: ${await updateRes.text()}`);
         } else {
-          console.log(`  ✓ Producto "${prodName}" -> ${publicUrl}`);
-          successCount++;
+          console.log(`  ✓ Vinculado: ${prod.name}`);
+          updatedCount++;
         }
       }
-    } catch (err) {
-      console.error(`[EXCEPCION] en ${item.file}:`, err);
-      failCount++;
+    } catch (uploadErr) {
+      console.error(`  [EXCEPCION] en ${fileName}:`, uploadErr.message);
     }
   }
 
-  console.log(`\n==============================================`);
-  console.log(`Subida completada: ${successCount} productos actualizados con éxito.`);
-  if (failCount > 0) {
-    console.log(`Hubo ${failCount} errores.`);
-  }
-  console.log(`==============================================\n`);
+  console.log('\n==============================================');
+  console.log(`TOTAL COMPLETADO: ${updatedCount} productos vinculados con éxito.`);
+  console.log('==============================================\n');
 }
 
 run();
