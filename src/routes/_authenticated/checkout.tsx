@@ -44,10 +44,13 @@ function CheckoutPage() {
   const [manualApartment, setManualApartment] = useState("");
   const [manualNotes, setManualNotes] = useState("");
   const [isEditingAddress, setIsEditingAddress] = useState(false);
+  const [addressError, setAddressError] = useState<string | null>(null);
   const [locating, setLocating] = useState(false);
   const [deliveryType, setDeliveryType] = useState<"normal" | "fast">("normal");
   const [placing, setPlacing] = useState(false);
   const lock = useRef(false);
+  const addressSectionRef = useRef<HTMLDivElement>(null);
+  const addressInputRef = useRef<HTMLInputElement>(null);
 
   const { data: fees } = useQuery(deliveryFeesQuery());
 
@@ -93,6 +96,7 @@ function CheckoutPage() {
         setLocating(false);
         const coords = `GPS (${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)})`;
         setManualAddress((prev) => (prev ? `${prev} [${coords}]` : coords));
+        setAddressError(null);
         toast.success("Ubicación GPS capturada. Agrega tu calle o edificio.");
       },
       (err) => {
@@ -137,8 +141,18 @@ function CheckoutPage() {
           .join(" • ");
 
     if (!effectiveAddress || effectiveAddress.trim().length < 4) {
-      toast.error("Por favor ingresa tu dirección de entrega para confirmar.");
       setIsEditingAddress(true);
+      const errMsg = "No puedes proceder al pago si no tienes la dirección. Dinos dónde te vamos a llevar el producto.";
+      setAddressError(errMsg);
+      toast.error("No puedes proceder al pago si no tienes la dirección.", {
+        description: "Dinos dónde te vamos a llevar el producto.",
+        duration: 5000,
+      });
+
+      setTimeout(() => {
+        addressSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+        addressInputRef.current?.focus();
+      }, 100);
       return;
     }
 
@@ -278,10 +292,16 @@ function CheckoutPage() {
 
       <div className="space-y-4 pb-32">
         {/* Address Card */}
-        <section className="rounded-[32px] bg-surface-2/60 p-5 shadow-sm">
+        <section
+          ref={addressSectionRef}
+          className={cn(
+            "rounded-[32px] bg-surface-2/60 p-5 shadow-sm transition-all duration-300",
+            addressError && "ring-2 ring-red-500/60 bg-red-500/5 shadow-[0_0_24px_rgba(239,68,68,0.15)]"
+          )}
+        >
           <div className="mb-3 flex items-center justify-between">
             <h2 className="flex items-center gap-2 text-[15px] font-semibold text-foreground">
-              <MapPin className="size-4 text-primary" /> Dirección de entrega
+              <MapPin className={cn("size-4 text-primary", addressError && "text-red-400")} /> Dirección de entrega
             </h2>
             {selected && !isEditingAddress && (
               <button
@@ -292,13 +312,25 @@ function CheckoutPage() {
                   setManualApartment(selected.apartment || "");
                   setManualNotes(selected.notes || selected.references || "");
                   setIsEditingAddress(true);
+                  setAddressError(null);
                 }}
-                className="text-xs font-bold text-primary hover:underline"
+                className="text-xs font-bold text-primary hover:underline cursor-pointer"
               >
                 Cambiar
               </button>
             )}
           </div>
+
+          {/* Mensaje de alerta visible si intentaron pagar sin dirección */}
+          {addressError && (
+            <div className="mb-3.5 flex items-start gap-2.5 rounded-2xl bg-red-500/15 border border-red-500/40 p-3.5 text-xs font-semibold text-red-400 animate-in fade-in slide-in-from-top-2 duration-300">
+              <MapPin className="size-4 shrink-0 text-red-400 mt-0.5" />
+              <div className="flex-1">
+                <span className="font-bold text-red-300">Dirección requerida:</span>{" "}
+                <span className="text-red-200/90">{addressError}</span>
+              </div>
+            </div>
+          )}
 
           {selected && !isEditingAddress ? (
             <div className="rounded-2xl bg-surface/90 border border-border/50 p-4">
@@ -329,8 +361,9 @@ function CheckoutPage() {
                     setManualApartment(selected.apartment || "");
                     setManualNotes(selected.notes || selected.references || "");
                     setIsEditingAddress(true);
+                    setAddressError(null);
                   }}
-                  className="text-[12px] font-bold text-primary px-3 py-1.5 rounded-full bg-surface-2 hover:bg-surface border border-border/40 transition-transform active:scale-95 shrink-0"
+                  className="text-[12px] font-bold text-primary px-3 py-1.5 rounded-full bg-surface-2 hover:bg-surface border border-border/40 transition-transform active:scale-95 shrink-0 cursor-pointer"
                 >
                   Editar
                 </button>
@@ -343,7 +376,7 @@ function CheckoutPage() {
                 type="button"
                 onClick={handleGetLocation}
                 disabled={locating}
-                className="flex w-full items-center justify-center gap-2 h-11 rounded-2xl bg-surface hover:bg-surface-2 border border-border/50 text-[13px] font-semibold text-primary transition-all active:scale-[0.98] disabled:opacity-50"
+                className="flex w-full items-center justify-center gap-2 h-11 rounded-2xl bg-surface hover:bg-surface-2 border border-border/50 text-[13px] font-semibold text-primary transition-all active:scale-[0.98] disabled:opacity-50 cursor-pointer select-none touch-manipulation"
               >
                 {locating ? <Loader2 className="size-4 animate-spin text-primary" /> : <Navigation className="size-4 text-primary" />}
                 <span>{locating ? "Obteniendo ubicación GPS..." : "Detectar mi ubicación actual con GPS"}</span>
@@ -364,9 +397,10 @@ function CheckoutPage() {
                           addressStore.select(addr.id);
                           setSelectedId(addr.id);
                           setIsEditingAddress(false);
+                          setAddressError(null);
                         }}
                         className={cn(
-                          "px-3 py-1.5 rounded-xl text-xs font-medium border transition-all text-left truncate max-w-full",
+                          "px-3 py-1.5 rounded-xl text-xs font-medium border transition-all text-left truncate max-w-full cursor-pointer select-none touch-manipulation",
                           selected?.id === addr.id
                             ? "bg-primary/15 border-primary text-primary"
                             : "bg-surface border-border/40 text-muted-foreground hover:text-foreground"
@@ -386,10 +420,17 @@ function CheckoutPage() {
                     Dirección principal <span className="text-primary">*</span>
                   </label>
                   <Input
+                    ref={addressInputRef}
                     value={manualAddress}
-                    onChange={(e) => setManualAddress(e.target.value)}
+                    onChange={(e) => {
+                      setManualAddress(e.target.value);
+                      if (addressError) setAddressError(null);
+                    }}
                     placeholder="Ej: Calle 45 # 12-34 o Edificio / Conjunto"
-                    className="h-11 rounded-2xl bg-surface border-border/40 text-[13px] text-foreground placeholder:text-muted-foreground/60 focus-visible:ring-1 focus-visible:ring-primary"
+                    className={cn(
+                      "h-11 rounded-2xl bg-surface border-border/40 text-[13px] text-foreground placeholder:text-muted-foreground/60 focus-visible:ring-1 focus-visible:ring-primary",
+                      addressError && "border-red-500/80 ring-2 ring-red-500/30"
+                    )}
                   />
                 </div>
 
@@ -400,7 +441,10 @@ function CheckoutPage() {
                     </label>
                     <Input
                       value={manualNeighborhood}
-                      onChange={(e) => setManualNeighborhood(e.target.value)}
+                      onChange={(e) => {
+                        setManualNeighborhood(e.target.value);
+                        if (addressError) setAddressError(null);
+                      }}
                       placeholder="Ej: El Poblado"
                       className="h-11 rounded-2xl bg-surface border-border/40 text-[13px] text-foreground placeholder:text-muted-foreground/60 focus-visible:ring-1 focus-visible:ring-primary"
                     />
@@ -411,7 +455,10 @@ function CheckoutPage() {
                     </label>
                     <Input
                       value={manualApartment}
-                      onChange={(e) => setManualApartment(e.target.value)}
+                      onChange={(e) => {
+                        setManualApartment(e.target.value);
+                        if (addressError) setAddressError(null);
+                      }}
                       placeholder="Ej: Apto 301, Torre 2"
                       className="h-11 rounded-2xl bg-surface border-border/40 text-[13px] text-foreground placeholder:text-muted-foreground/60 focus-visible:ring-1 focus-visible:ring-primary"
                     />
@@ -424,7 +471,10 @@ function CheckoutPage() {
                   </label>
                   <Input
                     value={manualNotes}
-                    onChange={(e) => setManualNotes(e.target.value)}
+                    onChange={(e) => {
+                      setManualNotes(e.target.value);
+                      if (addressError) setAddressError(null);
+                    }}
                     placeholder="Ej: Dejar en portería, casa de reja negra..."
                     className="h-11 rounded-2xl bg-surface border-border/40 text-[13px] text-foreground placeholder:text-muted-foreground/60 focus-visible:ring-1 focus-visible:ring-primary"
                   />
@@ -435,8 +485,11 @@ function CheckoutPage() {
                 <div className="flex justify-end pt-1">
                   <button
                     type="button"
-                    onClick={() => setIsEditingAddress(false)}
-                    className="text-xs text-muted-foreground hover:text-foreground font-semibold px-2 py-1"
+                    onClick={() => {
+                      setIsEditingAddress(false);
+                      setAddressError(null);
+                    }}
+                    className="text-xs text-muted-foreground hover:text-foreground font-semibold px-2 py-1 cursor-pointer"
                   >
                     Cancelar edición
                   </button>
@@ -536,7 +589,7 @@ function CheckoutPage() {
       {/* Fixed Bottom Action */}
       <div className="fixed inset-x-0 bottom-0 z-40 mx-auto max-w-5xl bg-gradient-to-t from-background via-background/95 to-transparent px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-4 md:bottom-4 md:px-0 md:bg-none">
         <button
-          className="flex h-[56px] w-full items-center justify-center rounded-full bg-primary px-6 shadow-2xl transition-transform active:scale-95 disabled:opacity-50 disabled:active:scale-100"
+          className="flex h-[56px] w-full items-center justify-center rounded-full bg-primary px-6 shadow-2xl transition-transform active:scale-95 disabled:opacity-50 disabled:active:scale-100 cursor-pointer select-none touch-manipulation"
           onClick={placeOrder}
           disabled={placing || unavailable.length > 0 || !isOpen}
         >

@@ -229,7 +229,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         )}
       </header>
 
-      <main key={pathname} className={cn("mx-auto max-w-5xl px-4 pb-36 pt-4 md:pb-12 min-w-0 overflow-x-hidden", isSubPage && "animate-ios-push")}>
+      <main className="mx-auto max-w-5xl px-4 pb-36 pt-4 md:pb-12 min-w-0 overflow-x-hidden">
         {children}
       </main>
 
