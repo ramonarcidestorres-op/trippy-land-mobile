@@ -18,6 +18,7 @@ import {
   TrendingUp, 
   Rocket,
   ShieldCheck,
+  ShieldAlert,
   Volume2,
   VolumeX,
   RotateCw,
@@ -77,7 +78,7 @@ function playChime() {
 type AdminTab = "pedidos" | "productos" | "categorias" | "referidos";
 
 export function AdminPedidosPage() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const queryClient = useQueryClient();
   const { isOpen, isToggling, toggleStoreStatus } = useStoreStatus();
   const [activeTab, setActiveTab] = useState<AdminTab>("pedidos");
@@ -834,6 +835,39 @@ export function AdminPedidosPage() {
     window.open(waUrl, "_blank");
   }
 
+
+  if (authLoading) {
+    return (
+      <AppShell>
+        <div className="flex min-h-[60vh] items-center justify-center">
+          <div className="size-8 animate-spin rounded-full border-2 border-candy-lime border-t-transparent" />
+        </div>
+      </AppShell>
+    );
+  }
+
+  if (!user || user.role !== "admin") {
+    return (
+      <AppShell>
+        <div className="flex min-h-[60vh] flex-col items-center justify-center px-4 text-center">
+          <div className="size-14 rounded-full bg-red-500/10 flex items-center justify-center text-red-400 mb-4 border border-red-500/20">
+            <ShieldAlert className="size-7" />
+          </div>
+          <h1 className="text-xl font-bold text-foreground">Acceso Restringido</h1>
+          <p className="mt-2 text-sm text-muted-foreground max-w-sm">
+            Esta sección es exclusiva para el equipo administrativo de Trippy Land Store.
+          </p>
+          <Link
+            to="/auth"
+            search={{ redirect: "/admin/pedidos" }}
+            className="mt-6 inline-flex items-center justify-center rounded-full bg-primary px-6 py-2.5 text-sm font-bold text-primary-foreground shadow-sm transition-transform active:scale-95"
+          >
+            Iniciar sesión como Administrador
+          </Link>
+        </div>
+      </AppShell>
+    );
+  }
 
   return (
     <AppShell>

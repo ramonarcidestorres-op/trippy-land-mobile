@@ -102,6 +102,7 @@
   }
 
   html {
+    background-color: #0e0e0e;
     color-scheme: dark;
     overflow-x: hidden;
     touch-action: manipulation;

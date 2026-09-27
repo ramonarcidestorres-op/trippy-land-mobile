@@ -111,7 +111,9 @@ export const ordersQuery = (userId: string | undefined) =>
         query = query.in("id", localIds);
       }
 
-      const { data, error } = await query.order("created_at", { ascending: false });
+      const { data, error } = await query
+        .order("created_at", { ascending: false })
+        .limit(50);
       if (error) throw new Error(error.message);
       return (data || []) as (Order & { order_items?: OrderItem[] })[];
     },
@@ -154,13 +156,14 @@ export type AdminOrder = Order & {
 export const allOrdersQuery = () =>
   queryOptions({
     queryKey: ["admin_orders"],
-    refetchInterval: 5000,
+    refetchInterval: 15000,
     queryFn: async (): Promise<AdminOrder[]> => {
-      // 1. Obtener órdenes con items y detalles de productos
+      // 1. Obtener órdenes con items y detalles de productos (limitado a los 200 más recientes para escalabilidad)
       const { data: rawOrders, error: ordersErr } = await supabase
         .from("orders")
         .select("*, order_items(*, products(id, name, image_url))")
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false })
+        .limit(200);
 
       if (ordersErr) throw new Error(ordersErr.message);
       if (!rawOrders || rawOrders.length === 0) return [];
