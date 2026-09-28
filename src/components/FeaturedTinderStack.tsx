@@ -74,16 +74,21 @@ export function FeaturedTinderStack({ products }: FeaturedTinderStackProps) {
   const isIntentDeterminedRef = useRef(false);
   const isSwipingCardRef = useRef(false);
 
-  // Preload all product images in background for instantaneous swipe transitions
+  // Preload only next 2-3 upcoming cards in stack to avoid mobile bandwidth saturation
   useEffect(() => {
     if (!products || products.length === 0) return;
-    products.forEach((p) => {
-      if (p.image_url) {
+    const nextCards = [
+      products[currentIndex],
+      products[(currentIndex + 1) % products.length],
+      products[(currentIndex + 2) % products.length],
+    ];
+    nextCards.forEach((p) => {
+      if (p?.image_url) {
         const preImg = new Image();
         preImg.src = p.image_url;
       }
     });
-  }, [products]);
+  }, [currentIndex, products]);
 
   // Sync favorites
   useEffect(() => {

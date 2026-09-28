@@ -15,6 +15,10 @@ type CatalogSearch = { q?: string | undefined; categoria?: string | undefined };
 
 export const Route = createFileRoute("/catalogo")({
   ssr: false,
+  loader: async ({ context: { queryClient } }) => {
+    queryClient.ensureQueryData(categoriesQuery()).catch(() => {});
+    queryClient.ensureQueryData(productsQuery()).catch(() => {});
+  },
   validateSearch: (search: Record<string, unknown>): CatalogSearch => ({
     q: typeof search["q"] === "string" ? search["q"] : undefined,
     categoria: typeof search["categoria"] === "string" ? search["categoria"] : undefined,
@@ -129,13 +133,13 @@ export function CatalogPage() {
       </div>
 
       <div className="mb-8">
-        {products.isLoading ? (
+        {products.isLoading && !products.data ? (
           <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
             {[0, 1, 2, 3, 4, 5].map((i) => (
               <ProductCardSkeleton key={i} />
             ))}
           </div>
-        ) : products.error ? (
+        ) : products.error && !products.data ? (
           <div className="rounded-3xl bg-surface-2/40 p-8 text-center">
             <p className="text-sm text-muted-foreground">No se pudieron cargar los productos.</p>
           </div>

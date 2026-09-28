@@ -272,7 +272,7 @@ export function AdminPedidosPage() {
     };
   }, [queryClient]);
 
-  // --- GESTIÓN DE LÍMITE DE 3 DISPOSITIVOS ADMINISTRADORES ---
+  // --- GESTIÓN DE LÍMITE DE 4 DISPOSITIVOS ADMINISTRADORES ---
   const [deviceStatus, setDeviceStatus] = useState<"checking" | "authorized" | "limit_reached" | "error">("checking");
   const [deviceLimitError, setDeviceLimitError] = useState<string | null>(null);
   const [adminDevicesList, setAdminDevicesList] = useState<AdminDeviceRecord[]>([]);
@@ -293,7 +293,7 @@ export function AdminPedidosPage() {
         setDeviceStatus("authorized");
       } else if (res.status === "device_limit_reached") {
         setDeviceStatus("limit_reached");
-        setDeviceLimitError(res.error || "Límite de 3 dispositivos administradores alcanzado (3/3).");
+        setDeviceLimitError(res.error || "Límite de 4 dispositivos administradores alcanzado (4/4).");
       } else {
         setDeviceStatus("authorized");
       }
@@ -379,11 +379,11 @@ export function AdminPedidosPage() {
             </div>
 
             <h1 className="text-xl sm:text-2xl font-black text-foreground">
-              Límite de 3 Dispositivos Alcanzado
+              Límite de 4 Dispositivos Alcanzado
             </h1>
 
             <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
-              Ya tienes el límite máximo de <strong className="text-foreground">3 dispositivos autorizados</strong> vinculados para administrar la tienda.
+              Ya tienes el límite máximo de <strong className="text-foreground">4 dispositivos autorizados</strong> vinculados para administrar la tienda.
             </p>
 
             <div className="mt-3 rounded-2xl bg-amber-500/10 border border-amber-500/20 p-3.5 text-xs text-amber-300 font-medium leading-relaxed">
@@ -392,7 +392,7 @@ export function AdminPedidosPage() {
 
             <div className="mt-5 space-y-2.5">
               <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-                Dispositivos actualmente conectados ({adminDevicesList.length}/3):
+                Dispositivos actualmente conectados ({adminDevicesList.length}/4):
               </p>
               {adminDevicesList.map((dev) => (
                 <div
@@ -1140,15 +1140,15 @@ export function AdminPedidosPage() {
             <span className="text-[11px] font-bold">{soundEnabled ? "Sonido" : "Mute"}</span>
           </button>
 
-          {/* Botón de Dispositivos Conectados (Límite 3) */}
+          {/* Botón de Dispositivos Conectados (Límite 4) */}
           <button
             type="button"
             onClick={() => setDevicesModalOpen(true)}
             className="flex items-center justify-center gap-1.5 h-11 px-3 rounded-2xl text-xs font-bold border border-border/40 bg-surface-2 text-foreground hover:bg-surface transition-all active:scale-95 shrink-0 cursor-pointer select-none"
-            title="Gestionar dispositivos administradores autorizados (máximo 3)"
+            title="Gestionar dispositivos administradores autorizados (máximo 4)"
           >
             <Smartphone className="size-4 text-candy-lime shrink-0" />
-            <span className="text-[11px] font-bold">{adminDevicesList.length}/3 Dispositivos</span>
+            <span className="text-[11px] font-bold">{adminDevicesList.length}/4 Dispositivos</span>
           </button>
 
           {/* Botón de Refrescar Datos */}
@@ -2921,17 +2921,17 @@ export function AdminPedidosPage() {
         </DialogContent>
       </Dialog>
       {/* ============================================================ */}
-      {/* MODAL DE GESTIÓN DE DISPOSITIVOS ADMINISTRADORES (MÁXIMO 3) */}
+      {/* MODAL DE GESTIÓN DE DISPOSITIVOS ADMINISTRADORES (MÁXIMO 4) */}
       {/* ============================================================ */}
       <Dialog open={devicesModalOpen} onOpenChange={setDevicesModalOpen}>
         <DialogContent className="w-[94%] max-w-md bg-surface-2 border-border/60 rounded-[32px] p-6">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-lg font-bold text-foreground">
               <Smartphone className="size-5 text-candy-lime" />
-              Dispositivos Conectados ({adminDevicesList.length}/3)
+              Dispositivos Conectados ({adminDevicesList.length}/4)
             </DialogTitle>
             <DialogDescription className="text-xs text-muted-foreground">
-              Por seguridad, la tienda permite un máximo de 3 dispositivos autorizados para administrar pedidos y catálogo.
+              Por seguridad, la tienda permite un máximo de 4 dispositivos autorizados para administrar pedidos y catálogo.
             </DialogDescription>
           </DialogHeader>
 
@@ -2991,9 +2991,9 @@ export function AdminPedidosPage() {
               );
             })}
 
-            {adminDevicesList.length < 3 && (
+            {adminDevicesList.length < 4 && (
               <div className="p-3 rounded-2xl border border-dashed border-emerald-500/40 bg-emerald-500/5 text-center text-xs text-emerald-300">
-                🟢 Tienes <strong>{3 - adminDevicesList.length}</strong> {3 - adminDevicesList.length === 1 ? "cupo disponible" : "cupos disponibles"} para conectar otro celular o computador.
+                🟢 Tienes <strong>{4 - adminDevicesList.length}</strong> {4 - adminDevicesList.length === 1 ? "cupo disponible" : "cupos disponibles"} para conectar otro celular o computador.
               </div>
             )}
           </div>

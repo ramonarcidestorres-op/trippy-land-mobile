@@ -73,7 +73,7 @@ export type AdminDeviceRecord = {
 };
 
 /**
- * Verifica o registra el dispositivo actual ante la base de datos (Máximo 3 dispositivos admin).
+ * Verifica o registra el dispositivo actual ante la base de datos (Máximo 4 dispositivos admin).
  */
 export async function verifyOrRegisterAdminDevice(): Promise<AdminDeviceResult> {
   const deviceId = getOrCreateDeviceId();
@@ -123,7 +123,7 @@ export async function revokeAdminDevice(deviceId: string): Promise<{ success: bo
 }
 
 /**
- * Lista todos los dispositivos autorizados actuales (máximo 3).
+ * Lista todos los dispositivos autorizados actuales (máximo 4).
  */
 export async function listAdminDevices(): Promise<AdminDeviceRecord[]> {
   try {

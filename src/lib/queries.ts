@@ -19,27 +19,90 @@ function unwrap<T>(res: { data: T | null; error: { message: string } | null }): 
   return (res.data ?? []) as T;
 }
 
+const CACHE_CATS_KEY = "tls_cached_categories";
+const CACHE_PRODS_KEY = "tls_cached_products";
+
+export function getCachedCategories(): Category[] | undefined {
+  if (typeof window === "undefined") return undefined;
+  try {
+    const raw = localStorage.getItem(CACHE_CATS_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+  } catch {
+    // ignore
+  }
+  return undefined;
+}
+
+export function saveCachedCategories(cats: Category[]) {
+  if (typeof window === "undefined" || !cats || cats.length === 0) return;
+  try {
+    localStorage.setItem(CACHE_CATS_KEY, JSON.stringify(cats));
+  } catch {
+    // ignore
+  }
+}
+
+export function getCachedProducts(): Product[] | undefined {
+  if (typeof window === "undefined") return undefined;
+  try {
+    const raw = localStorage.getItem(CACHE_PRODS_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+  } catch {
+    // ignore
+  }
+  return undefined;
+}
+
+export function saveCachedProducts(prods: Product[]) {
+  if (typeof window === "undefined" || !prods || prods.length === 0) return;
+  try {
+    localStorage.setItem(CACHE_PRODS_KEY, JSON.stringify(prods));
+  } catch {
+    // ignore
+  }
+}
+
 export const categoriesQuery = () =>
   queryOptions({
     queryKey: ["categories"],
     staleTime: 1000 * 60 * 10,
+    placeholderData: () => getCachedCategories(),
     queryFn: async () => {
-      const cats = unwrap<Category[]>(await supabase.from("categories").select("*").order("name"));
-      
-      const getPriority = (c: Category) => {
-        const s = (c.name + " " + c.slug).toLowerCase();
-        if (s.includes("sintético") || s.includes("sintetico") || s.includes("sintetic")) return 1;
-        if (s.includes("weed") || s.includes("mota")) return 2;
-        if (s.includes("coca") || s.includes("perico")) return 3;
-        return 99;
-      };
+      try {
+        const { data, error } = await supabase.from("categories").select("*").order("name");
+        if (error) throw error;
+        const cats = (data || []) as Category[];
+        
+        const getPriority = (c: Category) => {
+          const s = (c.name + " " + c.slug).toLowerCase();
+          if (s.includes("sintético") || s.includes("sintetico") || s.includes("sintetic")) return 1;
+          if (s.includes("weed") || s.includes("mota")) return 2;
+          if (s.includes("coca") || s.includes("perico")) return 3;
+          return 99;
+        };
 
-      return cats.sort((a, b) => {
-        const pA = getPriority(a);
-        const pB = getPriority(b);
-        if (pA !== pB) return pA - pB;
-        return a.name.localeCompare(b.name);
-      });
+        const sorted = cats.sort((a, b) => {
+          const pA = getPriority(a);
+          const pB = getPriority(b);
+          if (pA !== pB) return pA - pB;
+          return a.name.localeCompare(b.name);
+        });
+
+        if (sorted.length > 0) {
+          saveCachedCategories(sorted);
+        }
+        return sorted;
+      } catch (err) {
+        const cached = getCachedCategories();
+        if (cached && cached.length > 0) return cached;
+        throw err;
+      }
     }
   });
 
@@ -47,11 +110,32 @@ export const productsQuery = (opts: { search?: string | undefined; categoryId?: 
   queryOptions({
     queryKey: ["products", opts.search ?? "", opts.categoryId ?? ""],
     staleTime: 1000 * 60 * 5,
+    placeholderData: (prev) => {
+      if (prev) return prev;
+      if (!opts.search && !opts.categoryId) return getCachedProducts();
+      return undefined;
+    },
     queryFn: async () => {
-      let q = supabase.from("products").select("*").order("created_at", { ascending: false });
-      if (opts.categoryId) q = q.eq("category_id", opts.categoryId);
-      if (opts.search) q = q.ilike("name", `%${opts.search}%`);
-      return unwrap<Product[]>(await q);
+      try {
+        let q = supabase.from("products").select("*").order("created_at", { ascending: false });
+        if (opts.categoryId) q = q.eq("category_id", opts.categoryId);
+        if (opts.search) q = q.ilike("name", `%${opts.search}%`);
+        const { data, error } = await q;
+        if (error) throw error;
+        const prods = (data || []) as Product[];
+        
+        // If it was an unfiltered query, persist to localStorage for 0ms cold starts
+        if (!opts.categoryId && !opts.search && prods.length > 0) {
+          saveCachedProducts(prods);
+        }
+        return prods;
+      } catch (err) {
+        if (!opts.categoryId && !opts.search) {
+          const cached = getCachedProducts();
+          if (cached && cached.length > 0) return cached;
+        }
+        throw err;
+      }
     },
   });
 

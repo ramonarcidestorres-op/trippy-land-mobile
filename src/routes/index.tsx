@@ -10,6 +10,11 @@ import { categoriesQuery, productsQuery } from "@/lib/queries";
 
 export const Route = createFileRoute("/")({
   ssr: false,
+  loader: async ({ context: { queryClient } }) => {
+    // Pre-warm React Query cache during router navigation
+    queryClient.ensureQueryData(categoriesQuery()).catch(() => {});
+    queryClient.ensureQueryData(productsQuery()).catch(() => {});
+  },
   head: () => ({
     meta: [
       { title: "Trippy Land Store — Dulces a domicilio" },
@@ -59,13 +64,13 @@ function HomePage() {
 
       {/* Categorías Visuales inspiradas en la referencia */}
       <section className="mb-8">
-        {categories.isLoading ? (
+        {categories.isLoading && !categories.data ? (
           <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
             {[0, 1, 2, 3].map((i) => (
               <div key={i} className="h-[140px] w-[95px] shrink-0 animate-pulse rounded-[32px] bg-surface-2/60" />
             ))}
           </div>
-        ) : categories.error ? (
+        ) : categories.error && !categories.data ? (
           <div className="rounded-3xl bg-surface-2/40 p-6 text-center">
             <p className="text-sm text-muted-foreground">Error al cargar categorías</p>
           </div>
@@ -91,9 +96,9 @@ function HomePage() {
                 if (!c.icon_url) imgUrl = "/categorias/farmacia.png";
               } else if (n.includes("sint")) {
                 activeColor = "bg-[#FCA5A5] text-black";
-                if (!c.icon_url) imgUrl = "/categorias/sintéticos.png";
+                if (!c.icon_url) imgUrl = encodeURI("/categorias/sintéticos.png");
               } else {
-                if (!c.icon_url) imgUrl = `/categorias/${c.name}.png`;
+                if (!c.icon_url) imgUrl = encodeURI(`/categorias/${c.name}.png`);
               }
 
               const isActive = selectedCategory === c.id;
@@ -107,7 +112,15 @@ function HomePage() {
                   style={{ minHeight: "140px" }}
                 >
                   <div className="relative mt-1 aspect-square w-[75px] overflow-hidden rounded-full bg-transparent">
-                    <img src={imgUrl} alt={c.name} className="size-full object-cover transition-transform group-hover:scale-110" />
+                    <img 
+                      src={imgUrl} 
+                      alt={c.name} 
+                      loading="lazy"
+                      onError={(e) => {
+                        (e.currentTarget as HTMLImageElement).src = "https://images.unsplash.com/photo-1550258987-190a2d41a8ba?w=400&q=80";
+                      }}
+                      className="size-full object-cover transition-transform group-hover:scale-110" 
+                    />
                   </div>
                   <div className="mb-3 mt-3 text-center">
                     <p className={`text-[12px] font-bold leading-tight ${isActive ? "" : "text-foreground"}`}>

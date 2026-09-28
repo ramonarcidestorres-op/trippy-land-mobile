@@ -12,9 +12,19 @@ function isNewSupabaseApiKey(value: string): boolean {
 function createSupabaseFetch(supabaseKey: string): typeof fetch {
   return (input, init) => {
     const urlStr = typeof input === "string" ? input : input instanceof Request ? input.url : "";
+    const method = (init?.method || (input instanceof Request ? input.method : "GET")).toUpperCase();
     
-    // Check Rate Limiting for API requests to prevent bot flooding
-    if (isApiRateLimited(urlStr)) {
+    // Check Rate Limiting for API write/mutation requests or excessive non-GET flooding
+    // Public catalog GET requests (products, categories, app_config) are exempted to ensure instant loading for all visitors
+    const isPublicGet = method === "GET" && (
+      urlStr.includes("/rest/v1/products") ||
+      urlStr.includes("/rest/v1/categories") ||
+      urlStr.includes("/rest/v1/app_config") ||
+      urlStr.includes("/rest/v1/delivery_fees") ||
+      urlStr.includes("/rest/v1/referrals")
+    );
+
+    if (!isPublicGet && isApiRateLimited(urlStr)) {
       console.warn(`[RateLimit] API call throttled: ${urlStr}`);
       return Promise.resolve(
         new Response(
