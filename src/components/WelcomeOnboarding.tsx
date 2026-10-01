@@ -1,61 +1,184 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Logo, LogoEye } from "@/components/Logo";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
+import { categoriesQuery, productsQuery } from "@/lib/queries";
+import { preloadPriorityImages } from "@/lib/image-optimizer";
+
+type StartupPhase = "loading" | "onboarding" | "exiting_loading" | "exiting_onboarding" | "closed";
 
 export function WelcomeOnboarding() {
-  const [show, setShow] = useState<boolean>(false);
-  const [phase, setPhase] = useState<"splash" | "onboarding" | "exiting">("splash");
+  const queryClient = useQueryClient();
+  const [phase, setPhase] = useState<StartupPhase>("loading");
+  const [progress, setProgress] = useState<number>(10);
+  
+  const isMountedRef = useRef(true);
+  const hasExitedLoadingRef = useRef(false);
+  const safetyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const exitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
+    isMountedRef.current = true;
+    hasExitedLoadingRef.current = false;
 
-    // Verificar si ya completó el onboarding anteriormente
-    const completed = localStorage.getItem("tls_onboarding_completed");
-    if (completed === "true") {
-      return;
-    }
-
-    // Si ya tiene pedidos previos registrados en su dispositivo, omitir onboarding
-    try {
-      const orders = JSON.parse(localStorage.getItem("tls_my_orders") || "[]");
-      if (Array.isArray(orders) && orders.length > 0) {
-        localStorage.setItem("tls_onboarding_completed", "true");
-        return;
+    // Verificar estrictamente si el usuario ya completó el onboarding según el indicador existente
+    const checkOnboardingStatus = (): boolean => {
+      try {
+        return localStorage.getItem("tls_onboarding_completed") === "true";
+      } catch {
+        return false;
       }
-    } catch {
-      // ignore
+    };
+
+    const isAlreadyOnboarded = checkOnboardingStatus();
+
+    const finishLoading = (wasMeasuredSuccess: boolean) => {
+      if (!isMountedRef.current || hasExitedLoadingRef.current) return;
+      hasExitedLoadingRef.current = true;
+
+      if (safetyTimerRef.current) {
+        clearTimeout(safetyTimerRef.current);
+        safetyTimerRef.current = null;
+      }
+
+      if (wasMeasuredSuccess) {
+        setProgress(100);
+      }
+
+      if (isAlreadyOnboarded) {
+        setPhase("exiting_loading");
+        exitTimerRef.current = setTimeout(() => {
+          if (isMountedRef.current) setPhase("closed");
+        }, 350);
+      } else {
+        setPhase("onboarding");
+        // En segundo plano, precargar las demás imágenes mientras el usuario lee el onboarding
+        try {
+          const cachedProds = queryClient.getQueryData<any[]>(["products", "", ""]) || [];
+          const moreImages = cachedProds.slice(3, 8).map((p) => p?.image_url).filter(Boolean);
+          preloadPriorityImages(moreImages, 3000).catch(() => {});
+        } catch {
+          // ignore
+        }
+      }
+    };
+
+    // Tareas reales de preparación inicial con medición de progreso
+    async function initializeApp() {
+      let currentProgress = 15;
+      const updateProg = (inc: number) => {
+        if (!isMountedRef.current || hasExitedLoadingRef.current) return;
+        currentProgress = Math.min(95, currentProgress + inc);
+        setProgress(currentProgress);
+      };
+
+      try {
+        // Tarea 1: Comprobar sesión de auth (Supabase Auth)
+        const authPromise = supabase.auth.getSession().catch(() => null).then(() => updateProg(25));
+
+        // Tarea 2: Pre-calentar caché de categorías
+        const catsPromise = queryClient.ensureQueryData(categoriesQuery())
+          .catch(() => null)
+          .then((cats) => {
+            updateProg(25);
+            return cats;
+          });
+
+        // Tarea 3: Pre-calentar caché de productos
+        const prodsPromise = queryClient.ensureQueryData(productsQuery())
+          .catch(() => null)
+          .then((prods) => {
+            updateProg(25);
+            return prods;
+          });
+
+        // Tarea 4: Consulta de estado de la tienda
+        const configPromise = supabase
+          .from("app_config")
+          .select("value")
+          .eq("key", "store_is_open")
+          .maybeSingle()
+          .catch(() => null)
+          .then(() => updateProg(10));
+
+        // Esperar que las tareas esenciales finalicen
+        const [_, catsData, prodsData] = await Promise.allSettled([
+          authPromise,
+          catsPromise,
+          prodsPromise,
+          configPromise,
+        ]);
+
+        // Tarea 5: Precargar únicamente las primeras imágenes prioritarias de Home
+        const productsList = prodsData.status === "fulfilled" && Array.isArray(prodsData.value) ? prodsData.value : [];
+        const categoriesList = catsData.status === "fulfilled" && Array.isArray(catsData.value) ? catsData.value : [];
+
+        const priorityImages: string[] = [];
+        // Top 3 productos visibles en el Tinder stack
+        productsList.slice(0, 3).forEach((p) => {
+          if (p?.image_url) priorityImages.push(p.image_url);
+        });
+        // Íconos de las primeras 4 categorías
+        categoriesList.slice(0, 4).forEach((c) => {
+          if (c?.icon_url) priorityImages.push(c.icon_url);
+        });
+
+        // Precarga no bloqueante con timeout estricto de 700ms
+        await preloadPriorityImages(priorityImages, 700).catch(() => {});
+        updateProg(10);
+      } catch (err) {
+        console.warn("[Startup] Non-critical initialization error:", err);
+      } finally {
+        if (isMountedRef.current && !hasExitedLoadingRef.current) {
+          finishLoading(true);
+        }
+      }
     }
 
-    setShow(true);
+    // Safety timeout: garantía de que la pantalla de carga se retire sin marcar 100% artificial ni bloquear si la red es lenta
+    safetyTimerRef.current = setTimeout(() => {
+      if (!hasExitedLoadingRef.current && isMountedRef.current) {
+        finishLoading(false);
+      }
+    }, 1200);
 
-    // Transición del Splash al Onboarding después de la animación inicial de zoom
-    const splashTimer = setTimeout(() => {
-      setPhase("onboarding");
-    }, 1600);
+    initializeApp();
 
-    return () => clearTimeout(splashTimer);
-  }, []);
+    return () => {
+      isMountedRef.current = false;
+      if (safetyTimerRef.current) clearTimeout(safetyTimerRef.current);
+      if (exitTimerRef.current) clearTimeout(exitTimerRef.current);
+    };
+  }, [queryClient]);
 
   const handleEnter = () => {
-    setPhase("exiting");
+    if (exitTimerRef.current) {
+      clearTimeout(exitTimerRef.current);
+    }
+    setPhase("exiting_onboarding");
     try {
       localStorage.setItem("tls_onboarding_completed", "true");
       window.dispatchEvent(new Event("tls_onboarding_done"));
     } catch {
       // ignore
     }
-    setTimeout(() => {
-      setShow(false);
-    }, 450);
+    exitTimerRef.current = setTimeout(() => {
+      if (isMountedRef.current) setPhase("closed");
+    }, 350);
   };
 
-  if (!show) return null;
+  if (phase === "closed") return null;
+
+  const isExiting = phase === "exiting_loading" || phase === "exiting_onboarding";
+  const showLoading = phase === "loading" || phase === "exiting_loading";
+  const showOnboarding = phase === "onboarding" || phase === "exiting_onboarding";
 
   return (
     <div
       className={cn(
-        "fixed inset-0 z-50 flex flex-col justify-between bg-black text-white select-none transition-opacity duration-500 overflow-y-auto",
-        phase === "exiting" ? "opacity-0 pointer-events-none scale-105" : "opacity-100"
+        "fixed inset-0 z-50 flex flex-col justify-between bg-[#0a0a0a] text-white select-none transition-all duration-350 overflow-y-auto",
+        isExiting ? "opacity-0 pointer-events-none scale-[1.02]" : "opacity-100 scale-100"
       )}
       style={{
         paddingTop: "max(env(safe-area-inset-top), 20px)",
@@ -65,33 +188,47 @@ export function WelcomeOnboarding() {
       {/* Luz ambiental sutil de fondo */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div
-          className="absolute left-1/2 top-1/3 -translate-x-1/2 -translate-y-1/2 size-[320px] sm:size-[440px] rounded-full blur-[90px] opacity-25"
+          className="absolute left-1/2 top-1/3 -translate-x-1/2 -translate-y-1/2 size-[320px] sm:size-[440px] rounded-full blur-[100px] opacity-20"
           style={{
-            background: "radial-gradient(circle, rgba(255, 252, 235, 0.35) 0%, rgba(255, 255, 255, 0.05) 50%, transparent 80%)",
+            background: "radial-gradient(circle, rgba(255, 252, 235, 0.4) 0%, rgba(255, 255, 255, 0.05) 50%, transparent 80%)",
           }}
         />
       </div>
 
-      {/* FASE 1: SPLASH SCREEN (Animación de Zoom con Logo SVG y texto "• STORE •") */}
-      {phase === "splash" && (
-        <div className="relative z-10 flex flex-1 flex-col items-center justify-center px-6 animate-in fade-in zoom-in-95 duration-1000">
-          <div className="relative flex items-center justify-center">
+      {/* ============================================================ */}
+      {/* FASE 1: PANTALLA INICIAL DE CARGA (SPLASH PRE-ONBOARDING)    */}
+      {/* ============================================================ */}
+      {showLoading && (
+        <div className="relative z-10 flex flex-1 flex-col items-center justify-center px-6 animate-in fade-in duration-300">
+          <div className="relative flex flex-col items-center justify-center">
             {/* Halo suave detrás del logo */}
-            <div className="absolute size-48 rounded-full bg-white/10 blur-2xl animate-pulse" />
-            <Logo className="relative w-56 sm:w-64 h-auto drop-shadow-[0_10px_35px_rgba(255,252,235,0.25)] animate-[pulse_2s_ease-in-out_infinite]" />
-          </div>
+            <div className="absolute size-48 rounded-full bg-white/5 blur-2xl animate-pulse" />
+            <Logo className="relative w-56 sm:w-64 h-auto drop-shadow-[0_10px_35px_rgba(255,252,235,0.25)]" />
 
-          <div className="mt-8 flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.3em] text-[#8E8E93] animate-pulse">
-            <span className="size-1 rounded-full bg-[#8E8E93]" />
-            <span>STORE</span>
-            <span className="size-1 rounded-full bg-[#8E8E93]" />
+            <div className="mt-6 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.35em] text-[#8E8E93]">
+              <span className="size-1 rounded-full bg-[#8E8E93]" />
+              <span>STORE</span>
+              <span className="size-1 rounded-full bg-[#8E8E93]" />
+            </div>
+
+            {/* Barra de progreso fina y elegante */}
+            <div className="mt-8 w-44 sm:w-52 h-[2.5px] rounded-full bg-white/10 overflow-hidden relative shadow-inner">
+              <div
+                className="h-full rounded-full bg-gradient-to-r from-[#fffceb] via-white to-[#fffceb] transition-all duration-250 ease-out shadow-[0_0_10px_rgba(255,252,235,0.8)]"
+                style={{
+                  width: `${Math.max(8, progress)}%`,
+                }}
+              />
+            </div>
           </div>
         </div>
       )}
 
-      {/* FASE 2: ONBOARDING (Inspirado exactamente en la referencia del diseño) */}
-      {phase !== "splash" && (
-        <div className="relative z-10 flex flex-1 flex-col justify-between px-6 sm:px-8 max-w-sm mx-auto w-full animate-in fade-in duration-700">
+      {/* ============================================================ */}
+      {/* FASE 2: ONBOARDING (SOLO PARA USUARIOS NUEVOS)              */}
+      {/* ============================================================ */}
+      {showOnboarding && (
+        <div className="relative z-10 flex flex-1 flex-col justify-between px-6 sm:px-8 max-w-sm mx-auto w-full animate-in fade-in zoom-in-98 duration-500">
           {/* Mitad Superior: Ícono Ojo completo flotante con iluminación */}
           <div className="flex flex-1 items-center justify-center py-6">
             <div className="relative flex items-center justify-center">
@@ -122,8 +259,9 @@ export function WelcomeOnboarding() {
             {/* Botón Blanco Pill (único botón de entrar) */}
             <div className="pt-2.5">
               <button
+                type="button"
                 onClick={handleEnter}
-                className="flex h-13 w-full items-center justify-center rounded-full bg-white text-black font-extrabold text-[15px] shadow-[0_10px_30px_rgba(255,255,255,0.2)] transition-transform duration-200 hover:bg-[#F2F2F7] active:scale-[0.98]"
+                className="flex h-13 w-full items-center justify-center rounded-full bg-white text-black font-extrabold text-[15px] shadow-[0_10px_30px_rgba(255,255,255,0.2)] transition-transform duration-200 hover:bg-[#F2F2F7] active:scale-[0.98] cursor-pointer select-none"
               >
                 Entrar a la tienda
               </button>

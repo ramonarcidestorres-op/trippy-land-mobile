@@ -7,6 +7,7 @@ import { useReferral } from "@/hooks/useReferral";
 import { useProductModal } from "@/hooks/useProductModal";
 import { formatPrice } from "@/lib/format";
 import { type Product } from "@/lib/queries";
+import { getOptimizedImageUrl } from "@/lib/image-optimizer";
 import { cn } from "@/lib/utils";
 
 interface MatteCardTheme {
@@ -247,13 +248,8 @@ export function FeaturedTinderStack({ products }: FeaturedTinderStackProps) {
           const price = getAdjustedPrice(product.price);
           const available = product.is_available !== false;
 
-          const fallbackImg = product.name.toLowerCase().includes("gom")
-            ? "https://images.unsplash.com/photo-1582058091505-f87a2e55a40f?w=600&q=80"
-            : product.name.toLowerCase().includes("choco")
-            ? "https://images.unsplash.com/photo-1606312619070-d48b4c652a52?w=600&q=80"
-            : "https://images.unsplash.com/photo-1550258987-190a2d41a8ba?w=600&q=80";
-
-          const img = product.image_url || fallbackImg;
+          const fallbackImg = "/placeholder-product.svg";
+          const img = getOptimizedImageUrl(product.image_url, fallbackImg);
 
           // Cálculo de transformaciones para el efecto Tinder 3D Stack
           let transformStyle = "";
@@ -336,6 +332,9 @@ export function FeaturedTinderStack({ products }: FeaturedTinderStackProps) {
                     loading={isTop ? "eager" : "lazy"}
                     fetchPriority={isTop ? "high" : "auto"}
                     decoding="async"
+                    onError={(e) => {
+                      (e.currentTarget as HTMLImageElement).src = fallbackImg;
+                    }}
                     className="max-h-full max-w-full w-auto h-auto object-contain scale-110 drop-shadow-[0_12px_24px_rgba(0,0,0,0.22)] transition-transform duration-300"
                   />
                   {!available && (

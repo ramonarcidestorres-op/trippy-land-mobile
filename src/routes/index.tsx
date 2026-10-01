@@ -5,8 +5,8 @@ import { Candy, Search, Sparkles } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { FeaturedTinderStack } from "@/components/FeaturedTinderStack";
 import { EmptyState } from "@/components/States";
-import { Input } from "@/components/ui/input";
 import { categoriesQuery, productsQuery } from "@/lib/queries";
+import { getOptimizedImageUrl } from "@/lib/image-optimizer";
 
 export const Route = createFileRoute("/")({
   ssr: false,
@@ -79,27 +79,29 @@ function HomePage() {
             {categories.data.map((c) => {
               const n = c.name?.toLowerCase() || "";
               
-              let imgUrl = c.icon_url || "https://images.unsplash.com/photo-1550258987-190a2d41a8ba?w=400&q=80";
+              let rawImg = c.icon_url || "/placeholder-product.svg";
               
               let activeColor = "bg-primary text-primary-foreground";
               if (n.includes("coca")) {
                 activeColor = "bg-[#F5F5F0] text-black";
-                if (!c.icon_url) imgUrl = "/categorias/Coca.png";
+                if (!c.icon_url) rawImg = "/categorias/Coca.png";
               } else if (n.includes("pre-roll") || n.includes("pre roll")) {
                 activeColor = "bg-[#9EAB91] text-black";
-                if (!c.icon_url) imgUrl = "/categorias/Pre-Rolls.png";
+                if (!c.icon_url) rawImg = "/categorias/Pre-Rolls.png";
               } else if (n.includes("weed")) {
                 activeColor = "bg-[#9EAB91] text-black";
-                if (!c.icon_url) imgUrl = "/categorias/Weed.png";
+                if (!c.icon_url) rawImg = "/categorias/Weed.png";
               } else if (n.includes("farma")) {
                 activeColor = "bg-[#A7C7E7] text-black";
-                if (!c.icon_url) imgUrl = "/categorias/farmacia.png";
+                if (!c.icon_url) rawImg = "/categorias/farmacia.png";
               } else if (n.includes("sint")) {
                 activeColor = "bg-[#FCA5A5] text-black";
-                if (!c.icon_url) imgUrl = encodeURI("/categorias/sintéticos.png");
+                if (!c.icon_url) rawImg = "/categorias/sintéticos.png";
               } else {
-                if (!c.icon_url) imgUrl = encodeURI(`/categorias/${c.name}.png`);
+                if (!c.icon_url) rawImg = `/categorias/${c.name}.png`;
               }
+
+              const imgUrl = getOptimizedImageUrl(rawImg);
 
               const isActive = selectedCategory === c.id;
               const colorClasses = isActive ? activeColor : "bg-surface-2/60 text-foreground";
@@ -117,7 +119,7 @@ function HomePage() {
                       alt={c.name} 
                       loading="lazy"
                       onError={(e) => {
-                        (e.currentTarget as HTMLImageElement).src = "https://images.unsplash.com/photo-1550258987-190a2d41a8ba?w=400&q=80";
+                        (e.currentTarget as HTMLImageElement).src = "/placeholder-product.svg";
                       }}
                       className="size-full object-cover transition-transform group-hover:scale-110" 
                     />

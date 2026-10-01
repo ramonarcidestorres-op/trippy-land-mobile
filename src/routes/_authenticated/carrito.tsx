@@ -71,14 +71,8 @@ function CartPage() {
         <div className="pb-8">
           <ul className="space-y-4">
             {rows.map((row) => {
-              // Fallback image handling
-              const s = row.products?.name.toLowerCase() || "";
-              let imgUrl = row.products?.image_url;
-              if (!imgUrl) {
-                if (s.includes("gom")) imgUrl = "https://images.unsplash.com/photo-1582058091505-f87a2e55a40f?w=400&q=80";
-                else if (s.includes("choco")) imgUrl = "https://images.unsplash.com/photo-1606312619070-d48b4c652a52?w=400&q=80";
-                else imgUrl = "https://images.unsplash.com/photo-1550258987-190a2d41a8ba?w=400&q=80";
-              }
+              const fallbackImg = "/placeholder-product.svg";
+              const imgUrl = row.products?.image_url || fallbackImg;
 
               return (
                 <li
@@ -96,6 +90,9 @@ function CartPage() {
                           src={imgUrl}
                           alt={row.products?.name}
                           loading="lazy"
+                          onError={(e) => {
+                            (e.currentTarget as HTMLImageElement).src = fallbackImg;
+                          }}
                           className="size-full object-cover"
                         />
                       </div>
