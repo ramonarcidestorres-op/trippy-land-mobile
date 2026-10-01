@@ -5,6 +5,7 @@ import { Candy, Search, Sparkles } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { FeaturedTinderStack } from "@/components/FeaturedTinderStack";
 import { EmptyState } from "@/components/States";
+import { Input } from "@/components/ui/input";
 import { categoriesQuery, productsQuery } from "@/lib/queries";
 import { getOptimizedImageUrl } from "@/lib/image-optimizer";
 
