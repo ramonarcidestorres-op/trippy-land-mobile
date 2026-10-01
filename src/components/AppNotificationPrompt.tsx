@@ -103,50 +103,54 @@ export function AppNotificationPrompt() {
         else setIsOpen(true);
       }}
     >
-      <DialogContent className="p-5 sm:p-6 border-border/60">
+      <DialogContent className="p-6 sm:p-7 border-white/15 max-w-md w-full bg-[#0e0e0e] text-white rounded-[32px] shadow-[0_20px_60px_rgba(0,0,0,0.8)] overflow-hidden">
+        {/* Luz ambiental sutil */}
+        <div className="pointer-events-none absolute -top-12 left-1/2 -translate-x-1/2 size-44 rounded-full bg-white/[0.07] blur-3xl" />
+
         {/* Caso A: iPhone en Safari regular (Instrucciones visuales para PWA) */}
         {needsIOSInstall && (
-          <div className="space-y-4">
-            <DialogHeader className="text-left">
-              <div className="flex items-center gap-2 text-primary font-bold text-xs uppercase tracking-wider">
-                <LogoEye className="size-5 inline-block" />
-                <span>Trippy Land Store</span>
+          <div className="relative z-10 space-y-4">
+            <DialogHeader className="text-left space-y-2">
+              <div>
+                <span className="inline-block rounded-lg border border-white/15 bg-white/[0.06] px-2.5 py-0.5 text-[10px] font-bold tracking-wider text-[#E5E5EA] uppercase backdrop-blur-md">
+                  Avisos en iPhone
+                </span>
               </div>
-              <DialogTitle className="text-[20px] font-extrabold text-foreground pt-1 leading-snug">
+              <DialogTitle className="text-[22px] font-extrabold text-white pt-1 leading-snug tracking-tight">
                 Recibe avisos de tu pedido con tu celular bloqueado
               </DialogTitle>
-              <DialogDescription className="text-[13px] text-muted-foreground pt-1.5 leading-relaxed">
+              <DialogDescription className="text-[12.5px] text-[#8E8E93] leading-relaxed">
                 Apple exige que agregues Trippy Land a tu inicio para poder enviarte notificaciones y hacer vibrar tu celular:
               </DialogDescription>
             </DialogHeader>
 
             <div className="space-y-2.5 pt-1 text-[13px]">
-              <div className="flex items-start gap-3 rounded-2xl bg-surface/90 p-3.5 border border-border/40">
-                <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-primary/20 font-extrabold text-primary text-xs">
+              <div className="flex items-start gap-3 rounded-2xl bg-white/[0.04] p-3.5 border border-white/10 backdrop-blur-sm">
+                <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-white text-black font-black text-xs shadow-md">
                   1
                 </span>
-                <p className="text-foreground leading-snug">
-                  Toca el botón <span className="font-bold text-primary">Compartir</span>{" "}
-                  <Share className="inline size-4 mx-0.5 text-primary align-text-bottom" /> en la barra inferior de Safari.
+                <p className="text-[#EDEDED] leading-snug pt-0.5">
+                  Toca el botón <span className="font-bold text-white">Compartir</span>{" "}
+                  <Share className="inline size-4 mx-0.5 text-[#fffceb] align-text-bottom" /> en la barra inferior de Safari.
                 </p>
               </div>
 
-              <div className="flex items-start gap-3 rounded-2xl bg-surface/90 p-3.5 border border-border/40">
-                <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-primary/20 font-extrabold text-primary text-xs">
+              <div className="flex items-start gap-3 rounded-2xl bg-white/[0.04] p-3.5 border border-white/10 backdrop-blur-sm">
+                <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-white text-black font-black text-xs shadow-md">
                   2
                 </span>
-                <p className="text-foreground leading-snug">
-                  Baja en el menú y toca <span className="font-bold">"Añadir a pantalla de inicio"</span>{" "}
-                  <PlusSquare className="inline size-4 mx-0.5 text-primary align-text-bottom" />.
+                <p className="text-[#EDEDED] leading-snug pt-0.5">
+                  Baja en el menú y toca <span className="font-bold text-white">"Añadir a pantalla de inicio"</span>{" "}
+                  <PlusSquare className="inline size-4 mx-0.5 text-[#fffceb] align-text-bottom" />.
                 </p>
               </div>
 
-              <div className="flex items-start gap-3 rounded-2xl bg-surface/90 p-3.5 border border-border/40">
-                <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-primary/20 font-extrabold text-primary text-xs">
+              <div className="flex items-start gap-3 rounded-2xl bg-white/[0.04] p-3.5 border border-white/10 backdrop-blur-sm">
+                <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-white text-black font-black text-xs shadow-md">
                   3
                 </span>
-                <p className="text-foreground leading-snug">
-                  Abre Trippy Land desde tu pantalla de inicio y toca <span className="font-bold text-primary">"Activar avisos"</span>.
+                <p className="text-[#EDEDED] leading-snug pt-0.5">
+                  Abre Trippy Land desde tu pantalla de inicio y toca <span className="font-bold text-white">"Activar avisos"</span>.
                 </p>
               </div>
             </div>
@@ -155,33 +159,33 @@ export function AppNotificationPrompt() {
               <button
                 type="button"
                 onClick={handleClose}
-                className="flex h-12 w-full items-center justify-center rounded-full bg-primary font-bold text-primary-foreground shadow-sm transition-transform active:scale-95"
+                className="flex h-13 w-full items-center justify-center rounded-full bg-white text-black font-extrabold text-[15px] shadow-[0_10px_30px_rgba(255,255,255,0.2)] transition-transform active:scale-[0.98] cursor-pointer hover:bg-[#F2F2F7]"
               >
                 Entendido, voy a añadirla
               </button>
             </div>
 
-            <div className="flex items-center justify-center gap-1.5 text-[11px] font-semibold text-muted-foreground animate-bounce pt-1">
+            <div className="flex items-center justify-center gap-1.5 text-[11px] font-semibold text-[#8E8E93] animate-bounce pt-1">
               <span>El botón compartir está abajo en tu pantalla</span>
-              <ArrowDown className="size-3.5 text-primary" />
+              <ArrowDown className="size-3.5 text-white" />
             </div>
           </div>
         )}
 
         {/* Caso B: Android, Computador o iPhone instalado en pantalla de inicio */}
         {!needsIOSInstall && (
-          <div className="space-y-4">
+          <div className="relative z-10 space-y-4">
             {!isSubscribed ? (
               <>
-                <DialogHeader className="text-center items-center">
-                  <div className="flex size-14 items-center justify-center rounded-2xl bg-surface p-3 shadow-inner ring-1 ring-border/50">
-                    <LogoEye className="w-10 h-auto text-primary filter drop-shadow-[0_0_10px_rgba(255,252,235,0.25)]" />
+                <DialogHeader className="text-center items-center space-y-2">
+                  <div className="flex size-14 items-center justify-center rounded-2xl bg-white/[0.06] p-3 shadow-inner border border-white/15">
+                    <LogoEye className="w-10 h-auto text-[#fffceb] filter drop-shadow-[0_0_10px_rgba(255,252,235,0.25)]" />
                   </div>
-                  <DialogTitle className="text-[20px] font-extrabold text-foreground pt-2 leading-snug">
+                  <DialogTitle className="text-[22px] font-extrabold text-white pt-1 leading-snug tracking-tight">
                     ¿Deseas recibir avisos de tu pedido en tiempo real?
                   </DialogTitle>
-                  <DialogDescription className="text-[13px] text-muted-foreground pt-1 leading-relaxed">
-                    Te notificaremos y <span className="font-bold text-foreground">haremos vibrar tu celular</span> al instante cuando la tienda acepte tu orden, vaya en camino o el repartidor llegue afuera, incluso si tienes el celular bloqueado.
+                  <DialogDescription className="text-[13px] text-[#8E8E93] leading-relaxed">
+                    Te notificaremos y <span className="font-bold text-white">haremos vibrar tu celular</span> al instante cuando la tienda acepte tu orden, vaya en camino o el repartidor llegue afuera.
                   </DialogDescription>
                 </DialogHeader>
 
@@ -190,7 +194,7 @@ export function AppNotificationPrompt() {
                     type="button"
                     onClick={handleActivate}
                     disabled={loading}
-                    className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-white font-extrabold text-black text-[15px] shadow-lg transition-transform active:scale-95 disabled:opacity-50 hover:bg-[#F2F2F7]"
+                    className="flex h-13 w-full items-center justify-center gap-2 rounded-full bg-white font-extrabold text-black text-[15px] shadow-[0_10px_30px_rgba(255,255,255,0.2)] transition-transform active:scale-[0.98] disabled:opacity-50 hover:bg-[#F2F2F7] cursor-pointer"
                   >
                     {loading ? (
                       <Loader2 className="size-5 animate-spin text-black" />
@@ -205,7 +209,7 @@ export function AppNotificationPrompt() {
                   <button
                     type="button"
                     onClick={handleClose}
-                    className="h-9 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors"
+                    className="h-9 text-xs font-semibold text-[#8E8E93] hover:text-white transition-colors cursor-pointer"
                   >
                     Quizás más tarde
                   </button>
@@ -213,14 +217,14 @@ export function AppNotificationPrompt() {
               </>
             ) : (
               <>
-                <DialogHeader className="text-center sm:text-left">
-                  <div className="mx-auto sm:mx-0 flex size-16 items-center justify-center rounded-3xl bg-emerald-500/15 text-emerald-400 ring-8 ring-emerald-500/10">
-                    <Check className="size-8" />
+                <DialogHeader className="text-center sm:text-left space-y-2">
+                  <div className="mx-auto sm:mx-0 flex size-14 items-center justify-center rounded-2xl bg-emerald-500/15 text-emerald-400 ring-4 ring-emerald-500/10 border border-emerald-500/30">
+                    <Check className="size-7" />
                   </div>
-                  <DialogTitle className="text-[22px] font-extrabold text-foreground pt-3 leading-snug">
+                  <DialogTitle className="text-[22px] font-extrabold text-white pt-2 leading-snug tracking-tight">
                     Avisos activados con éxito
                   </DialogTitle>
-                  <DialogDescription className="text-[13px] text-muted-foreground pt-1.5 leading-relaxed">
+                  <DialogDescription className="text-[13px] text-[#8E8E93] leading-relaxed">
                     Tu celular recibirá alertas en pantalla bloqueada con sonido y vibración cada vez que haya novedades sobre tus pedidos.
                   </DialogDescription>
                 </DialogHeader>
@@ -228,7 +232,7 @@ export function AppNotificationPrompt() {
                 <button
                   type="button"
                   onClick={handleClose}
-                  className="flex h-11 w-full items-center justify-center rounded-full bg-surface-2 font-bold text-foreground transition-colors hover:bg-surface"
+                  className="flex h-12 w-full items-center justify-center rounded-full bg-white text-black font-extrabold text-sm transition-transform active:scale-95 cursor-pointer hover:bg-[#F2F2F7]"
                 >
                   Continuar
                 </button>

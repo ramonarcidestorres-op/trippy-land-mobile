@@ -14,6 +14,8 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { processUrlForReferral } from "../hooks/useReferral";
 import { AuthProvider } from "../hooks/useAuth";
+import { WelcomeOnboarding } from "../components/WelcomeOnboarding";
+import { InstallAppPrompt } from "../components/InstallAppPrompt";
 import { playWhatsAppChime } from "../lib/sound";
 import { checkAndNotifyRateLimit } from "../lib/rateLimit";
 
@@ -190,6 +192,8 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
+        <WelcomeOnboarding />
+        <InstallAppPrompt />
         {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
         <Outlet />
       </AuthProvider>

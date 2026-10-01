@@ -10,7 +10,6 @@ import { formatPrice } from "@/lib/format";
 import { addressStore, type SavedAddress } from "@/lib/address";
 import { AddressManager } from "@/components/AddressManager";
 import { AppNotificationPrompt } from "@/components/AppNotificationPrompt";
-import { WelcomeOnboarding } from "@/components/WelcomeOnboarding";
 import { cn } from "@/lib/utils";
 import { ProductDetailSheet } from "@/components/ProductDetailSheet";
 import {
@@ -62,7 +61,6 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <WelcomeOnboarding />
       <AppNotificationPrompt />
 
       {/* CABECERA */}
@@ -180,6 +178,14 @@ export function AppShell({ children }: { children: ReactNode }) {
                       <Link to="/pedidos" className="cursor-pointer font-medium text-xs py-2 px-3 rounded-xl">
                         Mis pedidos
                       </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => {
+                        window.dispatchEvent(new Event("tls_open_install_modal"));
+                      }}
+                      className="cursor-pointer font-medium text-xs py-2 px-3 rounded-xl text-primary"
+                    >
+                      <span>📲 Instalar en pantalla de inicio</span>
                     </DropdownMenuItem>
                     {user.role === "admin" && (
                       <DropdownMenuItem asChild>
