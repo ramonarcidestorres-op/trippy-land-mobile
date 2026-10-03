@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
-import { Candy, Search } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Candy, Search, X } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { ProductCard, ProductCardSkeleton } from "@/components/ProductCard";
 import { EmptyState } from "@/components/States";
@@ -39,6 +39,11 @@ export function CatalogPage() {
   const navigate = useNavigate({ from: "/catalogo" });
   const [term, setTerm] = useState(q ?? "");
 
+  // Sincronizar input cuando cambie el parámetro de búsqueda en la URL
+  useEffect(() => {
+    setTerm(q ?? "");
+  }, [q]);
+
   const categories = useQuery(categoriesQuery());
   const activeCategory = categories.data?.find((c) => c.slug === categoria) ?? null;
   const products = useQuery(
@@ -55,6 +60,17 @@ export function CatalogPage() {
         const next: Record<string, string> = {};
         if (prev.categoria) next["categoria"] = prev.categoria;
         if (clean) next["q"] = clean;
+        return next as any;
+      },
+    });
+  }
+
+  function handleClearSearch() {
+    setTerm("");
+    navigate({
+      search: (prev: CatalogSearch) => {
+        const next: Record<string, string> = {};
+        if (prev.categoria) next["categoria"] = prev.categoria;
         return next as any;
       },
     });
@@ -79,8 +95,18 @@ export function CatalogPage() {
           onChange={(e) => setTerm(e.target.value)}
           onBlur={() => applySearch(term)}
           placeholder={t("search_sweets")}
-          className="h-14 rounded-full bg-surface-2/60 border-none pl-12 pr-4 text-[15px] font-medium text-foreground placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-primary/50"
+          className="h-14 rounded-full bg-surface-2/60 border-none pl-12 pr-10 text-[15px] font-medium text-foreground placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-primary/50"
         />
+        {term.trim() && (
+          <button
+            type="button"
+            onClick={handleClearSearch}
+            className="absolute right-4 top-1/2 size-6 -translate-y-1/2 flex items-center justify-center rounded-full bg-surface-2 hover:bg-surface text-muted-foreground hover:text-foreground cursor-pointer"
+            aria-label="Limpiar búsqueda"
+          >
+            <X className="size-3.5" />
+          </button>
+        )}
       </form>
 
       <div className="mb-8 flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
@@ -122,7 +148,29 @@ export function CatalogPage() {
           return (
             <button
               key={c.id}
-              onClick={() => navigate({ search: (prev: CatalogSearch) => ({ ...prev, categoria: c.slug }) as any })}
+              onClick={() => {
+                // Al hacer clic en una pestaña de categoría, si la búsqueda era el nombre de esa categoría, la limpiamos para mostrar todo
+                const isCatSearch = q && (
+                  c.name.toLowerCase().includes(q.toLowerCase()) || 
+                  c.slug.toLowerCase().includes(q.toLowerCase()) ||
+                  q.toLowerCase().includes("edible") ||
+                  q.toLowerCase().includes("comestible")
+                );
+                
+                if (isCatSearch) {
+                  setTerm("");
+                }
+
+                navigate({ 
+                  search: (prev: CatalogSearch) => {
+                    const next: Record<string, string> = { categoria: c.slug };
+                    if (prev.q && !isCatSearch) {
+                      next["q"] = prev.q;
+                    }
+                    return next as any;
+                  } 
+                });
+              }}
               className={cn(
                 "shrink-0 rounded-full px-5 py-2.5 text-[14px] font-semibold transition-all active:scale-95 cursor-pointer select-none touch-manipulation",
                 categoria === c.slug

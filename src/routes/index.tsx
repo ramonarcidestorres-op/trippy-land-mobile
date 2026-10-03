@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { Candy, Search, Sparkles } from "lucide-react";
@@ -31,10 +31,18 @@ export const Route = createFileRoute("/")({
 
 function HomePage() {
   const { lang, t } = useLanguage();
+  const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const categories = useQuery(categoriesQuery());
   const products = useQuery(productsQuery({ categoryId: selectedCategory }));
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (search.trim()) {
+      navigate({ to: "/catalogo", search: { q: search.trim() } });
+    }
+  };
 
   return (
     <AppShell>
@@ -46,7 +54,7 @@ function HomePage() {
       </div>
 
       {/* Buscador minimalista HIG */}
-      <div className="relative mb-6 shadow-sm">
+      <form onSubmit={handleSearchSubmit} className="relative mb-6 shadow-sm">
         <Search className="absolute left-4 top-1/2 size-5 -translate-y-1/2 text-muted-foreground" />
         <Input
           value={search}
@@ -55,15 +63,14 @@ function HomePage() {
           className="h-14 rounded-full bg-surface-2/70 border border-border/30 pl-12 pr-12 text-[16px] font-medium text-foreground placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-white/30 focus-visible:border-white/40"
         />
         {search.trim() && (
-          <Link
-            to="/catalogo"
-            search={{ q: search.trim() }}
-            className="absolute right-2 top-1/2 -translate-y-1/2 flex h-10 items-center justify-center rounded-full bg-primary px-4 text-xs font-bold text-primary-foreground transition-transform active:scale-95"
+          <button
+            type="submit"
+            className="absolute right-2 top-1/2 -translate-y-1/2 flex h-10 items-center justify-center rounded-full bg-primary px-4 text-xs font-bold text-primary-foreground transition-transform active:scale-95 cursor-pointer"
           >
             {t("search_button")}
-          </Link>
+          </button>
         )}
-      </div>
+      </form>
 
       {/* Categorías Visuales inspiradas en la referencia */}
       <section className="mb-8">

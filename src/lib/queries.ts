@@ -117,17 +117,90 @@ export const productsQuery = (opts: { search?: string | undefined; categoryId?: 
     },
     queryFn: async () => {
       try {
-        let q = supabase.from("products").select("*").order("created_at", { ascending: false });
-        if (opts.categoryId) q = q.eq("category_id", opts.categoryId);
-        if (opts.search) q = q.ilike("name", `%${opts.search}%`);
-        const { data, error } = await q;
+        const { data, error } = await supabase
+          .from("products")
+          .select("*, categories:categories(id, name, slug)")
+          .order("created_at", { ascending: false });
+          
         if (error) throw error;
-        const prods = (data || []) as Product[];
+        let prods = (data || []) as (Product & { categories?: { id: string; name: string; slug: string } | null })[];
         
         // If it was an unfiltered query, persist to localStorage for 0ms cold starts
         if (!opts.categoryId && !opts.search && prods.length > 0) {
-          saveCachedProducts(prods);
+          saveCachedProducts(prods as any);
         }
+
+        // 1. Filtrar por ID de categoría si está seleccionada
+        if (opts.categoryId) {
+          prods = prods.filter((p) => p.category_id === opts.categoryId);
+        }
+
+        // 2. Búsqueda inteligente multi-campo y por categorías
+        if (opts.search && opts.search.trim()) {
+          const rawQuery = opts.search.trim();
+          const cleanQuery = rawQuery
+            .toLowerCase()
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "");
+          const tokens = cleanQuery.split(/\s+/).filter(Boolean);
+
+          prods = prods.filter((p) => {
+            const catName = p.categories?.name || "";
+            const catSlug = p.categories?.slug || "";
+            
+            // Texto searchable combinado
+            const searchable = [
+              p.name,
+              p.description,
+              p.effects,
+              p.strain_type,
+              catName,
+              catSlug,
+            ]
+              .filter(Boolean)
+              .join(" ")
+              .toLowerCase()
+              .normalize("NFD")
+              .replace(/[\u0300-\u036f]/g, "");
+
+            // Verificar si todos los tokens buscados coinciden con algún campo o sinónimo
+            return tokens.every((token) => {
+              if (searchable.includes(token)) return true;
+
+              // Sinónimos y asociaciones de categorías
+              if (["edible", "edibles", "comestible", "comestibles", "gomita", "gomitas", "gummies", "chocolate", "chocolatina", "chocolatinas", "brownie", "dulce", "dulces"].includes(token)) {
+                return catSlug.includes("edibles") || catName.toLowerCase().includes("edible");
+              }
+              if (["sintetico", "sinteticos", "synthetic", "synthetics", "quimico", "quimicos", "tussi", "tusi", "2cb", "mdma", "keta", "ketamina", "ghb", "popper", "lsd", "nexus", "molly", "extasis"].includes(token)) {
+                return catSlug.includes("sintetic") || catName.toLowerCase().includes("synth");
+              }
+              if (["weed", "mota", "hierba", "yerba", "cannabis", "marihuana", "flor", "cogollo", "indoor", "sativa", "indica", "hibrida"].includes(token)) {
+                return catSlug.includes("weed") || catName.toLowerCase().includes("cannabis") || catSlug.includes("pre-roll") || catName.toLowerCase().includes("joint");
+              }
+              if (["preroll", "prerolls", "pre-roll", "pre-rolls", "armado", "armados", "joint", "joints", "porro", "bareto"].includes(token)) {
+                return catSlug.includes("pre-roll") || catName.toLowerCase().includes("joint");
+              }
+              if (["farma", "farmacia", "pharmacy", "pastilla", "pastillas", "medicamento", "medicamentos", "clonazepam", "xanax", "metadona", "ritalin", "ritalina", "oxy", "oxycodona", "rivotril"].includes(token)) {
+                return catSlug.includes("farmacia") || catName.toLowerCase().includes("pharmacy");
+              }
+              if (["psico", "psicodelico", "psicodelicos", "psychedelic", "psychedelics", "dmt", "hongo", "hongos", "shroom", "shrooms"].includes(token)) {
+                return catSlug.includes("psychedel") || catName.toLowerCase().includes("psychedel");
+              }
+              if (["extracto", "extractos", "extract", "extracts", "vape", "vaporizador", "vaporizadores", "rosin", "resin", "live resin", "gotas", "hachis", "polen", "kief"].includes(token)) {
+                return catSlug.includes("extract") || catName.toLowerCase().includes("extract");
+              }
+              if (["sex", "sexo", "sexual", "sexuales", "potencializador", "ereccion", "erección", "lubricante", "vigor"].includes(token)) {
+                return catSlug.includes("sex") || catName.toLowerCase().includes("sex");
+              }
+              if (["coca", "cocaina", "perico", "blanca", "lavada", "pura"].includes(token)) {
+                return catSlug.includes("coca") || catName.toLowerCase().includes("coca");
+              }
+
+              return false;
+            });
+          });
+        }
+
         return prods;
       } catch (err) {
         if (!opts.categoryId && !opts.search) {
