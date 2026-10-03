@@ -10,7 +10,7 @@ import { categoriesQuery, productsQuery } from "@/lib/queries";
 import { cn } from "@/lib/utils";
 import { sanitizeSearchQuery } from "@/lib/sanitize";
 import { checkAndNotifyRateLimit } from "@/lib/rateLimit";
-import { useLanguage } from "@/lib/i18n";
+import { useLanguage, translateCategoryName } from "@/lib/i18n";
 
 type CatalogSearch = { q?: string | undefined; categoria?: string | undefined };
 
@@ -34,7 +34,7 @@ export const Route = createFileRoute("/catalogo")({
 });
 
 export function CatalogPage() {
-  const { t } = useLanguage();
+  const { lang, t } = useLanguage();
   const { q, categoria } = Route.useSearch();
   const navigate = useNavigate({ from: "/catalogo" });
   const [term, setTerm] = useState(q ?? "");
@@ -117,6 +117,8 @@ export function CatalogPage() {
             activeColor = "bg-[#FCA5A5] text-black shadow-sm";
           }
 
+          const catName = translateCategoryName(c.name, lang);
+
           return (
             <button
               key={c.id}
@@ -128,7 +130,7 @@ export function CatalogPage() {
                   : "bg-surface-2/60 text-foreground hover:bg-surface-2"
               )}
             >
-              {c.name}
+              {catName}
             </button>
           );
         })}

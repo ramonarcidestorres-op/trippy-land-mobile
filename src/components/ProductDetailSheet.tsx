@@ -17,11 +17,11 @@ import { useProductModal } from "@/hooks/useProductModal";
 import { productQuery, type Product } from "@/lib/queries";
 import { formatPrice } from "@/lib/format";
 import { getOptimizedImageUrl } from "@/lib/image-optimizer";
-import { useLanguage } from "@/lib/i18n";
+import { useLanguage, translateProductText, translateCategoryName } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 export function ProductDetailSheet() {
-  const { t, isEn } = useLanguage();
+  const { lang, t, isEn } = useLanguage();
   const { isOpen, product: initialProduct, productId, closeProduct } = useProductModal();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -212,11 +212,11 @@ export function ProductDetailSheet() {
       if (favs.includes(id)) {
         nextFavs = favs.filter((f: string) => f !== id);
         setIsFavorite(false);
-        toast.info("Eliminado de tus favoritos");
+        toast.info(t("removed_favorite"));
       } else {
         nextFavs = [...favs, id];
         setIsFavorite(true);
-        toast.success("❤️ Guardado en tus favoritos");
+        toast.success(t("saved_favorite"));
       }
       localStorage.setItem("tls_favorites", JSON.stringify(nextFavs));
     } catch {
@@ -248,10 +248,10 @@ export function ProductDetailSheet() {
 
     if (isAlreadyInCart) {
       setQuantity(id, qty);
-      toast.success(`✓ "${activeItem.name}" actualizado (${qty})`);
+      toast.success(`✓ "${activeItem.name}" ${isEn ? "updated" : "actualizado"} (${qty})`);
     } else {
       addToCart(activeItem, qty);
-      toast.success(`✓ "${activeItem.name}" agregado al carrito (${qty})`);
+      toast.success(`✓ "${activeItem.name}" ${t("added")} (${qty})`);
     }
 
     // Dismiss smoothly with silky slide down
@@ -267,13 +267,17 @@ export function ProductDetailSheet() {
 
   const fallbackImg = "/placeholder-product.svg";
   const img = getOptimizedImageUrl(activeProd?.image_url, fallbackImg);
-  const categoryName = (activeProd as any)?.categories?.name || activeProd?.strain_type || "Premium";
+  const rawCategory = (activeProd as any)?.categories?.name || activeProd?.strain_type || "Premium";
+  const categoryName = translateCategoryName(rawCategory, lang);
+
+  const productDescription = translateProductText(activeProd?.description, lang);
+  const productEffects = translateProductText(activeProd?.effects, lang);
 
   const hasSpecs = Boolean(
     activeProd?.weight_g || 
     activeProd?.thc_percentage != null || 
     activeProd?.cbd_percentage != null || 
-    activeProd?.effects
+    productEffects
   );
 
   const cartTotalCount = cart.reduce((sum, item) => sum + item.quantity, 0);
@@ -385,7 +389,7 @@ export function ProductDetailSheet() {
               )}
               {!available && (
                 <div className="absolute inset-0 grid place-items-center rounded-3xl bg-black/85 text-[11px] font-black uppercase tracking-widest text-red-400 border border-red-500/30 backdrop-blur-sm">
-                  Agotado
+                  {t("sold_out")}
                 </div>
               )}
             </div>
@@ -407,11 +411,11 @@ export function ProductDetailSheet() {
             )}
             
             <h1 className="text-2xl sm:text-[28px] font-bold tracking-tight text-neutral-950 leading-tight pt-0.5">
-              {activeProd?.name || "Cargando..."}
+              {activeProd?.name || t("loading")}
             </h1>
             
             <p className="text-[13px] sm:text-[14px] text-neutral-600 font-normal leading-relaxed whitespace-pre-line">
-              {activeProd?.description || "The ready-to-drink formula offers a smooth, creamy texture in a compact bottle that's easy to carry."}
+              {productDescription || (isEn ? "Premium exotic product with fast local delivery in Medellín." : "Producto premium con entrega rápida a domicilio en Medellín.")}
             </p>
           </div>
 
@@ -438,11 +442,11 @@ export function ProductDetailSheet() {
                 </div>
               )}
 
-              {activeProd.effects && (
+              {productEffects && (
                 <div className="flex items-start gap-2.5 text-[12px] font-medium text-neutral-700 bg-neutral-50 p-3 rounded-2xl border border-neutral-200/60 leading-relaxed">
                   <Sparkles className="size-4 text-neutral-800 shrink-0 mt-0.5" />
                   <div className="flex-1 min-w-0">
-                    <p className="whitespace-pre-line">{activeProd.effects}</p>
+                    <p className="whitespace-pre-line">{productEffects}</p>
                   </div>
                 </div>
               )}

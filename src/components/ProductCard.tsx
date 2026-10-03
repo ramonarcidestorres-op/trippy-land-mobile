@@ -5,12 +5,12 @@ import { formatPrice } from "@/lib/format";
 import { type Product } from "@/lib/queries";
 import { useReferral } from "@/hooks/useReferral";
 import { getOptimizedImageUrl } from "@/lib/image-optimizer";
-import { useLanguage } from "@/lib/i18n";
+import { useLanguage, translateProductText } from "@/lib/i18n";
 import { useState } from "react";
 import { toast } from "sonner";
 
 export function ProductCard({ product }: { product: Product }) {
-  const { t, isEn } = useLanguage();
+  const { lang, t, isEn } = useLanguage();
   const available = product.is_available !== false;
   const { addToCart } = useCart();
   const { openProduct } = useProductModal();
@@ -35,6 +35,7 @@ export function ProductCard({ product }: { product: Product }) {
   
   const fallbackImg = "/placeholder-product.svg";
   const img = getOptimizedImageUrl(product.image_url, fallbackImg);
+  const cardDescription = translateProductText(product.description, lang);
 
   return (
     <div 
@@ -67,7 +68,7 @@ export function ProductCard({ product }: { product: Product }) {
             {product.name}
           </h3>
           <p className="mt-0.5 line-clamp-2 text-[11px] text-muted-foreground leading-relaxed">
-            {product.description || "Delicioso producto seleccionado especialmente para ti."}
+            {cardDescription || (isEn ? "Special premium item selected for you." : "Delicioso producto seleccionado especialmente para ti.")}
           </p>
         </div>
         

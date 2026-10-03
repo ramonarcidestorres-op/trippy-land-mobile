@@ -8,7 +8,7 @@ import { EmptyState } from "@/components/States";
 import { Input } from "@/components/ui/input";
 import { categoriesQuery, productsQuery } from "@/lib/queries";
 import { getOptimizedImageUrl } from "@/lib/image-optimizer";
-import { useLanguage } from "@/lib/i18n";
+import { useLanguage, translateCategoryName } from "@/lib/i18n";
 
 export const Route = createFileRoute("/")({
   ssr: false,
@@ -30,7 +30,7 @@ export const Route = createFileRoute("/")({
 });
 
 function HomePage() {
-  const { t } = useLanguage();
+  const { lang, t } = useLanguage();
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const categories = useQuery(categoriesQuery());
@@ -108,6 +108,7 @@ function HomePage() {
 
               const isActive = selectedCategory === c.id;
               const colorClasses = isActive ? activeColor : "bg-surface-2/60 text-foreground";
+              const catDisplayName = translateCategoryName(c.name, lang);
 
               return (
                 <button
@@ -129,7 +130,7 @@ function HomePage() {
                   </div>
                   <div className="mb-3 mt-3 text-center">
                     <p className={`text-[12px] font-bold leading-tight ${isActive ? "" : "text-foreground"}`}>
-                      {c.name}
+                      {catDisplayName}
                     </p>
                   </div>
                 </button>
