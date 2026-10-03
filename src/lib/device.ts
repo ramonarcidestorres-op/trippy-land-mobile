@@ -53,15 +53,6 @@ export function getFriendlyDeviceName(): string {
   return `${os} • ${browser}`;
 }
 
-export type AdminDeviceResult = {
-  success: boolean;
-  status?: "existing_device" | "new_device_registered" | "device_limit_reached";
-  device_count?: number;
-  max_devices?: number;
-  device_id?: string;
-  error?: string;
-};
-
 export type AdminDeviceRecord = {
   id: string;
   device_id: string;
@@ -72,8 +63,18 @@ export type AdminDeviceRecord = {
   user_id?: string;
 };
 
+export type AdminDeviceResult = {
+  success: boolean;
+  status?: "existing_device" | "new_device_registered" | "device_limit_reached";
+  device_count?: number;
+  max_devices?: number;
+  device_id?: string;
+  devices?: AdminDeviceRecord[];
+  error?: string;
+};
+
 /**
- * Verifica o registra el dispositivo actual ante la base de datos (Máximo 4 dispositivos admin).
+ * Verifica o registra el dispositivo actual ante la base de datos (Máximo 5 dispositivos admin).
  */
 export async function verifyOrRegisterAdminDevice(): Promise<AdminDeviceResult> {
   const deviceId = getOrCreateDeviceId();
@@ -106,7 +107,7 @@ export async function verifyOrRegisterAdminDevice(): Promise<AdminDeviceResult> 
 /**
  * Desvincula un dispositivo administrador registrado por su device_id.
  */
-export async function revokeAdminDevice(deviceId: string): Promise<{ success: boolean; error?: string }> {
+export async function revokeAdminDevice(deviceId: string): Promise<{ success: boolean; error?: string; devices?: AdminDeviceRecord[] }> {
   try {
     const { data, error } = await supabase.rpc("revoke_admin_device", {
       p_device_id: deviceId,
@@ -116,17 +117,31 @@ export async function revokeAdminDevice(deviceId: string): Promise<{ success: bo
       return { success: false, error: error.message };
     }
 
-    return { success: (data as any)?.success ?? true };
+    const res = data as any;
+    return { 
+      success: res?.success ?? true, 
+      devices: res?.devices 
+    };
   } catch (err: any) {
     return { success: false, error: err?.message || "Error al desvincular dispositivo" };
   }
 }
 
 /**
- * Lista todos los dispositivos autorizados actuales (máximo 4).
+ * Lista todos los dispositivos autorizados actuales (máximo 5).
  */
 export async function listAdminDevices(): Promise<AdminDeviceRecord[]> {
   try {
+    // 1. Intentar por RPC de alta seguridad con bypass de RLS
+    const { data: rpcData, error: rpcError } = await supabase.rpc("get_admin_devices");
+    if (!rpcError && rpcData && typeof rpcData === "object") {
+      const devices = (rpcData as any).devices;
+      if (Array.isArray(devices)) {
+        return devices as AdminDeviceRecord[];
+      }
+    }
+
+    // 2. Fallback por consulta directa a tabla
     const { data, error } = await supabase
       .from("admin_devices")
       .select("*")

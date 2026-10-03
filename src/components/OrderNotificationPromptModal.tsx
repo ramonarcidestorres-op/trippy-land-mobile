@@ -35,8 +35,10 @@ export function OrderNotificationPromptModal({ orderId, targetUserId }: OrderNot
       return;
     }
 
-    // Verificar si ya cerró este prompt en esta sesión para este pedido
-    const dismissed = sessionStorage.getItem(`tls_prompt_dismissed_${orderId}`);
+    // Verificar si ya cerró este prompt para este pedido
+    const dismissed =
+      localStorage.getItem(`tls_prompt_dismissed_${orderId}`) ||
+      sessionStorage.getItem(`tls_prompt_dismissed_${orderId}`);
     if (dismissed) {
       return;
     }
@@ -52,6 +54,7 @@ export function OrderNotificationPromptModal({ orderId, targetUserId }: OrderNot
   const handleClose = () => {
     setIsOpen(false);
     try {
+      localStorage.setItem(`tls_prompt_dismissed_${orderId}`, "true");
       sessionStorage.setItem(`tls_prompt_dismissed_${orderId}`, "true");
     } catch {
       // ignore

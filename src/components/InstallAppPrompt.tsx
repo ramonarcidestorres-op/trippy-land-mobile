@@ -33,10 +33,34 @@ export function InstallAppPrompt() {
     // Detectar si ya está instalada como PWA (Standalone)
     const standalone =
       window.matchMedia("(display-mode: standalone)").matches ||
-      Boolean((navigator as any).standalone);
+      window.matchMedia("(display-mode: fullscreen)").matches ||
+      window.matchMedia("(display-mode: minimal-ui)").matches ||
+      Boolean((navigator as any).standalone) ||
+      document.referrer.startsWith("android-app://") ||
+      localStorage.getItem("tls_app_installed") === "true";
     setIsStandalone(standalone);
 
-    if (standalone) return;
+    // Escuchar cuando la app es instalada por el usuario
+    const handleAppInstalled = () => {
+      try {
+        localStorage.setItem("tls_app_installed", "true");
+        localStorage.setItem("tls_install_dismissed", "true");
+      } catch {}
+      setIsStandalone(true);
+      setShowBanner(false);
+      setIsOpen(false);
+    };
+    window.addEventListener("appinstalled", handleAppInstalled);
+
+    if (standalone) {
+      // Si está instalada, solo escuchar apertura manual desde el menú
+      const handleOpenModal = () => setIsOpen(true);
+      window.addEventListener("tls_open_install_modal", handleOpenModal);
+      return () => {
+        window.removeEventListener("appinstalled", handleAppInstalled);
+        window.removeEventListener("tls_open_install_modal", handleOpenModal);
+      };
+    }
 
     // Detectar Sistema Operativo
     const ua = navigator.userAgent || "";
@@ -56,7 +80,10 @@ export function InstallAppPrompt() {
 
     // Escuchar evento de onboarding completado para abrir el aviso automáticamente
     const handleOnboardingDone = () => {
-      const dismissed = sessionStorage.getItem("tls_install_dismissed");
+      const dismissed =
+        localStorage.getItem("tls_install_dismissed") === "true" ||
+        localStorage.getItem("tls_app_installed") === "true" ||
+        sessionStorage.getItem("tls_install_dismissed") === "true";
       if (!dismissed) {
         setTimeout(() => {
           setIsOpen(true);
@@ -71,16 +98,26 @@ export function InstallAppPrompt() {
     };
     window.addEventListener("tls_open_install_modal", handleOpenModal);
 
-    // Mostrar banner sutil si no está instalada y no ha sido descartada en esta sesión
-    const isDismissed = sessionStorage.getItem("tls_install_dismissed") === "true";
+    // Mostrar banner sutil si no está instalada y no ha sido descartada
+    const isDismissed =
+      localStorage.getItem("tls_install_dismissed") === "true" ||
+      localStorage.getItem("tls_app_installed") === "true" ||
+      sessionStorage.getItem("tls_install_dismissed") === "true";
     if (!isDismissed) {
       const timer = setTimeout(() => {
         setShowBanner(true);
       }, 2000);
-      return () => clearTimeout(timer);
+      return () => {
+        clearTimeout(timer);
+        window.removeEventListener("appinstalled", handleAppInstalled);
+        window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+        window.removeEventListener("tls_onboarding_done", handleOnboardingDone);
+        window.removeEventListener("tls_open_install_modal", handleOpenModal);
+      };
     }
 
     return () => {
+      window.removeEventListener("appinstalled", handleAppInstalled);
       window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
       window.removeEventListener("tls_onboarding_done", handleOnboardingDone);
       window.removeEventListener("tls_open_install_modal", handleOpenModal);
@@ -93,6 +130,11 @@ export function InstallAppPrompt() {
         await deferredPrompt.prompt();
         const choice = await deferredPrompt.userChoice;
         if (choice.outcome === "accepted") {
+          try {
+            localStorage.setItem("tls_app_installed", "true");
+            localStorage.setItem("tls_install_dismissed", "true");
+          } catch {}
+          setIsStandalone(true);
           setIsOpen(false);
           setShowBanner(false);
         }
@@ -109,13 +151,14 @@ export function InstallAppPrompt() {
     setShowBanner(false);
     setIsOpen(false);
     try {
+      localStorage.setItem("tls_install_dismissed", "true");
       sessionStorage.setItem("tls_install_dismissed", "true");
     } catch {
       // ignore
     }
   };
 
-  if (isStandalone) return null;
+  if (isStandalone && !isOpen) return null;
 
   return (
     <>

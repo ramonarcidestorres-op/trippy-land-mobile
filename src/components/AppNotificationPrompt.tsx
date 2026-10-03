@@ -26,7 +26,9 @@ export function AppNotificationPrompt() {
       return;
     }
 
-    const dismissed = sessionStorage.getItem("tls_app_push_dismissed");
+    const dismissed =
+      localStorage.getItem("tls_app_push_dismissed") ||
+      sessionStorage.getItem("tls_app_push_dismissed");
     if (dismissed) {
       return;
     }
@@ -62,6 +64,7 @@ export function AppNotificationPrompt() {
   const handleClose = () => {
     setIsOpen(false);
     try {
+      localStorage.setItem("tls_app_push_dismissed", "true");
       sessionStorage.setItem("tls_app_push_dismissed", "true");
     } catch {
       // ignore

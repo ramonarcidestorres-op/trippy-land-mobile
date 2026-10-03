@@ -26,7 +26,9 @@ export function AdminNotificationPromptModal() {
       return;
     }
 
-    const dismissed = sessionStorage.getItem("tls_admin_prompt_dismissed");
+    const dismissed =
+      localStorage.getItem("tls_admin_prompt_dismissed") ||
+      sessionStorage.getItem("tls_admin_prompt_dismissed");
     if (dismissed) {
       return;
     }
@@ -41,6 +43,7 @@ export function AdminNotificationPromptModal() {
   const handleClose = () => {
     setIsOpen(false);
     try {
+      localStorage.setItem("tls_admin_prompt_dismissed", "true");
       sessionStorage.setItem("tls_admin_prompt_dismissed", "true");
     } catch {
       // ignore
@@ -50,7 +53,11 @@ export function AdminNotificationPromptModal() {
   const handleActivate = async () => {
     const res = await subscribe({ role: "admin" });
     if (res.success) {
+      try {
+        localStorage.setItem("tls_admin_prompt_dismissed", "true");
+      } catch {}
       toast.success("Alertas de nuevos pedidos activadas");
+      setIsOpen(false);
     } else if (res.needsIOSInstall) {
       // Ya mostrará la vista de iOS
     } else {
