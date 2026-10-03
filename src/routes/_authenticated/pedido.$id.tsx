@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { sanitizePhone } from "@/lib/sanitize";
 import { checkAndNotifyRateLimit } from "@/lib/rateLimit";
+import { useLanguage } from "@/lib/i18n";
 
 type OrderDetailSearch = { nuevo?: boolean | undefined };
 
@@ -58,6 +59,7 @@ function playCustomerChime() {
 }
 
 function OrderDetailPage() {
+  const { t } = useLanguage();
   const { id } = Route.useParams();
   const { nuevo } = Route.useSearch();
   const { user } = useAuth();
@@ -238,10 +240,10 @@ function OrderDetailPage() {
     : 0;
 
   const STEPS = [
-    { label: "Recibido", icon: ShoppingBag },
-    { label: "Aceptado", icon: PackageCheck },
-    { label: "En Camino", icon: Bike },
-    { label: "Llegó", icon: MapPin },
+    { label: t("step_received"), icon: ShoppingBag },
+    { label: t("step_accepted"), icon: PackageCheck },
+    { label: t("step_in_transit"), icon: Bike },
+    { label: t("step_arrived"), icon: MapPin },
   ];
 
   return (
@@ -257,7 +259,7 @@ function OrderDetailPage() {
           aria-label="Volver a la tienda"
         >
           <ChevronLeft className="size-4 text-primary" />
-          <span>Volver al inicio</span>
+          <span>{t("back_to_home")}</span>
         </Link>
 
         <Link
@@ -265,7 +267,7 @@ function OrderDetailPage() {
           className="inline-flex items-center gap-1.5 rounded-full bg-surface-2 px-3.5 py-2 text-xs font-bold text-foreground hover:bg-surface border border-border/40 transition-all active:scale-95 shrink-0"
         >
           <Receipt className="size-3.5 text-primary" />
-          <span>Mis pedidos</span>
+          <span>{t("my_orders_btn")}</span>
         </Link>
       </div>
 
@@ -280,9 +282,9 @@ function OrderDetailPage() {
             <Check className="size-5" />
           </div>
           <div>
-            <p className="text-[16px] font-bold text-foreground">¡Pedido confirmado!</p>
+            <p className="text-[16px] font-bold text-foreground">{t("order_confirmed_title")}</p>
             <p className="text-[13px] font-medium text-muted-foreground">
-              Pagas en efectivo al recibir tu entrega.
+              {t("order_confirmed_desc")}
             </p>
           </div>
         </div>
@@ -311,8 +313,8 @@ function OrderDetailPage() {
         {/* Activar avisos Push para este pedido */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-[24px] bg-surface-2/60 p-4 border border-border/30">
           <div className="min-w-0">
-            <p className="text-[14px] font-bold text-foreground">Avisos de entrega en tu celular</p>
-            <p className="text-[12px] text-muted-foreground">Recibe alertas en directo cuando tu orden sea aceptada o despachada.</p>
+            <p className="text-[14px] font-bold text-foreground">{t("push_alerts_title")}</p>
+            <p className="text-[12px] text-muted-foreground">{t("push_alerts_desc")}</p>
           </div>
           <PushNotificationButton 
             variant="customer" 
@@ -326,12 +328,12 @@ function OrderDetailPage() {
         <section className="rounded-[28px] bg-surface-2/70 p-6 border border-border/40 backdrop-blur-md shadow-sm">
           <div className="mb-6 flex items-center justify-between">
             <div>
-              <h2 className="text-[18px] font-extrabold text-foreground">Seguimiento en Vivo</h2>
-              <p className="text-[12px] font-medium text-muted-foreground">Estado de tu entrega</p>
+              <h2 className="text-[18px] font-extrabold text-foreground">{t("live_tracking_title")}</h2>
+              <p className="text-[12px] font-medium text-muted-foreground">{t("live_tracking_subtitle")}</p>
             </div>
             <div className="flex items-center gap-1.5 rounded-full bg-primary/10 border border-primary/25 px-3 py-1 text-[11px] font-bold text-primary">
               <span className="size-2 rounded-full bg-primary animate-ping" />
-              En directo
+              {t("live_badge")}
             </div>
           </div>
 
@@ -379,9 +381,9 @@ function OrderDetailPage() {
             <div className="rounded-[22px] bg-destructive/10 p-4 border border-destructive/30 flex items-start gap-3">
               <XCircle className="size-5 text-destructive shrink-0 mt-0.5" />
               <div>
-                <p className="text-[15px] font-bold text-destructive">Pedido cancelado</p>
+                <p className="text-[15px] font-bold text-destructive">{t("status_cancelled_title")}</p>
                 {data.cancel_reason && (
-                  <p className="mt-0.5 text-[12px] text-destructive/80">Motivo: {data.cancel_reason}</p>
+                  <p className="mt-0.5 text-[12px] text-destructive/80">{t("status_cancelled_reason")}: {data.cancel_reason}</p>
                 )}
               </div>
             </div>
@@ -391,8 +393,8 @@ function OrderDetailPage() {
                 <ShoppingBag className="size-5 animate-pulse" />
               </div>
               <div>
-                <p className="text-[15px] font-bold text-foreground">Pedido recibido</p>
-                <p className="text-[12px] text-muted-foreground">Tu pedido está en cola y la tienda lo confirmará en breve.</p>
+                <p className="text-[15px] font-bold text-foreground">{t("status_received_title")}</p>
+                <p className="text-[12px] text-muted-foreground">{t("status_received_desc")}</p>
               </div>
             </div>
           ) : data.status === "accepted" || data.status === "preparing" ? (
@@ -401,8 +403,8 @@ function OrderDetailPage() {
                 <PackageCheck className="size-5 animate-bounce" />
               </div>
               <div>
-                <p className="text-[15px] font-bold text-foreground">¡La tienda aceptó tu pedido!</p>
-                <p className="text-[12px] text-muted-foreground">Tu pedido está siendo empacado y alistado para despacho.</p>
+                <p className="text-[15px] font-bold text-foreground">{t("status_accepted_title")}</p>
+                <p className="text-[12px] text-muted-foreground">{t("status_accepted_desc")}</p>
               </div>
             </div>
           ) : data.status === "in_transit" || data.status === "dispatched" ? (
@@ -411,9 +413,9 @@ function OrderDetailPage() {
                 <Bike className="size-5 animate-pulse" />
               </div>
               <div>
-                <p className="text-[15px] font-bold text-foreground">El repartidor va en camino</p>
+                <p className="text-[15px] font-bold text-foreground">{t("status_in_transit_title")}</p>
                 <p className="text-[12px] text-muted-foreground">
-                  {data.delivery_type === "fast" ? "Entrega Rápida 🚀 (~15-20 min)" : "El repartidor ya va hacia tu dirección."}
+                  {data.delivery_type === "fast" ? "Entrega Rápida 🚀 (~15-20 min)" : t("in_transit_desc")}
                 </p>
               </div>
             </div>
@@ -425,10 +427,10 @@ function OrderDetailPage() {
                 </div>
                 <div>
                   <p className="text-[16px] font-extrabold text-foreground">
-                    {data.status === "delivered" ? "¡Pedido entregado!" : "¡El repartidor ya llegó!"}
+                    {data.status === "delivered" ? t("status_delivered_title") : t("status_arrived_title")}
                   </p>
                   <p className="text-[13px] text-muted-foreground">
-                    Vehículo: <span className="font-bold text-foreground">{data.status_details || "Repartidor en punto"}</span>
+                    {t("driver_vehicle")}: <span className="font-bold text-foreground">{data.status_details || t("driver_at_point")}</span>
                   </p>
                 </div>
               </div>
@@ -437,7 +439,7 @@ function OrderDetailPage() {
               {data.status === "arrived" && timeLeft !== null && timeLeft > 0 && (
                 <div className="inline-flex items-center gap-2 rounded-full bg-surface-2 px-3 py-1 text-[13px] font-semibold text-foreground border border-border/30">
                   <Clock className="size-3.5 text-primary" />
-                  <span>Tiempo de espera: {Math.floor(timeLeft / 60000)}:{(Math.floor(timeLeft / 1000) % 60).toString().padStart(2, "0")}</span>
+                  <span>{t("waiting_time")}: {Math.floor(timeLeft / 60000)}:{(Math.floor(timeLeft / 1000) % 60).toString().padStart(2, "0")}</span>
                 </div>
               )}
 
@@ -445,7 +447,7 @@ function OrderDetailPage() {
               {data.status === "arrived" && timeLeft === 0 && !data.whatsapp_contact && (
                 <div className="space-y-2.5 rounded-xl bg-surface-2 p-3.5 border border-border/40">
                   <p className="text-[13px] font-semibold text-amber-400">
-                    Ingresa tu número de contacto para que el repartidor pueda comunicarse:
+                    {t("contact_number_prompt")}
                   </p>
                   <div className="flex gap-2">
                     <input 
@@ -460,7 +462,7 @@ function OrderDetailPage() {
                       disabled={waSending || !waText}
                       className="rounded-xl bg-primary px-4 text-xs font-bold text-primary-foreground transition-transform active:scale-95 disabled:opacity-50"
                     >
-                      {waSending ? "..." : "Enviar"}
+                      {waSending ? "..." : t("send_btn")}
                     </button>
                   </div>
                 </div>
@@ -468,7 +470,7 @@ function OrderDetailPage() {
               
               {data.whatsapp_contact && (
                 <p className="text-[12px] font-medium text-muted-foreground">
-                  Número enviado: <span className="text-foreground font-semibold">{data.whatsapp_contact}</span>
+                  {t("number_sent")}: <span className="text-foreground font-semibold">{data.whatsapp_contact}</span>
                 </p>
               )}
             </div>
@@ -479,7 +481,7 @@ function OrderDetailPage() {
         {data.delivery_address && (
           <section className="rounded-[28px] bg-surface-2/60 p-5 border border-border/30">
             <h2 className="mb-2 flex items-center gap-2 text-[14px] font-bold text-foreground">
-              <MapPin className="size-4 text-primary" /> Dirección de Entrega
+              <MapPin className="size-4 text-primary" /> {t("delivery_address_section")}
             </h2>
             <p className="text-[14px] font-medium text-muted-foreground leading-relaxed">{data.delivery_address}</p>
           </section>
@@ -487,7 +489,7 @@ function OrderDetailPage() {
 
         {/* Detalle y Resumen de Productos */}
         <section className="rounded-[28px] bg-surface-2/60 p-5 border border-border/30">
-          <h2 className="mb-4 text-[16px] font-bold text-foreground">Resumen de la Orden</h2>
+          <h2 className="mb-4 text-[16px] font-bold text-foreground">{t("order_summary_section")}</h2>
           <ul className="space-y-3">
             {items.map((item) => (
               <li key={item.id} className="flex items-center justify-between text-[14px] py-1 border-b border-border/10 last:border-none">
@@ -496,7 +498,7 @@ function OrderDetailPage() {
                     <span className="font-bold text-primary">{item.quantity}×</span> {item.products?.name ?? "Producto"}
                   </p>
                   <p className="text-[12px] text-muted-foreground">
-                    {formatPrice(item.price_at_time)} c/u
+                    {formatPrice(item.price_at_time)} {t("each")}
                   </p>
                 </div>
                 <span className="shrink-0 font-semibold text-foreground">
@@ -507,14 +509,14 @@ function OrderDetailPage() {
           </ul>
 
           <div className="mt-4 space-y-1.5 border-t border-border/30 pt-3 text-[13px]">
-            <Row label="Subtotal" value={formatPrice(subtotal)} />
-            <Row label="Domicilio" value={formatPrice(deliveryFee)} />
+            <Row label={t("subtotal")} value={formatPrice(subtotal)} />
+            <Row label={t("delivery_fee")} value={formatPrice(deliveryFee)} />
             <div className="flex items-center justify-between pt-2 text-[17px] font-extrabold text-foreground">
-              <span>Total</span>
+              <span>{t("total")}</span>
               <span>{formatPrice(data.total)}</span>
             </div>
             <p className="pt-1 text-[12px] text-muted-foreground">
-              Método: {data.payment_method === "cash" ? "Efectivo al recibir" : (data.payment_method ?? "—")}
+              {t("payment_method")}: {data.payment_method === "cash" ? t("payment_cash") : (data.payment_method ?? "—")}
             </p>
           </div>
         </section>
@@ -526,7 +528,7 @@ function OrderDetailPage() {
             className="flex h-14 w-full items-center justify-center gap-2 rounded-full bg-primary text-[15px] font-extrabold text-primary-foreground transition-transform active:scale-95 shadow-lg hover:bg-primary/90"
           >
             <Home className="size-4" />
-            <span>Seguir comprando (Ir al inicio)</span>
+            <span>{t("keep_shopping_btn")}</span>
           </Link>
 
           <Link
@@ -534,7 +536,7 @@ function OrderDetailPage() {
             className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-surface-2 border border-border/40 text-[14px] font-bold text-foreground transition-transform active:scale-95 hover:bg-surface"
           >
             <Receipt className="size-4 text-primary" />
-            <span>Ver todos mis pedidos</span>
+            <span>{t("view_all_orders_btn")}</span>
           </Link>
         </div>
       </div>

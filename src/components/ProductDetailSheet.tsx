@@ -17,9 +17,11 @@ import { useProductModal } from "@/hooks/useProductModal";
 import { productQuery, type Product } from "@/lib/queries";
 import { formatPrice } from "@/lib/format";
 import { getOptimizedImageUrl } from "@/lib/image-optimizer";
+import { useLanguage } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 export function ProductDetailSheet() {
+  const { t, isEn } = useLanguage();
   const { isOpen, product: initialProduct, productId, closeProduct } = useProductModal();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -420,7 +422,7 @@ export function ProductDetailSheet() {
                 <div className="flex flex-wrap items-center gap-1.5">
                   {activeProd.weight_g != null && (
                     <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold bg-neutral-100 text-neutral-800 border border-neutral-200/60">
-                      ⚖️ {activeProd.weight_g} gramos
+                      ⚖️ {activeProd.weight_g} {isEn ? "grams" : "gramos"}
                     </span>
                   )}
                   {activeProd.thc_percentage != null && (
@@ -455,7 +457,7 @@ export function ProductDetailSheet() {
               </span>
               {qty > 1 && (
                 <span className="text-[11px] font-semibold text-neutral-400 block mt-1">
-                  {formatPrice(singlePrice)} c/u
+                  {formatPrice(singlePrice)} {isEn ? "each" : "c/u"}
                 </span>
               )}
             </div>
@@ -501,9 +503,11 @@ export function ProductDetailSheet() {
               )}
             >
               {available && activeProd ? (
-                <span>{isAlreadyInCart ? "Actualizar Carrito" : "Agregar al Carrito"} • {formatPrice(totalPrice)}</span>
+                <span>
+                  {isAlreadyInCart ? (isEn ? "Update Cart" : "Actualizar Carrito") : (isEn ? "Add to Cart" : "Agregar al Carrito")} • {formatPrice(totalPrice)}
+                </span>
               ) : (
-                <span>Agotado</span>
+                <span>{t("sold_out")}</span>
               )}
             </button>
           </div>

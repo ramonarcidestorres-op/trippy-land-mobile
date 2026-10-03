@@ -9,6 +9,7 @@ import { formatPrice } from "@/lib/format";
 import { type Product } from "@/lib/queries";
 import { getOptimizedImageUrl } from "@/lib/image-optimizer";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/lib/i18n";
 
 interface MatteCardTheme {
   bg: string;
@@ -57,6 +58,7 @@ interface FeaturedTinderStackProps {
 
 export function FeaturedTinderStack({ products }: FeaturedTinderStackProps) {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const { addToCart } = useCart();
   const { openProduct } = useProductModal();
   const { getAdjustedPrice } = useReferral();
@@ -108,10 +110,10 @@ export function FeaturedTinderStack({ products }: FeaturedTinderStackProps) {
       let nextFavs: string[];
       if (favs.includes(productId)) {
         nextFavs = favs.filter((id: string) => id !== productId);
-        toast.info("Eliminado de favoritos");
+        toast.info(t("removed_favorite"));
       } else {
         nextFavs = [...favs, productId];
-        toast.success("❤️ Guardado en favoritos");
+        toast.success(t("saved_favorite"));
       }
       setFavorites(nextFavs);
       localStorage.setItem("tls_favorites", JSON.stringify(nextFavs));
@@ -123,11 +125,11 @@ export function FeaturedTinderStack({ products }: FeaturedTinderStackProps) {
   const handleAddToCart = (product: Product, e: React.MouseEvent) => {
     e.stopPropagation();
     if (product.is_available === false) {
-      toast.error("Producto agotado");
+      toast.error(t("product_sold_out"));
       return;
     }
     addToCart(product, 1);
-    toast.success(`✓ "${product.name}" agregado al carrito`);
+    toast.success(`✓ "${product.name}" ${t("added")}`);
   };
 
   const total = products.length;
@@ -339,7 +341,7 @@ export function FeaturedTinderStack({ products }: FeaturedTinderStackProps) {
                   />
                   {!available && (
                     <div className="absolute inset-0 grid place-items-center rounded-3xl bg-black/85 text-[11px] font-black uppercase tracking-widest text-red-400 border border-red-500/30 backdrop-blur-sm">
-                      Agotado
+                      {t("sold_out")}
                     </div>
                   )}
                 </div>
@@ -366,7 +368,7 @@ export function FeaturedTinderStack({ products }: FeaturedTinderStackProps) {
                     )}
                   >
                     <ShoppingCart className="size-3.5" />
-                    <span>Agregar</span>
+                    <span>{t("add_btn")}</span>
                   </button>
                 </div>
               </div>

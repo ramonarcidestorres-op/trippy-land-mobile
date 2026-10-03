@@ -6,6 +6,7 @@ import { useCart } from "@/hooks/useCart";
 import { useReferral } from "@/hooks/useReferral";
 import { useStoreStatus } from "@/hooks/useStoreStatus";
 import { formatPrice } from "@/lib/format";
+import { useLanguage } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_authenticated/carrito")({
   ssr: false,
@@ -19,6 +20,7 @@ export const Route = createFileRoute("/_authenticated/carrito")({
 });
 
 function CartPage() {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const { cart: rows, setQuantity, removeItem, clearCart } = useCart();
   const { getAdjustedPrice } = useReferral();
@@ -46,7 +48,7 @@ function CartPage() {
           <ChevronLeft className="size-6 stroke-[2.5]" />
         </button>
         <h1 className="text-[28px] sm:text-[34px] font-bold tracking-tight text-foreground">
-          Carrito Trippy
+          {t("cart_title")}
         </h1>
       </div>
 
@@ -54,15 +56,15 @@ function CartPage() {
         <div className="mt-10">
           <EmptyState
             icon={<ShoppingBag className="size-7" />}
-            title="Tu carrito está vacío"
-            description="Agrega tus antojos favoritos desde el catálogo."
+            title={t("cart_empty")}
+            description={t("cart_empty_desc")}
             action={
               <Link
                 to="/catalogo"
                 search={{}}
                 className="mt-4 flex h-12 w-full items-center justify-center rounded-full bg-primary font-bold text-primary-foreground shadow-sm transition-transform active:scale-95"
               >
-                Explorar catálogo
+                {t("explore_catalog_btn")}
               </Link>
             }
           />
@@ -105,11 +107,11 @@ function CartPage() {
                             </h3>
                           </div>
                           <p className="mt-1 text-[13px] font-medium text-muted-foreground">
-                            {formatPrice(getAdjustedPrice(row.products?.price ?? 0))} c/u
+                            {formatPrice(getAdjustedPrice(row.products?.price ?? 0))} {t("each")}
                           </p>
                           {row.products?.is_available === false && (
                             <p className="mt-0.5 text-[11px] font-bold text-red-400">
-                              No disponible
+                              {t("not_available")}
                             </p>
                           )}
                         </div>
@@ -155,20 +157,20 @@ function CartPage() {
               onClick={() => clearCart()}
               className="flex items-center gap-2 text-[14px] font-semibold text-muted-foreground hover:text-red-400 active:scale-95 transition-all px-4 py-2"
             >
-              <Trash2 className="size-4" /> Vaciar carrito
+              <Trash2 className="size-4" /> {t("empty_cart_action")}
             </button>
           </div>
           
           <div className="mb-12 mt-6 rounded-[32px] bg-surface-2/40 p-6 shadow-sm">
             <div className="flex items-center justify-between text-sm">
-              <span className="font-medium text-muted-foreground">Subtotal</span>
+              <span className="font-medium text-muted-foreground">{t("subtotal")}</span>
               <span className="text-[15px] font-bold text-foreground">{formatPrice(subtotal)}</span>
             </div>
 
             {!isOpen && (
               <div className="mt-4 flex items-center gap-2 rounded-2xl bg-red-500/10 border border-red-500/20 p-3 text-xs text-red-400">
                 <ShieldAlert className="size-4 shrink-0" />
-                <span>La tienda está cerrada temporalmente. Podrás pedir tan pronto abramos.</span>
+                <span>{t("store_closed_cart_msg")}</span>
               </div>
             )}
             
@@ -178,14 +180,14 @@ function CartPage() {
                   to="/checkout"
                   className="flex h-[54px] w-full items-center justify-center rounded-full bg-primary text-[16px] font-bold text-primary-foreground shadow-sm transition-transform active:scale-95"
                 >
-                  Proceder al pago
+                  {t("checkout_btn")}
                 </Link>
               ) : (
                 <button
                   disabled
                   className="flex h-[54px] w-full items-center justify-center rounded-full bg-surface-2 text-[15px] font-bold text-muted-foreground cursor-not-allowed opacity-60"
                 >
-                  Tienda Cerrada Temporalmente
+                  {t("store_closed_btn")}
                 </button>
               )}
             </div>

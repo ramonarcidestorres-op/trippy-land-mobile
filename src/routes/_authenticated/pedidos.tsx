@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { ordersQuery } from "@/lib/queries";
 import { formatDate, formatRelativeTime, formatPrice, STATUS_LABELS } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_authenticated/pedidos")({
   head: () => ({
@@ -19,6 +20,7 @@ export const Route = createFileRoute("/_authenticated/pedidos")({
 });
 
 function OrdersPage() {
+  const { t } = useLanguage();
   const { user } = useAuth();
   const { data, isLoading, error, refetch } = useQuery(ordersQuery(user?.id));
 
@@ -37,10 +39,10 @@ function OrdersPage() {
             </Link>
             <div>
               <h1 className="text-[26px] font-extrabold tracking-tight text-foreground">
-                Mis Pedidos
+                {t("my_orders_title")}
               </h1>
               <p className="text-[13px] text-muted-foreground">
-                Historial y seguimiento en vivo
+                {t("my_orders_subtitle")}
               </p>
             </div>
           </div>
@@ -63,6 +65,9 @@ function OrdersPage() {
               const itemsText = items.map((i) => `${i.quantity}× ${(i as any).products?.name || "Producto"}`).join(", ");
               const isDelivered = order.status === "delivered";
               const isCancelled = order.status === "cancelled";
+
+              const statusKey = `status_${order.status}` as any;
+              const statusText = t(statusKey, STATUS_LABELS[order.status] ?? order.status);
 
               return (
                 <Link
@@ -99,7 +104,7 @@ function OrdersPage() {
                             !isCancelled && !isDelivered && "bg-primary/20 text-primary animate-pulse"
                           )}
                         >
-                          {STATUS_LABELS[order.status] ?? order.status}
+                          {statusText}
                         </span>
                       </div>
                     </div>
@@ -129,15 +134,15 @@ function OrdersPage() {
           <div className="pt-8">
             <EmptyState
               icon={<Receipt className="size-8 text-primary" />}
-              title="Aún no tienes pedidos"
-              description="Cuando hagas tu pedido aparecerá aquí para que puedas hacerle seguimiento en tiempo real."
+              title={t("no_orders_yet")}
+              description={t("no_orders_yet_desc")}
               action={
                 <Link
                   to="/catalogo"
                   search={{}}
                   className="mt-4 flex h-12 w-full items-center justify-center rounded-full bg-primary font-bold text-primary-foreground shadow-sm transition-transform active:scale-95"
                 >
-                  Explorar catálogo
+                  {t("explore_catalog_btn")}
                 </Link>
               }
             />

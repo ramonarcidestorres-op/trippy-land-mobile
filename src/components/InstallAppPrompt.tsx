@@ -19,16 +19,36 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: "accepted" | "dismissed"; platform: string }>;
 }
 
+function checkIsIOS(): boolean {
+  if (typeof window === "undefined" || !navigator) return false;
+  const ua = navigator.userAgent || "";
+  const isIos = /iPad|iPhone|iPod/.test(ua) && !(window as any).MSStream;
+  const isIpadOS = /Macintosh/i.test(ua) && (navigator.maxTouchPoints || 0) > 1;
+  return isIos || isIpadOS;
+}
+
+function checkIsAndroid(): boolean {
+  if (typeof window === "undefined" || !navigator) return false;
+  const ua = navigator.userAgent || "";
+  return /Android/i.test(ua);
+}
+
 export function InstallAppPrompt() {
   const [isStandalone, setIsStandalone] = useState(false);
-  const [isIOS, setIsIOS] = useState(false);
-  const [isAndroid, setIsAndroid] = useState(false);
+  const [isIOS, setIsIOS] = useState(() => checkIsIOS());
+  const [isAndroid, setIsAndroid] = useState(() => checkIsAndroid());
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [showBanner, setShowBanner] = useState(false);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
+
+    // Detectar OS siempre
+    const isIosDevice = checkIsIOS();
+    const isAndroidDevice = checkIsAndroid();
+    setIsIOS(isIosDevice);
+    setIsAndroid(isAndroidDevice);
 
     // Detectar si ya está instalada como PWA (Standalone)
     const standalone =
@@ -52,23 +72,20 @@ export function InstallAppPrompt() {
     };
     window.addEventListener("appinstalled", handleAppInstalled);
 
+    // Permitir abrir el modal desde cualquier botón o menú de la app
+    const handleOpenModal = () => {
+      setIsIOS(checkIsIOS());
+      setIsAndroid(checkIsAndroid());
+      setIsOpen(true);
+    };
+    window.addEventListener("tls_open_install_modal", handleOpenModal);
+
     if (standalone) {
-      // Si está instalada, solo escuchar apertura manual desde el menú
-      const handleOpenModal = () => setIsOpen(true);
-      window.addEventListener("tls_open_install_modal", handleOpenModal);
       return () => {
         window.removeEventListener("appinstalled", handleAppInstalled);
         window.removeEventListener("tls_open_install_modal", handleOpenModal);
       };
     }
-
-    // Detectar Sistema Operativo
-    const ua = navigator.userAgent || "";
-    const isIosDevice = /iPad|iPhone|iPod/.test(ua) && !(window as any).MSStream;
-    const isAndroidDevice = /Android/i.test(ua);
-
-    setIsIOS(isIosDevice);
-    setIsAndroid(isAndroidDevice);
 
     // Capturar evento nativo de instalación en Android / Chrome
     const handleBeforeInstallPrompt = (e: Event) => {
@@ -86,17 +103,13 @@ export function InstallAppPrompt() {
         sessionStorage.getItem("tls_install_dismissed") === "true";
       if (!dismissed) {
         setTimeout(() => {
+          setIsIOS(checkIsIOS());
+          setIsAndroid(checkIsAndroid());
           setIsOpen(true);
         }, 1200);
       }
     };
     window.addEventListener("tls_onboarding_done", handleOnboardingDone);
-
-    // Permitir abrir el modal desde cualquier botón o menú de la app
-    const handleOpenModal = () => {
-      setIsOpen(true);
-    };
-    window.addEventListener("tls_open_install_modal", handleOpenModal);
 
     // Mostrar banner sutil si no está instalada y no ha sido descartada
     const isDismissed =

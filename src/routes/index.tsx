@@ -8,6 +8,7 @@ import { EmptyState } from "@/components/States";
 import { Input } from "@/components/ui/input";
 import { categoriesQuery, productsQuery } from "@/lib/queries";
 import { getOptimizedImageUrl } from "@/lib/image-optimizer";
+import { useLanguage } from "@/lib/i18n";
 
 export const Route = createFileRoute("/")({
   ssr: false,
@@ -29,6 +30,7 @@ export const Route = createFileRoute("/")({
 });
 
 function HomePage() {
+  const { t } = useLanguage();
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const categories = useQuery(categoriesQuery());
@@ -49,7 +51,7 @@ function HomePage() {
         <Input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="¿Qué vas a pedir hoy?"
+          placeholder={t("search_placeholder")}
           className="h-14 rounded-full bg-surface-2/70 border border-border/30 pl-12 pr-12 text-[16px] font-medium text-foreground placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-white/30 focus-visible:border-white/40"
         />
         {search.trim() && (
@@ -58,7 +60,7 @@ function HomePage() {
             search={{ q: search.trim() }}
             className="absolute right-2 top-1/2 -translate-y-1/2 flex h-10 items-center justify-center rounded-full bg-primary px-4 text-xs font-bold text-primary-foreground transition-transform active:scale-95"
           >
-            Buscar
+            {t("search_button")}
           </Link>
         )}
       </div>
@@ -141,14 +143,14 @@ function HomePage() {
       <section className="mb-8">
         <div className="mb-5 flex items-center justify-between">
           <h2 className="text-[22px] font-black tracking-tight text-foreground">
-            Destacados
+            {t("featured")}
           </h2>
           <Link 
             to="/catalogo" 
             search={selectedCategory ? { categoria: categories.data?.find(c => c.id === selectedCategory)?.slug } : {}} 
             className="text-xs text-primary font-bold transition-opacity active:opacity-70 ml-auto"
           >
-            Ver catálogo completo →
+            {t("view_full_catalog")}
           </Link>
         </div>
 

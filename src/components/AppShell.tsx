@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Home, LayoutGrid, ShoppingCart, User, Receipt, ShieldAlert, Store, ExternalLink, LogOut, ArrowLeft, ArrowRight } from "lucide-react";
+import { Home, LayoutGrid, ShoppingCart, User, Receipt, ShieldAlert, Store, ExternalLink, LogOut, ArrowLeft, ArrowRight, Globe } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { Logo } from "@/components/Logo";
 import { useAuth } from "@/hooks/useAuth";
@@ -10,6 +10,8 @@ import { formatPrice } from "@/lib/format";
 import { addressStore, type SavedAddress } from "@/lib/address";
 import { AddressManager } from "@/components/AddressManager";
 import { AppNotificationPrompt } from "@/components/AppNotificationPrompt";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { useLanguage } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { ProductDetailSheet } from "@/components/ProductDetailSheet";
 import {
@@ -20,13 +22,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { supabase } from "@/integrations/supabase/client";
-
-const NAV = [
-  { to: "/", label: "Inicio", icon: Home },
-  { to: "/catalogo", label: "Catálogo", icon: LayoutGrid },
-  { to: "/pedidos", label: "Pedidos", icon: Receipt },
-  { to: "/carrito", label: "Carrito", icon: ShoppingCart },
-] as const;
 
 function useSelectedAddress() {
   const [addr, setAddr] = useState<SavedAddress | null>(null);
@@ -39,15 +34,57 @@ function useSelectedAddress() {
   return addr;
 }
 
+function useIsStandalone() {
+  const [isStandalone, setIsStandalone] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return (
+      window.matchMedia("(display-mode: standalone)").matches ||
+      window.matchMedia("(display-mode: fullscreen)").matches ||
+      window.matchMedia("(display-mode: minimal-ui)").matches ||
+      Boolean((navigator as any).standalone) ||
+      document.referrer.startsWith("android-app://") ||
+      localStorage.getItem("tls_app_installed") === "true"
+    );
+  });
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const check = () => {
+      const standalone =
+        window.matchMedia("(display-mode: standalone)").matches ||
+        window.matchMedia("(display-mode: fullscreen)").matches ||
+        window.matchMedia("(display-mode: minimal-ui)").matches ||
+        Boolean((navigator as any).standalone) ||
+        document.referrer.startsWith("android-app://") ||
+        localStorage.getItem("tls_app_installed") === "true";
+      setIsStandalone(standalone);
+    };
+    check();
+    window.addEventListener("appinstalled", check);
+    return () => window.removeEventListener("appinstalled", check);
+  }, []);
+
+  return isStandalone;
+}
+
 export function AppShell({ children }: { children: ReactNode }) {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const address = useSelectedAddress();
+  const isStandalone = useIsStandalone();
   const { cart } = useCart();
   const { getAdjustedPrice } = useReferral();
   const { isOpen, toggleStoreStatus } = useStoreStatus();
   const count = cart.reduce((s, r) => s + r.quantity, 0);
   const cartSubtotal = cart.reduce((sum, r) => sum + getAdjustedPrice(r.products?.price ?? 0) * r.quantity, 0);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+
+  const navItems = [
+    { to: "/", label: t("nav_home"), icon: Home },
+    { to: "/catalogo", label: t("nav_catalog"), icon: LayoutGrid },
+    { to: "/pedidos", label: t("nav_orders"), icon: Receipt },
+    { to: "/carrito", label: t("nav_cart"), icon: ShoppingCart },
+  ] as const;
 
   const isAdminRoute = pathname.startsWith("/admin");
   const isHomeOrCatalog = pathname === "/" || pathname === "/catalogo";
@@ -65,9 +102,9 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       {/* CABECERA */}
       <header className="sticky top-0 z-30 bg-background/90 backdrop-blur-2xl pt-[max(env(safe-area-inset-top),16px)] pb-2.5 border-b border-border/20">
-        <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-1">
+        <div className="mx-auto flex max-w-5xl items-center justify-between gap-2.5 px-4 py-1">
           {isAdminRoute ? (
-            /* CABECERA AISLADA PARA PANEL ADMINISTRADOR (Sin carrito ni selector de dirección de cliente) */
+            /* CABECERA AISLADA PARA PANEL ADMINISTRADOR */
             <>
               <div className="flex items-center gap-2.5">
                 <Link to="/admin/pedidos" className="flex items-center gap-2 transition-transform active:scale-95">
@@ -82,13 +119,15 @@ export function AppShell({ children }: { children: ReactNode }) {
               </div>
 
               <div className="flex items-center gap-2">
+                <LanguageSwitcher />
+
                 {/* Enlace para ver la tienda como cliente */}
                 <Link
                   to="/"
                   className="inline-flex items-center gap-1.5 h-8.5 rounded-full bg-surface-2 px-3 text-[11px] font-semibold text-muted-foreground hover:text-foreground border border-border/30 transition-all active:scale-95"
                 >
                   <Store className="size-3.5 text-primary" />
-                  <span>Ver Tienda</span>
+                  <span>{t("view_store")}</span>
                 </Link>
 
                 {/* Menú de Usuario / Sesión */}
@@ -99,7 +138,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                       ★
                     </span>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-52 border-border bg-surface-2 shadow-2xl rounded-2xl p-1.5">
+                  <DropdownMenuContent align="end" className="w-56 border-border bg-surface-2 shadow-2xl rounded-2xl p-1.5">
                     <div className="px-3 py-2 text-xs font-medium text-muted-foreground truncate border-b border-border/30">
                       <p className="font-bold text-foreground truncate">{user?.user_metadata?.full_name || user?.email}</p>
                       <span className="inline-block mt-0.5 rounded bg-candy-lime/20 px-1.5 py-0.5 text-[9px] font-extrabold text-candy-lime">
@@ -110,15 +149,22 @@ export function AppShell({ children }: { children: ReactNode }) {
                     <DropdownMenuItem asChild>
                       <Link to="/" className="cursor-pointer font-medium text-xs flex items-center gap-2 py-2 px-3 rounded-xl">
                         <Store className="size-3.5 text-primary" />
-                        <span>Ver tienda como cliente</span>
+                        <span>{t("view_store")}</span>
                       </Link>
                     </DropdownMenuItem>
 
                     <DropdownMenuItem asChild>
                       <Link to="/admin/pedidos" className="cursor-pointer font-medium text-xs flex items-center gap-2 py-2 px-3 rounded-xl text-candy-lime">
-                        <span>★ Panel de Administración</span>
+                        <span>{t("admin_panel")}</span>
                       </Link>
                     </DropdownMenuItem>
+
+                    <DropdownMenuSeparator className="bg-border/30 my-1" />
+
+                    <div className="px-3 py-1.5 flex items-center justify-between">
+                      <span className="text-[11px] text-muted-foreground font-medium">{t("language")}:</span>
+                      <LanguageSwitcher />
+                    </div>
 
                     <DropdownMenuSeparator className="bg-border/30 my-1" />
 
@@ -130,7 +176,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                       className="cursor-pointer text-xs font-medium text-red-400 focus:bg-red-500/10 focus:text-red-400 flex items-center gap-2 py-2 px-3 rounded-xl"
                     >
                       <LogOut className="size-3.5" />
-                      <span>Cerrar sesión</span>
+                      <span>{t("sign_out")}</span>
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -139,14 +185,20 @@ export function AppShell({ children }: { children: ReactNode }) {
           ) : (
             /* CABECERA NORMAL PARA CLIENTES */
             <>
-              <div className="flex-1 min-w-0 pr-2">
+              <div className="flex-1 min-w-0 pr-1.5">
                 <AddressManager />
               </div>
+
+              {/* Selector de Idioma Sutil en la barra superior */}
+              <div className="shrink-0 hidden sm:flex">
+                <LanguageSwitcher />
+              </div>
+
               <Link
                 to="/carrito"
                 preload={false}
                 className="relative grid size-10 shrink-0 place-items-center rounded-full bg-surface-2 transition-transform active:scale-90 select-none touch-manipulation cursor-pointer"
-                aria-label="Carrito"
+                aria-label={t("nav_cart")}
               >
                 <ShoppingCart className="size-5" />
                 {count > 0 && (
@@ -155,6 +207,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                   </span>
                 )}
               </Link>
+
               {user ? (
                 <DropdownMenu>
                   <DropdownMenuTrigger className="relative grid size-10 shrink-0 place-items-center rounded-full bg-surface-2 outline-none">
@@ -165,7 +218,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                       </span>
                     )}
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-52 border-border bg-surface-2 shadow-2xl rounded-2xl p-1.5">
+                  <DropdownMenuContent align="end" className="w-56 border-border bg-surface-2 shadow-2xl rounded-2xl p-1.5">
                     <div className="px-3 py-2 text-xs font-medium text-muted-foreground truncate border-b border-border/30">
                       <p className="font-bold text-foreground truncate">{user.user_metadata?.full_name || user.email}</p>
                       {user.role === "admin" && (
@@ -176,21 +229,29 @@ export function AppShell({ children }: { children: ReactNode }) {
                     </div>
                     <DropdownMenuItem asChild>
                       <Link to="/pedidos" className="cursor-pointer font-medium text-xs py-2 px-3 rounded-xl">
-                        Mis pedidos
+                        {t("my_orders")}
                       </Link>
                     </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() => {
-                        window.dispatchEvent(new Event("tls_open_install_modal"));
-                      }}
-                      className="cursor-pointer font-medium text-xs py-2 px-3 rounded-xl text-primary"
-                    >
-                      <span>📲 Instalar en pantalla de inicio</span>
-                    </DropdownMenuItem>
+
+                    <div className="px-3 py-2 flex items-center justify-between border-y border-border/20 my-1">
+                      <span className="text-[11px] text-muted-foreground font-medium">{t("language")}:</span>
+                      <LanguageSwitcher />
+                    </div>
+
+                    {!isStandalone && (
+                      <DropdownMenuItem
+                        onClick={() => {
+                          window.dispatchEvent(new Event("tls_open_install_modal"));
+                        }}
+                        className="cursor-pointer font-medium text-xs py-2 px-3 rounded-xl text-primary"
+                      >
+                        <span>{t("install_app")}</span>
+                      </DropdownMenuItem>
+                    )}
                     {user.role === "admin" && (
                       <DropdownMenuItem asChild>
                         <Link to="/admin/pedidos" className="cursor-pointer font-bold text-xs text-candy-lime py-2 px-3 rounded-xl bg-candy-lime/10">
-                          ★ Panel de Administración
+                          {t("admin_panel")}
                         </Link>
                       </DropdownMenuItem>
                     )}
@@ -203,19 +264,34 @@ export function AppShell({ children }: { children: ReactNode }) {
                       className="cursor-pointer text-xs font-medium text-red-400 focus:bg-red-500/10 focus:text-red-400 flex items-center gap-2 py-2 px-3 rounded-xl"
                     >
                       <LogOut className="size-3.5" />
-                      <span>Cerrar sesión</span>
+                      <span>{t("sign_out")}</span>
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               ) : (
-                <Link
-                  to="/auth"
-                  preload={false}
-                  className="relative grid size-10 shrink-0 place-items-center rounded-full bg-surface-2 transition-transform active:scale-90 select-none touch-manipulation cursor-pointer"
-                  aria-label="Entrar"
-                >
-                  <User className="size-5 text-muted-foreground" />
-                </Link>
+                <div className="flex items-center gap-1.5">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger className="relative grid size-10 shrink-0 place-items-center rounded-full bg-surface-2 outline-none select-none active:scale-95">
+                      <Globe className="size-4.5 text-muted-foreground" />
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-48 border-border bg-surface-2 shadow-2xl rounded-2xl p-2">
+                      <div className="px-2 py-1 text-xs font-bold text-foreground">
+                        {t("language")}
+                      </div>
+                      <div className="pt-1 flex justify-center">
+                        <LanguageSwitcher />
+                      </div>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                  <Link
+                    to="/auth"
+                    preload={false}
+                    className="relative grid size-10 shrink-0 place-items-center rounded-full bg-surface-2 transition-transform active:scale-90 select-none touch-manipulation cursor-pointer"
+                    aria-label={t("sign_in")}
+                  >
+                    <User className="size-5 text-muted-foreground" />
+                  </Link>
+                </div>
               )}
             </>
           )}
@@ -227,8 +303,8 @@ export function AppShell({ children }: { children: ReactNode }) {
             <div className="flex items-center gap-2.5 rounded-2xl bg-red-500/15 border border-red-500/30 px-3.5 py-2 text-xs font-semibold text-red-400 shadow-sm">
               <ShieldAlert className="size-4 shrink-0 text-red-400" />
               <div className="flex-1">
-                <span className="font-bold text-red-300">Tienda cerrada temporalmente:</span>{" "}
-                <span className="text-red-200/90">No estamos recibiendo pedidos en este momento. Puedes explorar el menú.</span>
+                <span className="font-bold text-red-300">{t("store_closed")}:</span>{" "}
+                <span className="text-red-200/90">{t("store_closed_banner")}</span>
               </div>
             </div>
           </div>
@@ -252,7 +328,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 {count}
               </span>
               <span className="text-[13px] font-bold text-white tracking-tight">
-                Ir al Carrito
+                {t("go_to_cart")}
               </span>
             </div>
 
@@ -272,7 +348,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       {!hideBottomNav && (
         <div className="fixed bottom-4 inset-x-0 z-30 md:hidden flex justify-center px-4 pointer-events-none">
           <nav className="pointer-events-auto w-[88%] max-w-[340px] h-14 px-3 flex items-center justify-around rounded-full bg-neutral-950/85 backdrop-blur-2xl border border-white/15 shadow-[0_15px_40px_rgba(0,0,0,0.6)]">
-            {NAV.map(({ to, label, icon: Icon }) => {
+            {navItems.map(({ to, label, icon: Icon }) => {
               const active = to === "/" ? pathname === "/" : pathname.startsWith(to);
               return (
                 <Link

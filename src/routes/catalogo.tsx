@@ -10,6 +10,7 @@ import { categoriesQuery, productsQuery } from "@/lib/queries";
 import { cn } from "@/lib/utils";
 import { sanitizeSearchQuery } from "@/lib/sanitize";
 import { checkAndNotifyRateLimit } from "@/lib/rateLimit";
+import { useLanguage } from "@/lib/i18n";
 
 type CatalogSearch = { q?: string | undefined; categoria?: string | undefined };
 
@@ -33,6 +34,7 @@ export const Route = createFileRoute("/catalogo")({
 });
 
 export function CatalogPage() {
+  const { t } = useLanguage();
   const { q, categoria } = Route.useSearch();
   const navigate = useNavigate({ from: "/catalogo" });
   const [term, setTerm] = useState(q ?? "");
@@ -61,7 +63,7 @@ export function CatalogPage() {
   return (
     <AppShell>
       <h1 className="mb-6 text-[34px] font-bold tracking-tight text-foreground">
-        Catálogo
+        {t("catalog_title")}
       </h1>
 
       <form
@@ -76,7 +78,7 @@ export function CatalogPage() {
           value={term}
           onChange={(e) => setTerm(e.target.value)}
           onBlur={() => applySearch(term)}
-          placeholder="Buscar dulces..."
+          placeholder={t("search_sweets")}
           className="h-14 rounded-full bg-surface-2/60 border-none pl-12 pr-4 text-[15px] font-medium text-foreground placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-primary/50"
         />
       </form>
@@ -97,7 +99,7 @@ export function CatalogPage() {
             !categoria ? "bg-primary text-primary-foreground shadow-sm" : "bg-surface-2/60 text-foreground hover:bg-surface-2"
           )}
         >
-          Todos
+          {t("all")}
         </button>
         {categories.data?.map((c) => {
           const n = c.name?.toLowerCase() || "";
@@ -141,7 +143,7 @@ export function CatalogPage() {
           </div>
         ) : products.error && !products.data ? (
           <div className="rounded-3xl bg-surface-2/40 p-8 text-center">
-            <p className="text-sm text-muted-foreground">No se pudieron cargar los productos.</p>
+            <p className="text-sm text-muted-foreground">{t("error_loading_products")}</p>
           </div>
         ) : products.data?.length ? (
           <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
@@ -152,8 +154,8 @@ export function CatalogPage() {
         ) : (
           <EmptyState
             icon={<Candy className="size-7" />}
-            title="Sin resultados"
-            description="Prueba con otra búsqueda o cambia de categoría."
+            title={t("no_results")}
+            description={t("no_results_desc")}
           />
         )}
       </div>

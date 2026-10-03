@@ -5,11 +5,14 @@ import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { categoriesQuery, productsQuery } from "@/lib/queries";
 import { preloadPriorityImages } from "@/lib/image-optimizer";
+import { useLanguage } from "@/lib/i18n";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 
 type StartupPhase = "loading" | "onboarding" | "exiting_loading" | "exiting_onboarding" | "closed";
 
 export function WelcomeOnboarding() {
   const queryClient = useQueryClient();
+  const { lang, isEn } = useLanguage();
   const [phase, setPhase] = useState<StartupPhase>("loading");
   const [progress, setProgress] = useState<number>(10);
   
@@ -229,15 +232,20 @@ export function WelcomeOnboarding() {
       {/* ============================================================ */}
       {showOnboarding && (
         <div className="relative z-10 flex flex-1 flex-col justify-between px-6 sm:px-8 max-w-sm mx-auto w-full animate-in fade-in zoom-in-98 duration-500">
+          {/* Barra superior con selector de idioma */}
+          <div className="flex justify-end pt-1">
+            <LanguageSwitcher />
+          </div>
+
           {/* Mitad Superior: Ícono Ojo completo flotante con iluminación */}
-          <div className="flex flex-1 items-center justify-center py-6">
+          <div className="flex flex-1 items-center justify-center py-4">
             <div className="relative flex items-center justify-center">
               <div className="absolute size-44 rounded-full bg-white/10 blur-2xl" />
-              <LogoEye className="relative w-48 sm:w-56 h-auto drop-shadow-[0_12px_35px_rgba(255,252,235,0.28)]" />
+              <LogoEye className="relative w-44 sm:w-52 h-auto drop-shadow-[0_12px_35px_rgba(255,252,235,0.28)]" />
             </div>
           </div>
 
-          {/* Mitad Inferior: Textos y Botón estilo exacto de la referencia */}
+          {/* Mitad Inferior: Textos y Botón traducidos reactivamente */}
           <div className="space-y-3.5 pb-2">
             {/* Pill Badge */}
             <div>
@@ -251,19 +259,21 @@ export function WelcomeOnboarding() {
               Trippy Land Store.
             </h1>
 
-            {/* Texto Pequeño Informativo en Minúsculas Normales */}
+            {/* Texto Informativo */}
             <p className="text-[12px] leading-relaxed text-[#8E8E93] font-normal">
-              Toda la información que manejamos aquí es totalmente privada y confidencial. No almacenamos datos personales innecesarios. Plataforma exclusiva por invitación de referido.
+              {isEn
+                ? "All information handled here is strictly private and confidential. We do not store unnecessary personal data. Premium delivery in Medellín."
+                : "Toda la información que manejamos aquí es totalmente privada y confidencial. No almacenamos datos personales innecesarios. Entrega a domicilio exclusiva en Medellín."}
             </p>
 
-            {/* Botón Blanco Pill (único botón de entrar) */}
+            {/* Botón Blanco Pill */}
             <div className="pt-2.5">
               <button
                 type="button"
                 onClick={handleEnter}
                 className="flex h-13 w-full items-center justify-center rounded-full bg-white text-black font-extrabold text-[15px] shadow-[0_10px_30px_rgba(255,255,255,0.2)] transition-transform duration-200 hover:bg-[#F2F2F7] active:scale-[0.98] cursor-pointer select-none"
               >
-                Entrar a la tienda
+                {isEn ? "Enter the store" : "Entrar a la tienda"}
               </button>
             </div>
           </div>

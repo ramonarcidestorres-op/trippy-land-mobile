@@ -5,10 +5,12 @@ import { formatPrice } from "@/lib/format";
 import { type Product } from "@/lib/queries";
 import { useReferral } from "@/hooks/useReferral";
 import { getOptimizedImageUrl } from "@/lib/image-optimizer";
+import { useLanguage } from "@/lib/i18n";
 import { useState } from "react";
 import { toast } from "sonner";
 
 export function ProductCard({ product }: { product: Product }) {
+  const { t, isEn } = useLanguage();
   const available = product.is_available !== false;
   const { addToCart } = useCart();
   const { openProduct } = useProductModal();
@@ -23,9 +25,9 @@ export function ProductCard({ product }: { product: Product }) {
     setBusy(true);
     try {
       addToCart(product, 1);
-      toast.success("Agregado al carrito");
+      toast.success(isEn ? "Added to cart" : "Agregado al carrito");
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Error al agregar");
+      toast.error(e instanceof Error ? e.message : (isEn ? "Error adding product" : "Error al agregar"));
     } finally {
       setBusy(false);
     }
@@ -54,7 +56,7 @@ export function ProductCard({ product }: { product: Product }) {
         />
         {!available && (
           <div className="absolute inset-0 grid place-items-center rounded-2xl bg-background/85 text-[10px] font-black uppercase tracking-widest text-red-400 border border-red-500/30 backdrop-blur-sm">
-            Agotado
+            {t("sold_out")}
           </div>
         )}
       </div>

@@ -18,6 +18,7 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { sanitizeAddress } from "@/lib/sanitize";
 import { checkAndNotifyRateLimit } from "@/lib/rateLimit";
+import { useLanguage } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_authenticated/checkout")({
   ssr: false,
@@ -31,6 +32,7 @@ export const Route = createFileRoute("/_authenticated/checkout")({
 });
 
 function CheckoutPage() {
+  const { t } = useLanguage();
   const { user } = useAuth();
   const { cart: rows, clearCart } = useCart();
   const { referralCode, getAdjustedPrice } = useReferral();
@@ -67,10 +69,6 @@ function CheckoutPage() {
   const unavailable = rows.filter((r) => r.products?.is_available === false);
   const selected = addressStore.list().find((a) => a.id === selectedId) ?? addressStore.selected() ?? null;
 
-  // Cálculo automático según los requerimientos:
-  // - Hasta 199.999: Normal 25.000 / Rápida 50.000
-  // - 200.000 a 999.999: Normal 50.000 / Rápida 50.000
-  // - Más de 1.000.000: 100.000
   const applicableFee = (fees ?? []).find(
     (f) => subtotal >= f.min_subtotal && (f.max_subtotal === null || subtotal <= f.max_subtotal)
   );
@@ -115,11 +113,10 @@ function CheckoutPage() {
     if (lock.current) return;
     if (rows.length === 0) return;
     if (unavailable.length > 0) {
-      toast.error("Quita del carrito los productos que ya no están disponibles.");
+      toast.error(t("remove_sold_out_msg"));
       return;
     }
 
-    // Rate Limiting para prevenir spam de pedidos y ataques de bots
     if (!checkAndNotifyRateLimit("checkout", "Has realizado varios intentos de pedido seguidos. Por favor espera unos segundos.")) {
       return;
     }
@@ -142,12 +139,9 @@ function CheckoutPage() {
 
     if (!effectiveAddress || effectiveAddress.trim().length < 4) {
       setIsEditingAddress(true);
-      const errMsg = "No puedes proceder al pago si no tienes la dirección. Dinos dónde te vamos a llevar el producto.";
+      const errMsg = t("address_required_error");
       setAddressError(errMsg);
-      toast.error("No puedes proceder al pago si no tienes la dirección.", {
-        description: "Dinos dónde te vamos a llevar el producto.",
-        duration: 5000,
-      });
+      toast.error(errMsg, { duration: 5000 });
 
       setTimeout(() => {
         addressSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -156,7 +150,6 @@ function CheckoutPage() {
       return;
     }
 
-    // Guardar dirección en el dispositivo para futuros pedidos si se ingresó manualmente
     if ((!selected || isEditingAddress) && cleanAddress) {
       addressStore.save({
         label: "Mi dirección",
@@ -199,7 +192,6 @@ function CheckoutPage() {
         // ignore
       }
 
-      // Si el navegador ya tiene permisos de notificaciones concedidos, vincular este pedido automáticamente
       if (typeof window !== "undefined" && "serviceWorker" in navigator && "Notification" in window && Notification.permission === "granted") {
         try {
           const reg = await navigator.serviceWorker.ready;
@@ -224,7 +216,6 @@ function CheckoutPage() {
         }
       }
 
-      // Notificar a los administradores de inmediato vía Push
       try {
         supabase.functions.invoke("send-order-push", {
           body: { order_id: orderId, status: "pending" },
@@ -251,15 +242,15 @@ function CheckoutPage() {
         <div className="pt-10">
           <EmptyState
             icon={<ShoppingBag className="size-7" />}
-            title="Nada por aquí"
-            description="Tu carrito está vacío. Agrega algo antes de confirmar."
+            title={t("cart_empty")}
+            description={t("cart_empty_desc")}
             action={
               <Link
                 to="/catalogo"
                 search={{}}
                 className="mt-4 flex h-12 w-full items-center justify-center rounded-full bg-primary font-bold text-primary-foreground shadow-sm transition-transform active:scale-95"
               >
-                Volver al catálogo
+                {t("explore_catalog_btn")}
               </Link>
             }
           />
@@ -286,7 +277,7 @@ function CheckoutPage() {
           <ChevronLeft className="size-6 stroke-[2.5]" />
         </button>
         <h1 className="text-[28px] sm:text-[34px] font-bold tracking-tight text-foreground">
-          Checkout
+          {t("checkout_btn")}
         </h1>
       </div>
 
@@ -301,7 +292,7 @@ function CheckoutPage() {
         >
           <div className="mb-3 flex items-center justify-between">
             <h2 className="flex items-center gap-2 text-[15px] font-semibold text-foreground">
-              <MapPin className={cn("size-4 text-primary", addressError && "text-red-400")} /> Dirección de entrega
+              <MapPin className={cn("size-4 text-primary", addressError && "text-red-400")} /> {t("delivery_address_title")}
             </h2>
             {selected && !isEditingAddress && (
               <button
@@ -316,17 +307,16 @@ function CheckoutPage() {
                 }}
                 className="text-xs font-bold text-primary hover:underline cursor-pointer"
               >
-                Cambiar
+                {t("change_btn")}
               </button>
             )}
           </div>
 
-          {/* Mensaje de alerta visible si intentaron pagar sin dirección */}
           {addressError && (
             <div className="mb-3.5 flex items-start gap-2.5 rounded-2xl bg-red-500/15 border border-red-500/40 p-3.5 text-xs font-semibold text-red-400 animate-in fade-in slide-in-from-top-2 duration-300">
               <MapPin className="size-4 shrink-0 text-red-400 mt-0.5" />
               <div className="flex-1">
-                <span className="font-bold text-red-300">Dirección requerida:</span>{" "}
+                <span className="font-bold text-red-300">{t("delivery_address_title")}:</span>{" "}
                 <span className="text-red-200/90">{addressError}</span>
               </div>
             </div>
@@ -365,13 +355,12 @@ function CheckoutPage() {
                   }}
                   className="text-[12px] font-bold text-primary px-3 py-1.5 rounded-full bg-surface-2 hover:bg-surface border border-border/40 transition-transform active:scale-95 shrink-0 cursor-pointer"
                 >
-                  Editar
+                  {t("edit_btn")}
                 </button>
               </div>
             </div>
           ) : (
             <div className="space-y-3 pt-1">
-              {/* Botón rápido de GPS */}
               <button
                 type="button"
                 onClick={handleGetLocation}
@@ -379,14 +368,13 @@ function CheckoutPage() {
                 className="flex w-full items-center justify-center gap-2 h-11 rounded-2xl bg-surface hover:bg-surface-2 border border-border/50 text-[13px] font-semibold text-primary transition-all active:scale-[0.98] disabled:opacity-50 cursor-pointer select-none touch-manipulation"
               >
                 {locating ? <Loader2 className="size-4 animate-spin text-primary" /> : <Navigation className="size-4 text-primary" />}
-                <span>{locating ? "Obteniendo ubicación GPS..." : "Detectar mi ubicación actual con GPS"}</span>
+                <span>{locating ? t("getting_gps") : t("detect_gps_btn")}</span>
               </button>
 
-              {/* Lista de direcciones guardadas previamente (si existen) */}
               {addressStore.list().length > 0 && (
                 <div className="pt-1">
                   <p className="text-[11px] uppercase tracking-wider font-bold text-muted-foreground/70 mb-2">
-                    O selecciona una guardada:
+                    {t("select_saved_address")}
                   </p>
                   <div className="flex flex-wrap gap-1.5">
                     {addressStore.list().map((addr) => (
@@ -413,11 +401,10 @@ function CheckoutPage() {
                 </div>
               )}
 
-              {/* Campos estructurados claros y elegantes */}
               <div className="space-y-2.5 pt-1">
                 <div>
                   <label className="text-[11px] font-semibold text-muted-foreground mb-1 block">
-                    Dirección principal <span className="text-primary">*</span>
+                    {t("main_address_label")} <span className="text-primary">*</span>
                   </label>
                   <Input
                     ref={addressInputRef}
@@ -426,7 +413,7 @@ function CheckoutPage() {
                       setManualAddress(e.target.value);
                       if (addressError) setAddressError(null);
                     }}
-                    placeholder="Ej: Calle 45 # 12-34 o Edificio / Conjunto"
+                    placeholder={t("main_address_placeholder")}
                     className={cn(
                       "h-11 rounded-2xl bg-surface border-border/40 text-[13px] text-foreground placeholder:text-muted-foreground/60 focus-visible:ring-1 focus-visible:ring-primary",
                       addressError && "border-red-500/80 ring-2 ring-red-500/30"
@@ -437,7 +424,7 @@ function CheckoutPage() {
                 <div className="grid grid-cols-2 gap-2">
                   <div>
                     <label className="text-[11px] font-semibold text-muted-foreground mb-1 block">
-                      Barrio o Sector
+                      {t("neighborhood_label")}
                     </label>
                     <Input
                       value={manualNeighborhood}
@@ -445,13 +432,13 @@ function CheckoutPage() {
                         setManualNeighborhood(e.target.value);
                         if (addressError) setAddressError(null);
                       }}
-                      placeholder="Ej: El Poblado"
+                      placeholder={t("neighborhood_placeholder")}
                       className="h-11 rounded-2xl bg-surface border-border/40 text-[13px] text-foreground placeholder:text-muted-foreground/60 focus-visible:ring-1 focus-visible:ring-primary"
                     />
                   </div>
                   <div>
                     <label className="text-[11px] font-semibold text-muted-foreground mb-1 block">
-                      Apto / Casa (Opcional)
+                      {t("apartment_label")}
                     </label>
                     <Input
                       value={manualApartment}
@@ -459,7 +446,7 @@ function CheckoutPage() {
                         setManualApartment(e.target.value);
                         if (addressError) setAddressError(null);
                       }}
-                      placeholder="Ej: Apto 301, Torre 2"
+                      placeholder={t("apartment_placeholder")}
                       className="h-11 rounded-2xl bg-surface border-border/40 text-[13px] text-foreground placeholder:text-muted-foreground/60 focus-visible:ring-1 focus-visible:ring-primary"
                     />
                   </div>
@@ -467,7 +454,7 @@ function CheckoutPage() {
 
                 <div>
                   <label className="text-[11px] font-semibold text-muted-foreground mb-1 block">
-                    Indicaciones para el repartidor (Opcional)
+                    {t("notes_label")}
                   </label>
                   <Input
                     value={manualNotes}
@@ -475,7 +462,7 @@ function CheckoutPage() {
                       setManualNotes(e.target.value);
                       if (addressError) setAddressError(null);
                     }}
-                    placeholder="Ej: Dejar en portería, casa de reja negra..."
+                    placeholder={t("notes_placeholder")}
                     className="h-11 rounded-2xl bg-surface border-border/40 text-[13px] text-foreground placeholder:text-muted-foreground/60 focus-visible:ring-1 focus-visible:ring-primary"
                   />
                 </div>
@@ -491,7 +478,7 @@ function CheckoutPage() {
                     }}
                     className="text-xs text-muted-foreground hover:text-foreground font-semibold px-2 py-1 cursor-pointer"
                   >
-                    Cancelar edición
+                    {t("cancel_edit_btn")}
                   </button>
                 </div>
               )}
@@ -501,7 +488,7 @@ function CheckoutPage() {
 
         {/* Delivery Type */}
         <section className="rounded-[32px] bg-surface-2/60 p-5">
-          <h2 className="mb-4 text-[15px] font-semibold text-foreground">Tipo de entrega</h2>
+          <h2 className="mb-4 text-[15px] font-semibold text-foreground">{t("delivery_type_title")}</h2>
           <div className="grid grid-cols-2 gap-3">
             <button
               onClick={() => setDeliveryType("normal")}
@@ -512,7 +499,7 @@ function CheckoutPage() {
                   : "border-border/50 bg-surface text-foreground"
               )}
             >
-              <span className="text-[15px] font-bold">Normal</span>
+              <span className="text-[15px] font-bold">{t("delivery_normal")}</span>
               <span className={cn("mt-1 text-[12px] font-medium opacity-80")}>~40 min</span>
               {applicableFee && (
                 <span className="mt-2 text-[14px] font-extrabold">{formatPrice(applicableFee.normal_fee)}</span>
@@ -527,7 +514,7 @@ function CheckoutPage() {
                   : "border-border/50 bg-surface text-foreground"
               )}
             >
-              <span className="text-[15px] font-bold">Rápida 🚀</span>
+              <span className="text-[15px] font-bold">{t("delivery_fast")}</span>
               <span className={cn("mt-1 text-[12px] font-medium opacity-80")}>~20 min</span>
               {applicableFee && (
                 <span className="mt-2 text-[14px] font-extrabold">{formatPrice(applicableFee.fast_fee)}</span>
@@ -542,14 +529,14 @@ function CheckoutPage() {
             <Banknote className="size-6" />
           </div>
           <div>
-            <p className="text-[15px] font-semibold text-foreground">Pago en efectivo</p>
-            <p className="mt-0.5 text-[13px] text-muted-foreground">Pagas al recibir tu pedido.</p>
+            <p className="text-[15px] font-semibold text-foreground">{t("payment_cash")}</p>
+            <p className="mt-0.5 text-[13px] text-muted-foreground">{t("payment_cash_desc")}</p>
           </div>
         </section>
 
         {/* Summary */}
         <section className="rounded-[32px] bg-surface-2/60 p-6">
-          <h2 className="mb-4 text-[15px] font-semibold text-foreground">Resumen</h2>
+          <h2 className="mb-4 text-[15px] font-semibold text-foreground">{t("order_summary_title")}</h2>
           <ul className="mb-6 space-y-3">
             {rows.map((r) => (
               <li key={r.id} className="flex items-start justify-between gap-4">
@@ -565,15 +552,15 @@ function CheckoutPage() {
           
           <div className="space-y-2 border-t border-border/40 pt-4">
             <div className="flex items-center justify-between text-[14px]">
-              <span className="text-muted-foreground">Subtotal</span>
+              <span className="text-muted-foreground">{t("subtotal")}</span>
               <span className="font-medium text-foreground">{formatPrice(subtotal)}</span>
             </div>
             <div className="flex items-center justify-between text-[14px]">
-              <span className="text-muted-foreground">Domicilio</span>
+              <span className="text-muted-foreground">{t("delivery_fee")}</span>
               <span className="font-medium text-foreground">{applicableFee ? formatPrice(deliveryCost) : "..."}</span>
             </div>
             <div className="pt-2 flex items-center justify-between text-[18px] font-bold text-foreground">
-              <span>Total</span>
+              <span>{t("total")}</span>
               <span>{formatPrice(total)}</span>
             </div>
           </div>
@@ -581,7 +568,7 @@ function CheckoutPage() {
 
         {unavailable.length > 0 && (
           <p className="text-center text-sm font-semibold text-destructive">
-            Quita los productos agotados de tu carrito para continuar.
+            {t("remove_sold_out_msg")}
           </p>
         )}
       </div>
@@ -595,10 +582,10 @@ function CheckoutPage() {
         >
           <span className="text-[17px] font-bold text-primary-foreground">
             {!isOpen
-              ? "Tienda Cerrada Temporalmente"
+              ? t("store_closed_btn")
               : placing
-              ? "Confirmando..."
-              : `Confirmar pedido · ${formatPrice(total)}`}
+              ? t("confirming_btn")
+              : `${t("confirm_order")} · ${formatPrice(total)}`}
           </span>
         </button>
       </div>
